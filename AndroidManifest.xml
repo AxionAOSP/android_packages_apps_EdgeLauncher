@@ -1,0 +1,44 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.android.edge.bar"
+    android:sharedUserId="android.uid.system">
+
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <protected-broadcast android:name="com.android.edge.bar.ACTION_START_SIDEBAR"/>
+    <protected-broadcast android:name="com.android.edge.bar.ACTION_STOP_SIDEBAR"/>
+
+    <application
+        android:allowBackup="false"
+        android:label="Edge Bar"
+        android:icon="@mipmap/ic_launcher"
+        android:theme="@style/Theme.Material3.DayNight.NoActionBar">
+
+        <service
+            android:name=".EdgeService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
+
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".SidebarReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.android.edge.bar.ACTION_START_SIDEBAR" />
+                <action android:name="com.android.edge.bar.ACTION_STOP_SIDEBAR" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

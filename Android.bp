@@ -1,0 +1,55 @@
+android_app {
+    name: "EdgeLauncher",
+    manifest: "AndroidManifest.xml",
+
+    srcs: [
+        "src/**/*.kt",
+    ],
+    resource_dirs: ["res"],
+
+    certificate: "platform",
+    platform_apis: true,
+    privileged: true,
+    system_ext_specific: true,
+
+    optimize: {
+        enabled: true,
+    },
+
+    static_libs: [
+        "androidx.activity_activity-compose",
+        "androidx.core_core-ktx",
+        "androidx.appcompat_appcompat",
+        "com.google.android.material_material",
+        "androidx.compose.animation_animation-core",
+        "androidx.compose.animation_animation-graphics",
+        "androidx.compose.foundation_foundation",
+        "androidx.compose.material3_material3",
+        "androidx.compose.material3_material3-window-size-class",
+        "androidx.compose.material_material-icons-core",
+        "androidx.compose.material_material-icons-extended",
+        "androidx.compose.runtime_runtime",
+        "androidx.compose.ui_ui",
+        "kotlinx-coroutines-core",
+    ],
+    
+    plugins: ["androidx.room_room-compiler-plugin"],
+
+    kotlincflags: [
+        "-Xjvm-default=all",
+        "-Xopt-in=kotlin.RequiresOptIn",
+        "-P plugin:androidx.compose.compiler.plugins.kotlin:sourceInformation=true",
+    ],
+
+    required: [
+        "privapp_whitelist_com.android.edgelauncher",
+    ],
+}
+
+prebuilt_etc {
+    name: "privapp_whitelist_com.android.edgelauncher",
+    system_ext_specific: true,
+    sub_dir: "permissions",
+    src: "privapp_whitelist_com.android.edgelauncher.xml",
+    filename_from_src: true,
+}
