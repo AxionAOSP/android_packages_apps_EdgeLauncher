@@ -1,0 +1,3 @@
+<resources>
+    <string name="app_locked_message">This app is locked. Please unlock it first.</string>
+</resources>

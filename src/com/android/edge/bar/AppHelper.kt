@@ -24,10 +24,12 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.view.WindowManager
+import android.widget.Toast
 import android.app.WindowConfiguration
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
+import com.android.internal.util.NTAppLockerHelper
 
 object AppHelper {
 
@@ -50,6 +52,15 @@ object AppHelper {
     }
 
     fun launchApp(context: Context, packageName: String) {
+        NTAppLockerHelper.init(context)
+        if (NTAppLockerHelper.get().isAppLocked(packageName)) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.app_locked_message),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
         val pm = context.packageManager
         val launchIntent = pm.getLaunchIntentForPackage(packageName) ?: return
         launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
