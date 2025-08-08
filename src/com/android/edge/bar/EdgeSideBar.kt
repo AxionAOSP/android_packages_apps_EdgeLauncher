@@ -176,11 +176,8 @@ class EdgeSideBar(
                         ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
                     )
                     setContent {
-                        val isDark = (context.resources.configuration.uiMode and
-                            Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-
-                        val colorScheme = if (isDark) darkColorScheme() else lightColorScheme()
-
+                        val isDark = isSystemInDarkTheme()
+                        val colorScheme = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
                         MaterialTheme(colorScheme = colorScheme) {
                             content()
                         }
