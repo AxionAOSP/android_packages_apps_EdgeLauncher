@@ -30,6 +30,7 @@ class SidebarReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
+            Intent.ACTION_MY_PACKAGE_REPLACED,
             ACTION_START_SIDEBAR -> {
                 Log.d(TAG, "Broadcast received: start service")
                 context.startService(Intent(context, EdgeService::class.java))

@@ -19,7 +19,7 @@
             android:name=".EdgeService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="mediaProjection" />
+            android:foregroundServiceType="systemExempted" />
 
         <receiver
             android:name=".BootReceiver"

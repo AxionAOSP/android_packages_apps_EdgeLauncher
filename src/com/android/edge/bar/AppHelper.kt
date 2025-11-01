@@ -23,6 +23,7 @@ import android.graphics.Canvas
 import android.graphics.Point
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
+import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
 import android.app.WindowConfiguration
@@ -70,6 +71,20 @@ object AppHelper {
             setLaunchBounds(launchBounds)
         }
         context.startActivity(launchIntent, options.toBundle())
+    }
+
+    fun launchAppFull(context: Context, packageName: String) {
+        try {
+            val launchIntent = context.packageManager.getLaunchIntentForPackage(packageName)
+            if (launchIntent != null) {
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(launchIntent)
+            } else {
+                Log.e("AppHelper", "Unable to find launch intent for $packageName")
+            }
+        } catch (e: Exception) {
+            Log.e("AppHelper", "Failed to launch app: ${e.message}")
+        }
     }
 
     private fun calculateFreeformBounds(context: Context): Rect {

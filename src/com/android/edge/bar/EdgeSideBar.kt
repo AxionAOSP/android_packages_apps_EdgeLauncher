@@ -58,6 +58,10 @@ class EdgeSideBar(
 
     private var sidebarPositionX = 0
     private var sidebarPositionY = 0
+    
+    private var xPos = 0
+    private var yPos = 0
+    private var sidebarHeight = 0
 
     private val screenWidth get() = context.resources.displayMetrics.widthPixels
     private val screenHeight get() = context.resources.displayMetrics.heightPixels
@@ -66,6 +70,7 @@ class EdgeSideBar(
     fun showPanelView() {
         synchronized(this) {
             if (isShowing) return
+            updateSidebarPosition()
             panelView = createComposeView {
                 EdgeContentView(
                     onAppDrawerClick = { removePanelView(); showAppDrawerView() },
@@ -74,11 +79,12 @@ class EdgeSideBar(
                         removePanelView()
                         AppHelper.launchApp(ctx, pkg)
                     },
-                    modifier = Modifier.fillMaxHeight().wrapContentWidth()
+                    xPos = xPos,
+                    yPos = yPos,
+                    sidebarHeight = (sidebarHeight / context.resources.displayMetrics.density).roundToInt()
                 )
             }
             configureLayoutParams(lp)
-            updateSidebarPosition()
             addViewSafely(panelView)
             isShowing = true
         }
@@ -98,6 +104,16 @@ class EdgeSideBar(
     fun showAppDrawerView() {
         synchronized(this) {
             if (appDrawerState != AppDrawerState.HIDDEN) return
+            updateSidebarPosition()
+            
+            val drawerWidth = (screenWidth * 0.8f).roundToInt()
+            val drawerHeight = sidebarHeight
+            val drawerX = if (sidebarPositionX > 0) {
+                screenWidth - drawerWidth - 32 
+            } else {
+                32
+            }
+            
             appDrawerView = createComposeView {
                 AppDrawerContentView(
                     onDismiss = {
@@ -107,11 +123,14 @@ class EdgeSideBar(
                     onAppClick = { ctx, pkg ->
                         removeAppDrawerView()
                         AppHelper.launchApp(ctx, pkg)
-                    }
+                    },
+                    xPos = drawerX,
+                    yPos = yPos,
+                    drawerWidth = (drawerWidth / context.resources.displayMetrics.density).roundToInt(),
+                    drawerHeight = (drawerHeight / context.resources.displayMetrics.density).roundToInt()
                 )
             }
             configureLayoutParams(lp)
-            updateSidebarPosition()
             addViewSafely(appDrawerView)
             appDrawerState = AppDrawerState.EXPANDED
         }
@@ -126,10 +145,10 @@ class EdgeSideBar(
     }
 
     fun updateSidebarPosition() {
-        val sidebarHeight = if (isPortrait) {
-            screenHeight / 3
+        sidebarHeight = if (isPortrait) {
+            (screenHeight * 0.45f).roundToInt()
         } else {
-            (screenHeight * 0.8f).roundToInt()
+            (screenHeight * 0.85f).roundToInt()
         }
 
         sidebarPositionX = Settings.Secure.getInt(
@@ -149,11 +168,17 @@ class EdgeSideBar(
         }
 
         lp.apply {
-            width = LayoutParams.WRAP_CONTENT
-            height = sidebarHeight
-            x = sidebarPositionX * (screenWidth / 2 - OFFSET_X)
-            y = sidebarPositionY
+            width = LayoutParams.MATCH_PARENT
+            height = LayoutParams.MATCH_PARENT
         }
+
+        xPos = if (sidebarPositionX > 0) {
+            screenWidth - SIDEBAR_WIDTH 
+        } else {
+            0
+        }
+        
+        yPos = (screenHeight - sidebarHeight) / 2 + sidebarPositionY
 
         if (isShowing) {
             mainScope.launch(Dispatchers.Main) {
@@ -190,8 +215,7 @@ class EdgeSideBar(
     private fun configureLayoutParams(lp: LayoutParams) = lp.apply {
         type = LayoutParams.TYPE_APPLICATION_OVERLAY
         flags = LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                LayoutParams.FLAG_HARDWARE_ACCELERATED or
-                LayoutParams.FLAG_NOT_FOCUSABLE
+                LayoutParams.FLAG_HARDWARE_ACCELERATED
         format = PixelFormat.RGBA_8888
         windowAnimations = android.R.style.Animation_Dialog
         layoutInDisplayCutoutMode = LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
@@ -227,6 +251,6 @@ class EdgeSideBar(
     private enum class AppDrawerState { HIDDEN, EXPANDED }
 
     companion object {
-        private const val OFFSET_X = 90
+        private const val SIDEBAR_WIDTH = 72 * 3
     }
 }
