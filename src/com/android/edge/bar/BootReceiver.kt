@@ -18,11 +18,43 @@ package com.android.edge.bar
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.UserHandle
+import android.provider.Settings
+import android.util.Log
 
 class BootReceiver : BroadcastReceiver() {
+    
+    companion object {
+        private const val TAG = "BootReceiver"
+        private const val SIDELINE = "sidebar_feature_enabled"
+    }
+
     override fun onReceive(context: Context, intent: Intent?) {
-        if (intent?.action == Intent.ACTION_BOOT_COMPLETED) {
-            context.startService(Intent(context, EdgeService::class.java))
+        val action = intent?.action
+        Log.d(TAG, "onReceive: $action, userId: ${UserHandle.myUserId()}")
+
+        if (UserHandle.myUserId() != 0) {
+            return
         }
+
+        when (action) {
+            Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_LOCKED_BOOT_COMPLETED -> {
+                if (isFeatureEnabled(context)) {
+                    Log.d(TAG, "Starting EdgeService after boot")
+                    try {
+                        context.startService(Intent(context, EdgeService::class.java))
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to start EdgeService", e)
+                    }
+                } else {
+                    Log.d(TAG, "Feature disabled, not starting EdgeService")
+                }
+            }
+        }
+    }
+
+    private fun isFeatureEnabled(context: Context): Boolean {
+        return Settings.Secure.getInt(context.contentResolver, SIDELINE, 0) == 1
     }
 }

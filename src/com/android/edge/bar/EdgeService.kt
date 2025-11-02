@@ -15,9 +15,6 @@
  */
 package com.android.edge.bar
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.IActivityManager
 import android.app.Service
 import android.app.UserSwitchObserver
@@ -25,7 +22,6 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
-import android.content.pm.ServiceInfo
 import android.graphics.PixelFormat
 import android.graphics.Rect
 import android.os.IBinder
@@ -36,7 +32,6 @@ import android.view.View
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.app.NotificationCompat
 import com.android.internal.policy.SystemBarUtils
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
@@ -65,37 +60,6 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
     private var screenHeight = 0
 
     private var idleJob: Job? = null
-
-    var fgServiceEnabled: Boolean = false
-        set(value) {
-            field = value
-            if (value) {
-                startForeground(
-                    8080,
-                    buildNotification(),
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED
-                )
-            } else {
-                stopForeground(STOP_FOREGROUND_REMOVE)
-            }
-        }
-
-    private fun buildNotification(): Notification {
-        val nm = getSystemService(NotificationManager::class.java)
-        val channel = NotificationChannel(
-            "edge_service",
-            "Edge Service",
-            NotificationManager.IMPORTANCE_LOW
-        )
-        nm.createNotificationChannel(channel)
-
-        return NotificationCompat.Builder(this, "edge_service")
-            .setContentTitle("Edge Service Running")
-            .setContentText("edge bar running")
-            .setSmallIcon(android.R.drawable.ic_menu_view)
-            .setOngoing(true)
-            .build()
-    }
     
     private val sideLineView by lazy {
         val gestureManager = MGestureManager(this@EdgeService, GestureListener(this@EdgeService))
@@ -176,8 +140,6 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
         showSideline = getSecureBoolean(SIDELINE, false)
         if (showSideline) showSidelineView()
         
-        fgServiceEnabled = true
-
         return START_STICKY
     }
 
@@ -200,7 +162,6 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
         activityManager.unregisterUserSwitchObserver(userSwitchObserver)
         removeView(force = true)
         serviceJob.cancel()
-        fgServiceEnabled = false
     }
 
     override fun showSidebar() {

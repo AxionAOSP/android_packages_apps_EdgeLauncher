@@ -6,27 +6,31 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    
     <protected-broadcast android:name="com.android.edge.bar.ACTION_START_SIDEBAR"/>
     <protected-broadcast android:name="com.android.edge.bar.ACTION_STOP_SIDEBAR"/>
 
     <application
+        android:name=".EdgeApplication"
         android:allowBackup="false"
         android:label="Edge Bar"
         android:icon="@mipmap/ic_launcher"
+        android:persistent="true"
         android:theme="@style/Theme.Material3.DayNight.NoActionBar">
 
         <service
             android:name=".EdgeService"
             android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="systemExempted" />
+            android:exported="false" />
 
         <receiver
             android:name=".BootReceiver"
             android:enabled="true"
-            android:exported="true">
+            android:exported="true"
+            android:directBootAware="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 
