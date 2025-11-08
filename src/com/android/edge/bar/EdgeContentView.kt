@@ -168,14 +168,7 @@ fun AppDrawerContentView(
         value = AppHelper.getInstalledApps(context)
     }
 
-    var searchMode by remember { mutableStateOf(false) }
-    var searchQuery by remember { mutableStateOf("") }
     var activePopup by remember { mutableStateOf<PopupState?>(null) }
-
-    val filteredApps = remember(searchQuery, allApps) {
-        if (searchQuery.isBlank()) allApps
-        else allApps.filter { it.label.contains(searchQuery, ignoreCase = true) }
-    }
 
     Card(
         colors = CardDefaults.cardColors(
@@ -189,36 +182,27 @@ fun AppDrawerContentView(
             .padding(end = 8.dp)
             .swipeToDismiss(threshold = 150f, onDismiss = onDismiss)
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            AppDrawerHeader(
-                searchMode = searchMode,
-                searchQuery = searchQuery,
-                onSearchModeChange = { searchMode = it },
-                onSearchQueryChange = { searchQuery = it }
-            )
-
-            if (filteredApps.isEmpty()) {
-                EmptyState(text = "No apps found")
-            } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(4),
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(20.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(filteredApps) { appInfo ->
-                        AppGridItem(
-                            appInfo = appInfo,
-                            onClick = { onAppClick(context, appInfo.packageName) },
-                            onLongClick = { bounds ->
-                                activePopup = PopupState(
-                                    packageName = appInfo.packageName,
-                                    anchorBounds = bounds
-                                )
-                            }
-                        )
-                    }
+        if (allApps.isEmpty()) {
+            EmptyState(text = "No apps found")
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(4),
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp),
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(allApps) { appInfo ->
+                    AppGridItem(
+                        appInfo = appInfo,
+                        onClick = { onAppClick(context, appInfo.packageName) },
+                        onLongClick = { bounds ->
+                            activePopup = PopupState(
+                                packageName = appInfo.packageName,
+                                anchorBounds = bounds
+                            )
+                        }
+                    )
                 }
             }
         }
@@ -404,99 +388,6 @@ private fun AppGridItem(
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.fillMaxWidth()
         )
-    }
-}
-
-@OptIn(ExperimentalAnimationApi::class)
-@Composable
-private fun AppDrawerHeader(
-    searchMode: Boolean,
-    searchQuery: String,
-    onSearchModeChange: (Boolean) -> Unit,
-    onSearchQueryChange: (String) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 20.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        AnimatedContent(
-            targetState = searchMode,
-            transitionSpec = {
-                slideInVertically(
-                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                ) + fadeIn() togetherWith
-                        slideOutVertically(
-                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                        ) + fadeOut()
-            },
-            label = "Search Bar Animation"
-        ) { isSearching ->
-            if (!isSearching) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Apps",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    CircleIconButton(
-                        icon = Icons.Rounded.Search,
-                        contentDescription = "Search",
-                        onClick = { onSearchModeChange(true) },
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        size = 48.dp,
-                        iconSize = 24.dp
-                    )
-                }
-            } else {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    IconButton(onClick = {
-                        onSearchModeChange(false)
-                        onSearchQueryChange("")
-                    }) {
-                        Icon(
-                            imageVector = Icons.Rounded.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    val outlineAlpha by animateFloatAsState(
-                        targetValue = if (searchMode) 1f else 0f,
-                        animationSpec = tween(300)
-                    )
-
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = onSearchQueryChange,
-                        placeholder = { Text("Search apps") },
-                        singleLine = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .graphicsLayer { alpha = outlineAlpha },
-                        shape = RoundedCornerShape(20.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = outlineAlpha),
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = outlineAlpha),
-                            cursorColor = MaterialTheme.colorScheme.primary
-                        )
-                    )
-                }
-            }
-        }
     }
 }
 
