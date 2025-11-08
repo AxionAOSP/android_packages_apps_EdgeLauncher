@@ -49,8 +49,6 @@ fun EdgeContentView(
     onPanelTap: () -> Unit,
     onPinnedAppClick: (context: Context, packageName: String) -> Unit,
     onAppDrawerClick: () -> Unit,
-    xPos: Int,
-    yPos: Int,
     sidebarHeight: Int,
     modifier: Modifier = Modifier
 ) {
@@ -67,81 +65,93 @@ fun EdgeContentView(
 
     var activePopup by remember { mutableStateOf<PopupState?>(null) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) { onPanelTap() }
+    EdgeSidebarCard(
+        height = sidebarHeight,
+        onPanelTap = onPanelTap
     ) {
-        EdgeSidebarCard(
-            xPos = xPos,
-            yPos = yPos,
-            height = sidebarHeight,
-            onPanelTap = onPanelTap
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(vertical = 12.dp, horizontal = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(vertical = 16.dp, horizontal = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .clickable { onAppDrawerClick() }
             ) {
-                CircleIconButton(
-                    icon = Icons.Default.Apps,
+                Icon(
+                    imageVector = Icons.Rounded.Apps,
                     contentDescription = "App Drawer",
-                    onClick = onAppDrawerClick,
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
+            }
 
-                Box(
-                    modifier = Modifier
-                        .size(4.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                )
+            Box(
+                modifier = Modifier
+                    .width(32.dp)
+                    .height(1.5.dp)
+                    .clip(RoundedCornerShape(1.dp))
+                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.95f))
+            )
 
-                LazyColumn(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    if (pinnedApps.isEmpty()) {
-                        item { Spacer(modifier = Modifier.height(64.dp)) }
-                    } else {
-                        items(pinnedApps) { appInfo ->
-                            AppIconButton(
-                                appInfo = appInfo,
-                                onClick = { onPinnedAppClick(context, appInfo.packageName) },
-                                onLongClick = { bounds ->
-                                    activePopup = PopupState(
-                                        packageName = appInfo.packageName,
-                                        anchorBounds = bounds
-                                    )
-                                }
+            LazyColumn(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (pinnedApps.isEmpty()) {
+                    item { 
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Add,
+                                contentDescription = null,
+                                modifier = Modifier.size(28.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                             )
                         }
+                    }
+                } else {
+                    items(pinnedApps) { appInfo ->
+                        AppIconButton(
+                            appInfo = appInfo,
+                            onClick = { onPinnedAppClick(context, appInfo.packageName) },
+                            onLongClick = { bounds ->
+                                activePopup = PopupState(
+                                    packageName = appInfo.packageName,
+                                    anchorBounds = bounds
+                                )
+                            }
+                        )
                     }
                 }
             }
         }
+    }
 
-        activePopup?.let { popup ->
-            LaunchModePopup(
-                anchorBounds = popup.anchorBounds,
-                onDismiss = { activePopup = null },
-                onLaunchFull = { 
-                    AppHelper.launchAppFull(context, popup.packageName)
-                    activePopup = null
-                },
-                onLaunchFreeform = { 
-                    AppHelper.launchApp(context, popup.packageName)
-                    activePopup = null
-                }
-            )
-        }
+    activePopup?.let { popup ->
+        LaunchModePopup(
+            anchorBounds = popup.anchorBounds,
+            onDismiss = { activePopup = null },
+            onLaunchFull = { 
+                AppHelper.launchAppFull(context, popup.packageName)
+                activePopup = null
+            },
+            onLaunchFreeform = { 
+                AppHelper.launchApp(context, popup.packageName)
+                activePopup = null
+            }
+        )
     }
 }
 
@@ -150,8 +160,6 @@ fun EdgeContentView(
 fun AppDrawerContentView(
     onDismiss: () -> Unit,
     onAppClick: (context: Context, packageName: String) -> Unit,
-    xPos: Int,
-    yPos: Int,
     drawerWidth: Int,
     drawerHeight: Int
 ) {
@@ -169,111 +177,88 @@ fun AppDrawerContentView(
         else allApps.filter { it.label.contains(searchQuery, ignoreCase = true) }
     }
 
-    Box(
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        shape = RoundedCornerShape(32.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Transparent)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) { onDismiss() }
+            .width(drawerWidth.dp)
+            .height(drawerHeight.dp)
+            .padding(end = 8.dp)
+            .swipeToDismiss(threshold = 150f, onDismiss = onDismiss)
     ) {
-        Card(
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f)
-            ),
-            shape = RoundedCornerShape(32.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
-            modifier = Modifier
-                .offset { IntOffset(xPos, yPos) }
-                .width(drawerWidth.dp)
-                .height(drawerHeight.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) { }
-                .swipeToDismiss(threshold = 150f, onDismiss = onDismiss)
-        ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                AppDrawerHeader(
-                    searchMode = searchMode,
-                    searchQuery = searchQuery,
-                    onSearchModeChange = { searchMode = it },
-                    onSearchQueryChange = { searchQuery = it }
-                )
+        Column(modifier = Modifier.fillMaxSize()) {
+            AppDrawerHeader(
+                searchMode = searchMode,
+                searchQuery = searchQuery,
+                onSearchModeChange = { searchMode = it },
+                onSearchQueryChange = { searchQuery = it }
+            )
 
-                if (filteredApps.isEmpty()) {
-                    EmptyState(text = "No apps found")
-                } else {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(4),
-                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(24.dp),
-                        horizontalArrangement = Arrangement.spacedBy(20.dp),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(filteredApps) { appInfo ->
-                            AppGridItem(
-                                appInfo = appInfo,
-                                onClick = { onAppClick(context, appInfo.packageName) },
-                                onLongClick = { bounds ->
-                                    activePopup = PopupState(
-                                        packageName = appInfo.packageName,
-                                        anchorBounds = bounds
-                                    )
-                                }
-                            )
-                        }
+            if (filteredApps.isEmpty()) {
+                EmptyState(text = "No apps found")
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(4),
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(20.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(filteredApps) { appInfo ->
+                        AppGridItem(
+                            appInfo = appInfo,
+                            onClick = { onAppClick(context, appInfo.packageName) },
+                            onLongClick = { bounds ->
+                                activePopup = PopupState(
+                                    packageName = appInfo.packageName,
+                                    anchorBounds = bounds
+                                )
+                            }
+                        )
                     }
                 }
             }
         }
+    }
 
-        activePopup?.let { popup ->
-            LaunchModePopup(
-                anchorBounds = popup.anchorBounds,
-                onDismiss = { activePopup = null },
-                onLaunchFull = { 
-                    AppHelper.launchAppFull(context, popup.packageName)
-                    activePopup = null
-                },
-                onLaunchFreeform = { 
-                    AppHelper.launchApp(context, popup.packageName)
-                    activePopup = null
-                }
-            )
-        }
+    activePopup?.let { popup ->
+        LaunchModePopup(
+            anchorBounds = popup.anchorBounds,
+            onDismiss = { activePopup = null },
+            onLaunchFull = { 
+                AppHelper.launchAppFull(context, popup.packageName)
+                activePopup = null
+            },
+            onLaunchFreeform = { 
+                AppHelper.launchApp(context, popup.packageName)
+                activePopup = null
+            }
+        )
     }
 }
 
 @Composable
 private fun EdgeSidebarCard(
-    xPos: Int,
-    yPos: Int,
     height: Int,
     onPanelTap: () -> Unit,
     content: @Composable () -> Unit
 ) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.95f)
-        ),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        shape = RoundedCornerShape(20.dp),
+        tonalElevation = 2.dp,
+        shadowElevation = 4.dp,
         modifier = Modifier
-            .offset { IntOffset(xPos, yPos) }
-            .width(72.dp)
+            .width(64.dp)
             .height(height.dp)
-            .shadow(
-                elevation = 12.dp,
-                shape = RoundedCornerShape(24.dp),
-                ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+            .border(
+                width = 0.5.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(20.dp)
             )
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) { }
             .swipeToDismiss(threshold = 50f, onDismiss = onPanelTap)
     ) {
         content()
@@ -317,13 +302,27 @@ private fun AppIconButton(
 ) {
     val context = LocalContext.current
     var anchorBounds by remember { mutableStateOf<Rect?>(null) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.88f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessHigh
+        )
+    )
 
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .size(56.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.6f))
+            .size(52.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.4f))
             .onGloballyPositioned { coords ->
                 val pos = coords.positionInWindow()
                 val size = coords.size
@@ -335,6 +334,8 @@ private fun AppIconButton(
                 )
             }
             .combinedClickable(
+                interactionSource = interactionSource,
+                indication = ripple(bounded = true, radius = 26.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
                 onClick = onClick,
                 onLongClick = { anchorBounds?.let { onLongClick(it) } }
             )
@@ -342,7 +343,9 @@ private fun AppIconButton(
         Image(
             painter = AppHelper.getAppPainter(context, appInfo.packageName, appInfo.icon),
             contentDescription = appInfo.label,
-            modifier = Modifier.size(36.dp)
+            modifier = Modifier
+                .size(32.dp)
+                .clip(RoundedCornerShape(10.dp))
         )
     }
 }
