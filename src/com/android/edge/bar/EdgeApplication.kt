@@ -18,6 +18,7 @@ package com.android.edge.bar
 import android.app.Application
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Process
 import android.os.UserHandle
 import android.provider.Settings
 import android.util.Log
@@ -33,6 +34,7 @@ class EdgeApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        Process.setThreadAffinity(Process.myPid(), 1)
         Log.d(TAG, "Application onCreate - userId: ${UserHandle.myUserId()}")
         
         if (UserHandle.myUserId() != 0) {

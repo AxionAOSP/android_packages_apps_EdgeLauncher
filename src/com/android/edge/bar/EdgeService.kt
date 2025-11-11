@@ -25,6 +25,7 @@ import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.graphics.Rect
 import android.os.IBinder
+import android.os.Process
 import android.os.ServiceManager
 import android.os.UserHandle
 import android.provider.Settings
@@ -113,6 +114,10 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
+        Process.setThreadGroupAndCpuset(Process.myPid(), 9)
+        Process.setProcessGroup(Process.myPid(), 9)
+
         userId = UserHandle.myUserId()
 
         if (userId != 0) {

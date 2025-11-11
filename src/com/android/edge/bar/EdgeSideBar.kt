@@ -19,6 +19,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.provider.Settings
+import android.os.Process
 import android.util.Log
 import android.view.Gravity
 import android.view.View
@@ -68,6 +69,9 @@ class EdgeSideBar(
     private val isPortrait get() = context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
 
     fun showPanelView() {
+        Process.setThreadAffinity(Process.myPid(), 2)
+        Process.setThreadGroupAndCpuset(Process.myPid(), Process.THREAD_GROUP_TOP_APP)
+        Process.setProcessGroup(Process.myPid(), Process.THREAD_GROUP_TOP_APP)
         synchronized(this) {
             if (isShowing) return
             updateSidebarPosition()
@@ -97,9 +101,15 @@ class EdgeSideBar(
             }
             callback.onRemove()
         }
+        Process.setThreadAffinity(Process.myPid(), 1)
+        Process.setThreadGroupAndCpuset(Process.myPid(), 9)
+        Process.setProcessGroup(Process.myPid(), 9)
     }
 
     fun showAppDrawerView() {
+        Process.setThreadAffinity(Process.myPid(), 2)
+        Process.setThreadGroupAndCpuset(Process.myPid(), Process.THREAD_GROUP_TOP_APP)
+        Process.setProcessGroup(Process.myPid(), Process.THREAD_GROUP_TOP_APP)
         synchronized(this) {
             if (appDrawerState != AppDrawerState.HIDDEN) return
             updateSidebarPosition()
@@ -141,6 +151,9 @@ class EdgeSideBar(
             removeViewSafely(appDrawerView)
             appDrawerState = AppDrawerState.HIDDEN
         }
+        Process.setThreadAffinity(Process.myPid(), 1)
+        Process.setThreadGroupAndCpuset(Process.myPid(), 9)
+        Process.setProcessGroup(Process.myPid(), 9)
     }
 
     fun updateSidebarPosition() {
