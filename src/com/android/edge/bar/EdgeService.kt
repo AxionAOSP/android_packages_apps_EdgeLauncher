@@ -15,6 +15,10 @@
  */
 package com.android.edge.bar
 
+import com.android.edge.bar.freeform.FreeformWindowCompose
+import com.android.edge.bar.freeform.FreeformWindowManager
+import com.android.edge.bar.freeform.FreeformTaskStackListener
+
 import android.app.IActivityManager
 import android.app.Service
 import android.app.UserSwitchObserver
@@ -40,8 +44,11 @@ import kotlin.coroutines.CoroutineContext
 class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
 
     private val serviceJob = SupervisorJob()
+    private val serviceDispatcher = Dispatchers.Default.limitedParallelism(2)
     override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + serviceJob
+        get() = serviceDispatcher + serviceJob + CoroutineName("EdgeService")
+    
+    private val mainScope = CoroutineScope(Dispatchers.Main + serviceJob)
 
     private lateinit var windowManager: WindowManager
     private lateinit var activityManager: IActivityManager
@@ -59,6 +66,9 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
     private var sidelinePosY = 0
     private var screenWidth = 0
     private var screenHeight = 0
+    private var sideBar: EdgeSideBar? = null
+    private lateinit var freeformWM: FreeformWindowManager
+    private lateinit var taskStackListener: FreeformTaskStackListener
 
     private var idleJob: Job? = null
     
@@ -70,7 +80,7 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
                 gestureManager.onTouchEvent(event)
                 animate().alpha(ACTIVE_ALPHA).setDuration(FADE_DURATION).start()
                 idleJob?.cancel()
-                idleJob = launch {
+                idleJob = mainScope.launch {
                     delay(IDLE_TIMEOUT)
                     animate().alpha(IDLE_ALPHA).setDuration(FADE_DURATION).start()
                 }
@@ -109,6 +119,9 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
         const val SIDELINE_POSITION_X = "sideline_position_x"
         const val SIDELINE_POSITION_Y_PORTRAIT = "sideline_position_y_portrait"
         const val SIDELINE_POSITION_Y_LANDSCAPE = "sideline_position_y_landscape"
+
+        const val ACTION_LAUNCH_FREEFORM = "com.android.edge.bar.ACTION_LAUNCH_FREEFORM"
+        const val EXTRA_PACKAGE_NAME = "package_name"
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -120,6 +133,13 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
 
         userId = UserHandle.myUserId()
 
+        if (intent?.action == ACTION_LAUNCH_FREEFORM) {
+            val packageName = intent.getStringExtra(EXTRA_PACKAGE_NAME)
+            if (packageName != null) {
+                launchFreeform(packageName)
+            }
+        }
+
         if (userId != 0) {
             stopSelf()
             return START_STICKY
@@ -128,6 +148,10 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         activityManager = IActivityManager.Stub.asInterface(ServiceManager.getService(Context.ACTIVITY_SERVICE))
         contentResolverRef = applicationContext.contentResolver
+        
+        freeformWM = FreeformWindowManager.getInstance(this)
+        taskStackListener = FreeformTaskStackListener(this, freeformWM)
+        taskStackListener.register()
 
         screenWidth = resources.displayMetrics.widthPixels
         screenHeight = resources.displayMetrics.heightPixels
@@ -163,9 +187,17 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
 
     override fun onDestroy() {
         super.onDestroy()
-        if (!serviceStarted) return
-        activityManager.unregisterUserSwitchObserver(userSwitchObserver)
+
+        if (::taskStackListener.isInitialized) {
+            taskStackListener.unregister()
+        }
+        if (::freeformWM.isInitialized) {
+            freeformWM.closeAllWindows()
+        }
+        
         removeView(force = true)
+        serviceStarted = false
+        activityManager.unregisterUserSwitchObserver(userSwitchObserver)
         serviceJob.cancel()
     }
 
@@ -214,32 +246,32 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
     private fun showSidelineView() {
         if (isSidelineVisible) return
 
-        wmLayoutParams.apply {
-            type = LayoutParams.TYPE_APPLICATION_OVERLAY
-            width = SIDELINE_WIDTH
-            height = SIDELINE_HEIGHT
-            format = PixelFormat.RGBA_8888
-            windowAnimations = android.R.style.Animation_Dialog
-            flags = LayoutParams.FLAG_NOT_FOCUSABLE or
-                    LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                    LayoutParams.FLAG_HARDWARE_ACCELERATED
-            privateFlags = LayoutParams.SYSTEM_FLAG_SHOW_FOR_ALL_USERS or
-                    LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY or
-                    LayoutParams.PRIVATE_FLAG_SYSTEM_APPLICATION_OVERLAY
-        }
+        mainScope.launch {
+            wmLayoutParams.apply {
+                type = LayoutParams.TYPE_APPLICATION_OVERLAY
+                width = SIDELINE_WIDTH
+                height = SIDELINE_HEIGHT
+                format = PixelFormat.RGBA_8888
+                windowAnimations = android.R.style.Animation_Dialog
+                flags = LayoutParams.FLAG_NOT_FOCUSABLE or
+                        LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                        LayoutParams.FLAG_HARDWARE_ACCELERATED
+                privateFlags = LayoutParams.SYSTEM_FLAG_SHOW_FOR_ALL_USERS or
+                        LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY or
+                        LayoutParams.PRIVATE_FLAG_SYSTEM_APPLICATION_OVERLAY
+            }
 
-        sideLineView.setSystemGestureExclusionRects(
-            listOf(Rect(0, 0, SIDELINE_WIDTH, SIDELINE_HEIGHT))
-        )
+            sideLineView.setSystemGestureExclusionRects(
+                listOf(Rect(0, 0, SIDELINE_WIDTH, SIDELINE_HEIGHT))
+            )
 
-        updateSidelinePosition()
+            updateSidelinePosition()
 
-        launch {
             try {
                 windowManager.addView(sideLineView, wmLayoutParams)
                 isSidelineVisible = true
                 idleJob?.cancel()
-                idleJob = launch {
+                idleJob = mainScope.launch {
                     delay(IDLE_TIMEOUT)
                     sideLineView.animate().alpha(IDLE_ALPHA).setDuration(FADE_DURATION).start()
                 }
@@ -273,7 +305,7 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
     }
 
     private fun updateViewLayout() {
-        launch {
+        mainScope.launch {
             try {
                 windowManager.updateViewLayout(sideLineView, wmLayoutParams)
             } catch (_: Exception) { }
@@ -282,7 +314,7 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
 
     private fun removeView(force: Boolean = false) {
         if (!isSidelineVisible && !force) return
-        launch {
+        mainScope.launch {
             try {
                 windowManager.removeViewImmediate(sideLineView)
             } catch (_: Exception) { }
@@ -293,14 +325,18 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
     }
 
     private fun animateHideSideline() {
-        sideLineView.animate()
-            .translationX(sidelinePosX * SIDELINE_WIDTH.toFloat())
-            .setDuration(300)
-            .start()
+        mainScope.launch {
+            sideLineView.animate()
+                .translationX(sidelinePosX * SIDELINE_WIDTH.toFloat())
+                .setDuration(300)
+                .start()
+        }
     }
 
     private fun animateShowSideline() {
-        sideLineView.animate().translationX(0f).setDuration(300).start()
+        mainScope.launch {
+            sideLineView.animate().translationX(0f).setDuration(300).start()
+        }
     }
 
     private fun putSecureInt(key: String, value: Int) {
@@ -313,5 +349,17 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
 
     private fun getSecureBoolean(key: String, defaultValue: Boolean): Boolean {
         return Settings.Secure.getInt(contentResolverRef, key, if (defaultValue) 1 else 0) == 1
+    }
+
+    private fun launchFreeform(packageName: String) {
+        if (freeformWM.hasWindow(packageName)) {
+            freeformWM.bringToFront(packageName)
+            return
+        }
+        
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+        val activityName = launchIntent?.component?.className ?: return
+
+        val window = FreeformWindowCompose(this, packageName, activityName, userId)
     }
 }

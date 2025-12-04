@@ -15,22 +15,18 @@
  */
 package com.android.edge.bar
 
-import android.app.ActivityOptions
+import android.app.ActivityManager
+import android.app.FreeformLauncher
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Point
-import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.util.Log
-import android.view.WindowManager
 import android.widget.Toast
-import android.app.WindowConfiguration
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
-import com.android.internal.util.NTAppLockerHelper
 
 object AppHelper {
 
@@ -47,30 +43,14 @@ object AppHelper {
             AppInfo(
                 label = it.loadLabel(pm).toString(),
                 icon = it.activityInfo.loadIcon(pm),
-                packageName = it.activityInfo.packageName
+                packageName = it.activityInfo.packageName,
+                activityName = it.activityInfo.name
             )
         }.sortedBy { it.label.lowercase() }
     }
 
-    fun launchApp(context: Context, packageName: String) {
-        NTAppLockerHelper.init(context)
-        if (NTAppLockerHelper.get().isAppLocked(packageName)) {
-            Toast.makeText(
-                context,
-                context.getString(R.string.app_locked_message),
-                Toast.LENGTH_SHORT
-            ).show()
-            return
-        }
-        val pm = context.packageManager
-        val launchIntent = pm.getLaunchIntentForPackage(packageName) ?: return
-        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        val launchBounds = calculateFreeformBounds(context)
-        val options = ActivityOptions.makeBasic().apply {
-            setLaunchWindowingMode(WindowConfiguration.WINDOWING_MODE_FREEFORM)
-            setLaunchBounds(launchBounds)
-        }
-        context.startActivity(launchIntent, options.toBundle())
+    fun launchApp(packageName: String) {
+        FreeformLauncher.launch(packageName)
     }
 
     fun launchAppFull(context: Context, packageName: String) {
@@ -86,21 +66,15 @@ object AppHelper {
             Log.e("AppHelper", "Failed to launch app: ${e.message}")
         }
     }
-
-    private fun calculateFreeformBounds(context: Context): Rect {
-        val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        val screenSize = Point()
-        wm.defaultDisplay.getSize(screenSize)
-        val screenWidth = screenSize.x
-        val screenHeight = screenSize.y
-
-        val width = (screenWidth * 0.45).toInt()
-        val height = (screenHeight * 0.45).toInt()
-
-        val left = (screenWidth - width) / 2
-        val top = (screenHeight - height) / 2
-
-        return Rect(left, top, left + width, top + height)
+    
+    fun killApp(context: Context, packageName: String) {
+        try {
+            val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            am.forceStopPackage(packageName)
+            Log.i("AppHelper", "Force stopped: $packageName")
+        } catch (e: Exception) {
+            Log.e("AppHelper", "Failed to kill app: ${e.message}")
+        }
     }
 
     fun getAppPainter(context: Context, packageName: String, icon: Drawable?): Painter {
@@ -124,5 +98,6 @@ object AppHelper {
 data class AppInfo(
     val label: String,
     val icon: Drawable,
-    val packageName: String
+    val packageName: String,
+    val activityName: String = ""
 )

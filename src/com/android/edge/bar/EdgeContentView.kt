@@ -148,7 +148,7 @@ fun EdgeContentView(
                 activePopup = null
             },
             onLaunchFreeform = { 
-                AppHelper.launchApp(context, popup.packageName)
+                AppHelper.launchApp(popup.packageName)
                 activePopup = null
             }
         )
@@ -217,7 +217,7 @@ fun AppDrawerContentView(
                 activePopup = null
             },
             onLaunchFreeform = { 
-                AppHelper.launchApp(context, popup.packageName)
+                AppHelper.launchApp(popup.packageName)
                 activePopup = null
             }
         )

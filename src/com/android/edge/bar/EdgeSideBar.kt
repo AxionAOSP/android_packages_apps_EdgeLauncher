@@ -22,6 +22,7 @@ import android.provider.Settings
 import android.os.Process
 import android.util.Log
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
@@ -81,7 +82,7 @@ class EdgeSideBar(
                     onPanelTap = { removePanelView() },
                     onPinnedAppClick = { ctx, pkg ->
                         removePanelView()
-                        AppHelper.launchApp(ctx, pkg)
+                        AppHelper.launchApp(pkg)
                     },
                     sidebarHeight = (sidebarHeight / context.resources.displayMetrics.density).roundToInt()
                 )
@@ -133,7 +134,7 @@ class EdgeSideBar(
                     },
                     onAppClick = { ctx, pkg ->
                         removeAppDrawerView()
-                        AppHelper.launchApp(ctx, pkg)
+                        AppHelper.launchApp(pkg)
                     },
                     drawerWidth = (drawerWidth / context.resources.displayMetrics.density).roundToInt(),
                     drawerHeight = (drawerHeight / context.resources.displayMetrics.density).roundToInt()
@@ -255,7 +256,7 @@ class EdgeSideBar(
             }
             
             setOnTouchListener { view, event ->
-                if (event.action == android.view.MotionEvent.ACTION_OUTSIDE) {
+                if (event.action == MotionEvent.ACTION_OUTSIDE) {
                     if (isShowing) {
                         removePanelView()
                     }

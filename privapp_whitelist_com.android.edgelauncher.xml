@@ -3,5 +3,8 @@
         <permission name="android.permission.SYSTEM_ALERT_WINDOW"/>
         <permission name="android.permission.FOREGROUND_SERVICE"/>
         <permission name="android.permission.QUERY_ALL_PACKAGES"/>
+        <permission name="android.permission.REQUEST_SYSTEM_MULTITASKING_CONTROLS"/>
+        <permission name="android.permission.SUBSCRIBE_TO_KEYGUARD_LOCKED_STATE"/>
+        <permission name="android.permission.FORCE_STOP_PACKAGES"/>
     </privapp-permissions>
 </permissions>
