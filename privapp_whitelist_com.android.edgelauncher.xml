@@ -6,5 +6,6 @@
         <permission name="android.permission.REQUEST_SYSTEM_MULTITASKING_CONTROLS"/>
         <permission name="android.permission.SUBSCRIBE_TO_KEYGUARD_LOCKED_STATE"/>
         <permission name="android.permission.FORCE_STOP_PACKAGES"/>
+        <permission name="android.permission.WRITE_SECURE_SETTINGS"/>
     </privapp-permissions>
 </permissions>

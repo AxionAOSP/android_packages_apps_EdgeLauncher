@@ -49,6 +49,7 @@ fun EdgeContentView(
     onPanelTap: () -> Unit,
     onPinnedAppClick: (context: Context, packageName: String) -> Unit,
     onAppDrawerClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     sidebarHeight: Int,
     modifier: Modifier = Modifier
 ) {
@@ -103,7 +104,9 @@ fun EdgeContentView(
             LazyColumn(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
             ) {
                 if (pinnedApps.isEmpty()) {
                     item { 
@@ -135,6 +138,30 @@ fun EdgeContentView(
                         )
                     }
                 }
+            }
+
+            Box(
+                modifier = Modifier
+                    .width(32.dp)
+                    .height(1.5.dp)
+                    .clip(RoundedCornerShape(1.dp))
+                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.95f))
+            )
+
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f))
+                    .clickable { onSettingsClick() }
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Settings,
+                    contentDescription = "Settings",
+                    modifier = Modifier.size(22.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

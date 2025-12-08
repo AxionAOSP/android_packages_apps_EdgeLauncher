@@ -25,4 +25,12 @@ object PinnedApps {
         val value = Settings.Secure.getString(context.contentResolver, KEY_PINNED_APPS)
         return value?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
     }
+
+    fun savePinned(context: Context, packages: List<String>) {
+        Settings.Secure.putString(
+            context.contentResolver,
+            KEY_PINNED_APPS,
+            packages.joinToString(",")
+        )
+    }
 }

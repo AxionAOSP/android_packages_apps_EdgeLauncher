@@ -16,6 +16,7 @@
 package com.android.edge.bar
 
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.provider.Settings
@@ -83,6 +84,13 @@ class EdgeSideBar(
                     onPinnedAppClick = { ctx, pkg ->
                         removePanelView()
                         AppHelper.launchApp(pkg)
+                    },
+                    onSettingsClick = {
+                        removePanelView()
+                        context.startActivity(
+                            Intent(context, com.android.edge.bar.settings.SettingsActivity::class.java)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
                     },
                     sidebarHeight = (sidebarHeight / context.resources.displayMetrics.density).roundToInt()
                 )
