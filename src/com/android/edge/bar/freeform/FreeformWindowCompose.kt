@@ -103,6 +103,11 @@ class FreeformWindowCompose(
                 scope = viewModel.scope,
                 onCloseAndKill = { closeWindow() },
                 onBringToFront = { bringToFront() },
+                onMaximizeFullscreen = { 
+                    viewModel.launchFullscreen { 
+                        closeWindow() 
+                    } 
+                },
                 onUpdateWindowLayout = { x, y, w, h -> windowController.updateLayout(x, y, w, h) },
                 onSetupTextureView = { view ->
                     textureView = view

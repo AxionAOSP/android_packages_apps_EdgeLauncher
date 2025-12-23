@@ -85,6 +85,14 @@ object FreeformConstants {
     const val RESIZE_HANDLE_BOTTOM_INDICATOR_MIN_DP = 48
     const val RESIZE_HANDLE_BOTTOM_INDICATOR_MAX_DP = 64
     const val RESIZE_HANDLE_BOTTOM_INDICATOR_HEIGHT_DP = 3
+
+    const val OVERLAY_TITLE_BAR_HEIGHT_DP = 56
+    const val OVERLAY_MENU_BUTTON_SIZE_DP = 36
+    const val OVERLAY_PILL_PADDING_DP = 6
+    const val OVERLAY_PILL_ICON_SIZE_DP = 32
+
+    const val RESIZE_HANDLE_INSET_DP = 4
+    const val RESIZE_HANDLE_BOTTOM_INSET_DP = 8
     
     fun createDefaultWindowState(width: Int, height: Int, x: Int = 0, y: Int = 0): WindowState {
         return WindowState(

@@ -34,6 +34,8 @@ import com.android.edge.bar.freeform.data.FreeformRepository
 import com.android.edge.bar.freeform.data.FreeformRepositoryImpl
 import com.android.edge.bar.freeform.domain.FreeformConstants
 import com.android.axion.kotlin.math.dpToPx
+import android.content.ComponentName
+import android.content.Intent
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.StateFlow
 
@@ -116,10 +118,7 @@ class FreeformWindowViewModel(
             val displayId = currentState.displayId
             if (displayId != Display.INVALID_DISPLAY && displayId > 0) {
                 if (event.actionMasked == MotionEvent.ACTION_DOWN) {
-                    val displayHeight = when (currentState.mode) {
-                        WindowMode.HANGUP -> currentState.height
-                        else -> currentState.height - context.dpToPx(FreeformConstants.TITLE_BAR_HEIGHT_DP)
-                    }
+                    val displayHeight = currentState.height
                     inputInjector.setScale(v.width, v.height, currentState.width, displayHeight)
                 }
 
@@ -181,7 +180,7 @@ class FreeformWindowViewModel(
         onDisplayReady: (Int) -> Unit
     ) {
         val displayWidth = config.width
-        val displayHeight = config.height - config.titleBarHeight
+        val displayHeight = config.height
         
         Log.i(TAG, "onSurfaceTextureAvailable: callback=${width}x${height}, using config=${displayWidth}x${displayHeight}")
 
@@ -271,5 +270,24 @@ class FreeformWindowViewModel(
 
     fun register(window: FreeformWindowCompose) {
         freeformWindowManager.registerWindow(packageName, window)
+    }
+    
+    fun launchFullscreen(onComplete: () -> Unit) {
+        scope.launch {
+            try {
+                val intent = Intent(Intent.ACTION_MAIN).apply {
+                    component = ComponentName(packageName, activityName)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                }
+                context.startActivity(intent)
+                Log.i(TAG, "Launched $packageName/$activityName in fullscreen")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to launch activity in fullscreen", e)
+            } finally {
+                onComplete()
+            }
+        }
     }
 }

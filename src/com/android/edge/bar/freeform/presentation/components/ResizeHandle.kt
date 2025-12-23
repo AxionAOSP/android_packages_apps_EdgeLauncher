@@ -44,7 +44,7 @@ fun CornerResizeHandle(
     onResize: (Float, Float) -> Unit,
     onResizeStart: () -> Unit,
     onResizeEnd: () -> Unit,
-    showIndicator: Boolean,
+    showIndicator: Boolean = false,
     isLeftCorner: Boolean = false,
     handleWidth: Dp = RESIZE_HANDLE_SIZE_DP.dp,
     canvasSize: Dp = RESIZE_HANDLE_CANVAS_SIZE_DP.dp,
@@ -53,8 +53,6 @@ fun CornerResizeHandle(
     cornerRadius: Dp = RESIZE_HANDLE_CORNER_RADIUS_DP.dp,
     modifier: Modifier = Modifier
 ) {
-    val alpha = if (showIndicator) 0.4f else 0f
-    
     Box(
         modifier = modifier
             .size(handleWidth)
@@ -68,48 +66,7 @@ fun CornerResizeHandle(
                     }
                 )
             }
-    ) {
-        Canvas(
-            modifier = Modifier
-                .size(canvasSize)
-                .alpha(alpha)
-                .align(Alignment.Center)
-        ) {
-            val strokeWidthPx = strokeWidth.toPx()
-            val armLengthPx = armLength.toPx()
-            val cornerRadiusPx = cornerRadius.toPx()
-            val halfStroke = strokeWidthPx / 2
-            
-            val path = Path().apply {
-                if (isLeftCorner) {
-                    moveTo(0f, size.height - armLengthPx)
-                    quadraticTo(
-                        x1 = 0f,
-                        y1 = size.height,
-                        x2 = armLengthPx,
-                        y2 = size.height
-                    )
-                } else {
-                    moveTo(size.width, size.height - armLengthPx)
-                    quadraticTo(
-                        x1 = size.width,
-                        y1 = size.height,
-                        x2 = size.width - armLengthPx,
-                        y2 = size.height
-                    )
-                }
-            }
-            drawPath(
-                path = path,
-                color = Color.White,
-                style = Stroke(
-                    width = strokeWidthPx,
-                    cap = StrokeCap.Round,
-                    join = StrokeJoin.Round
-                )
-            )
-        }
-    }
+    )
 }
 
 @Composable
@@ -118,13 +75,25 @@ fun BottomResizeHandle(
     onResizeStart: () -> Unit,
     onResizeEnd: () -> Unit,
     showIndicator: Boolean,
+    isContentLight: Boolean = false,
+    isResizing: Boolean = false,
     handleWidth: Dp = RESIZE_HANDLE_BOTTOM_WIDTH_DP.dp,
     handleHeight: Dp = RESIZE_HANDLE_BOTTOM_HEIGHT_DP.dp,
     indicatorWidth: Dp = RESIZE_HANDLE_BOTTOM_INDICATOR_DP.dp,
     indicatorHeight: Dp = RESIZE_HANDLE_BOTTOM_INDICATOR_HEIGHT_DP.dp,
     modifier: Modifier = Modifier
 ) {
-    val alpha = if (showIndicator) 0.4f else 0.25f
+    val alpha = when {
+        isResizing -> 0f
+        showIndicator -> 0.6f
+        else -> 0.4f
+    }
+    
+    val handleColor = if (isContentLight) {
+        Color(0xFF1C1C1E)
+    } else {
+        Color.White
+    }
     
     Box(
         modifier = modifier
@@ -149,7 +118,7 @@ fun BottomResizeHandle(
                 .align(Alignment.Center)
         ) {
             drawRoundRect(
-                color = Color.White,
+                color = handleColor,
                 cornerRadius = CornerRadius(size.height / 2, size.height / 2),
                 size = size
             )

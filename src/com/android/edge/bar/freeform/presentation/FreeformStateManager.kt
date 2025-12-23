@@ -42,12 +42,15 @@ sealed class WindowEvent {
     object DragEnd : WindowEvent()
 
     object Minimize : WindowEvent()
+    object Hangup : WindowEvent()
     object BubbleTap : WindowEvent()
     object HangupTap : WindowEvent()
 
     object ResizeStart : WindowEvent()
     data class Resize(val newWidth: Int, val newHeight: Int) : WindowEvent()
     object ResizeEnd : WindowEvent()
+    
+    object Maximize : WindowEvent()
     
     data class IconLoaded(val icon: Bitmap) : WindowEvent()
 }
@@ -133,10 +136,7 @@ class FreeformStateManager(
     
     private fun getDisplayDimensions(): Pair<Int, Int> {
         val displayWidth = currentState.width
-        val displayHeight = when (currentState.mode) {
-            WindowMode.HANGUP -> currentState.height
-            else -> currentState.height - context.dpToPx(FreeformConstants.TITLE_BAR_HEIGHT_DP)
-        }
+        val displayHeight = currentState.height
         return displayWidth to displayHeight
     }
     
@@ -181,12 +181,14 @@ class FreeformStateManager(
             is WindowEvent.DragEnd -> handleDragEnd()
             
             is WindowEvent.Minimize -> handleMinimize()
+            is WindowEvent.Hangup -> enterHangupMode()
             is WindowEvent.BubbleTap -> handleBubbleExpand()
             is WindowEvent.HangupTap -> handleHangupTap()
             
             is WindowEvent.ResizeStart -> handleResizeStart()
             is WindowEvent.Resize -> handleResize(event.newWidth, event.newHeight)
             is WindowEvent.ResizeEnd -> handleResizeEnd()
+            is WindowEvent.Maximize -> handleMaximize()
             
             is WindowEvent.IconLoaded -> updateState { copy(appIcon = event.icon) }
         }
@@ -458,6 +460,58 @@ class FreeformStateManager(
         dispatch(WindowEvent.SurfaceSettled)
     }
     
+    private suspend fun handleMaximize() {
+        if (currentState.mode != WindowMode.NORMAL) return
+        
+        surfaceEventsManager.dispatch(SurfaceEvent.ShowVeilRequested(VeilReason.RESIZE_STARTED))
+        surfaceEventsManager.dispatch(SurfaceEvent.OperationStarted("maximize"))
+        
+        val displayId = currentState.displayId
+        if (displayId >= 0) {
+            repository.pauseDisplay(displayId)
+        }
+        
+        val padding = context.dpToPx(32)
+        val maxWidth = screenWidth - (padding * 2)
+        val maxHeight = screenHeight - (padding * 2)
+        
+        val targetWidth: Int
+        val targetHeight: Int
+        val aspectRatio = FreeformConstants.DEFAULT_ASPECT_RATIO
+        
+        if (maxWidth / aspectRatio <= maxHeight) {
+            targetWidth = maxWidth
+            targetHeight = (maxWidth / aspectRatio).toInt()
+        } else {
+            targetHeight = maxHeight
+            targetWidth = (maxHeight * aspectRatio).toInt()
+        }
+        
+        val targetX = (screenWidth - targetWidth) / 2
+        val targetY = (screenHeight - targetHeight) / 2
+        
+        updateState {
+            copy(
+                x = targetX,
+                y = targetY,
+                width = targetWidth,
+                height = targetHeight,
+                isPaused = true
+            )
+        }
+        
+        if (displayId >= 0) {
+            repository.resumeDisplay(displayId)
+        }
+        
+        val (displayWidth, displayHeight) = getDisplayDimensions()
+        _effect.emit(FreeformEffect.ResizeDisplay(displayWidth, displayHeight))
+        
+        delay(FreeformConstants.DELAY_SURFACE_SETTLE_MS)
+        surfaceEventsManager.dispatch(SurfaceEvent.OperationCompleted("maximize"))
+        dispatch(WindowEvent.SurfaceSettled)
+    }
+    
     private fun snapBubbleToSafeZone() {
         val bubbleSize = currentState.width
         val safeTop = context.dpToPx(FreeformConstants.SAFE_ZONE_TOP_DP)
@@ -516,6 +570,10 @@ class FreeformStateManager(
         dispatch(WindowEvent.Minimize)
     }
     
+    fun onHangup() {
+        dispatch(WindowEvent.Hangup)
+    }
+    
     fun onBubbleTap() {
         dispatch(WindowEvent.BubbleTap)
     }
@@ -534,6 +592,10 @@ class FreeformStateManager(
     
     fun onResizeEnd() {
         dispatch(WindowEvent.ResizeEnd)
+    }
+    
+    fun onMaximize() {
+        dispatch(WindowEvent.Maximize)
     }
     
     fun setDisplayId(displayId: Int) {
