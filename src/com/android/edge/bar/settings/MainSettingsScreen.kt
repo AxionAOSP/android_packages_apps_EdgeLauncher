@@ -49,7 +49,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.android.edge.bar.SidebarReceiver
 
 private const val SIDELINE_KEY = "sidebar_feature_enabled"
 
@@ -135,13 +134,6 @@ fun MainSettingsScreen(
                     onCheckedChange = { enabled ->
                         isEdgeBarEnabled = enabled
                         Settings.Secure.putInt(context.contentResolver, SIDELINE_KEY, if (enabled) 1 else 0)
-                        
-                        val action = if (enabled) {
-                            SidebarReceiver.ACTION_START_SIDEBAR
-                        } else {
-                            SidebarReceiver.ACTION_STOP_SIDEBAR
-                        }
-                        context.sendBroadcast(Intent(action).setPackage(context.packageName))
                     }
                 )
                 

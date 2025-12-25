@@ -26,9 +26,12 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.database.ContentObserver
 import android.graphics.PixelFormat
 import android.graphics.Rect
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.os.Process
 import android.os.ServiceManager
 import android.os.UserHandle
@@ -71,6 +74,20 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
     private lateinit var taskStackListener: FreeformTaskStackListener
 
     private var idleJob: Job? = null
+    
+    private val sidelineSettingObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+        override fun onChange(selfChange: Boolean) {
+            val enabled = getSecureBoolean(SIDELINE, false)
+            if (enabled != showSideline) {
+                showSideline = enabled
+                if (showSideline) {
+                    showSidelineView()
+                } else {
+                    hideSidelineView()
+                }
+            }
+        }
+    }
     
     private val sideLineView by lazy {
         val gestureManager = MGestureManager(this@EdgeService, GestureListener(this@EdgeService))
@@ -169,6 +186,12 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
         showSideline = getSecureBoolean(SIDELINE, false)
         if (showSideline) showSidelineView()
         
+        contentResolverRef.registerContentObserver(
+            Settings.Secure.getUriFor(SIDELINE),
+            false,
+            sidelineSettingObserver
+        )
+        
         return START_STICKY
     }
 
@@ -188,6 +211,8 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
     override fun onDestroy() {
         super.onDestroy()
 
+        contentResolverRef.unregisterContentObserver(sidelineSettingObserver)
+        
         if (::taskStackListener.isInitialized) {
             taskStackListener.unregister()
         }
@@ -336,6 +361,16 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
     private fun animateShowSideline() {
         mainScope.launch {
             sideLineView.animate().translationX(0f).setDuration(300).start()
+        }
+    }
+    
+    private fun hideSidelineView() {
+        if (!isSidelineVisible) return
+        mainScope.launch {
+            try {
+                windowManager.removeViewImmediate(sideLineView)
+                isSidelineVisible = false
+            } catch (_: Exception) { }
         }
     }
 
