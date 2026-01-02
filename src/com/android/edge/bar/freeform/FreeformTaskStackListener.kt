@@ -18,8 +18,8 @@ package com.android.edge.bar.freeform
 import android.app.ActivityManager
 import android.app.ActivityTaskManager
 import android.app.TaskStackListener
-import android.content.ComponentName
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.util.Log
 
 class FreeformTaskStackListener(
@@ -98,6 +98,32 @@ class FreeformTaskStackListener(
                 Log.d(TAG, "Freeform window task moved to front: $packageName")
                 windowManager.bringToFront(packageName)
             }
+        }
+    }
+
+    override fun onTaskRequestedOrientationChanged(taskId: Int, requestedOrientation: Int) {
+        super.onTaskRequestedOrientationChanged(taskId, requestedOrientation)
+        try {
+            val tasks = activityTaskManager.getTasks(100)
+            val taskInfo = tasks.find { it.taskId == taskId }
+            val displayId = taskInfo?.displayId ?: return
+            
+            val isLandscape = isLandscapeOrientation(requestedOrientation)
+            Log.d(TAG, "Task $taskId orientation changed: $requestedOrientation (landscape=$isLandscape) on display $displayId")
+            
+            windowManager.notifyOrientationChanged(displayId, isLandscape)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error handling orientation change", e)
+        }
+    }
+
+    private fun isLandscapeOrientation(orientation: Int): Boolean {
+        return when (orientation) {
+            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE,
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE,
+            ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE,
+            ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE -> true
+            else -> false
         }
     }
 }

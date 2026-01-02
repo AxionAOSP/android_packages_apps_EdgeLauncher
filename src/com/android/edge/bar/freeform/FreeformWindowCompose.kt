@@ -34,7 +34,8 @@ class FreeformWindowCompose(
     private val context: Context,
     private val packageName: String,
     private val activityName: String,
-    private val userId: Int
+    private val userId: Int,
+    private val taskId: Int = -1
 ) : TextureView.SurfaceTextureListener {
 
     companion object {
@@ -50,6 +51,7 @@ class FreeformWindowCompose(
         packageName = packageName,
         activityName = activityName,
         userId = userId,
+        taskId = taskId,
         onWindowDead = { destroy("App killed externally") }
     )
 
@@ -102,6 +104,7 @@ class FreeformWindowCompose(
                 density = viewModel.density,
                 scope = viewModel.scope,
                 onCloseAndKill = { closeWindow() },
+                onBack = { viewModel.onBackPress() },
                 onBringToFront = { bringToFront() },
                 onMaximizeFullscreen = { 
                     viewModel.launchFullscreen { 

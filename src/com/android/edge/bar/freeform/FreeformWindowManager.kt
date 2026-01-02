@@ -35,6 +35,7 @@ class FreeformWindowManager private constructor(private val context: Context) {
     }
 
     private val windows = ConcurrentHashMap<String, FreeformWindowCompose>()
+    private val displayIdToPackage = ConcurrentHashMap<Int, String>()
     private var focusedWindow: FreeformWindowCompose? = null
     private val listeners = mutableListOf<WindowEventListener>()
     private val bubbleSlots = ConcurrentHashMap<String, Int>()
@@ -67,6 +68,7 @@ class FreeformWindowManager private constructor(private val context: Context) {
         fun onWindowAdded(packageName: String, window: FreeformWindowCompose) {}
         fun onWindowRemoved(packageName: String) {}
         fun onWindowFocusChanged(packageName: String?, hasFocus: Boolean) {}
+        fun onWindowOrientationChanged(packageName: String, isLandscape: Boolean) {}
     }
 
     fun registerWindow(packageName: String, window: FreeformWindowCompose) {
@@ -106,10 +108,6 @@ class FreeformWindowManager private constructor(private val context: Context) {
         val newFocusedWindow = packageName?.let { windows[it] }
         
         if (focusedWindow != newFocusedWindow) {
-            focusedWindow?.let {
-                // todo: focused based back gesture intercept
-            }
-            
             focusedWindow = newFocusedWindow
             
             listeners.forEach { 
@@ -185,5 +183,26 @@ class FreeformWindowManager private constructor(private val context: Context) {
 
     fun getBubbleSlot(packageName: String): Int? {
         return bubbleSlots[packageName]
+    }
+
+    fun registerDisplayId(displayId: Int, packageName: String) {
+        displayIdToPackage[displayId] = packageName
+        Log.d(TAG, "Registered displayId $displayId for $packageName")
+    }
+
+    fun unregisterDisplayId(displayId: Int) {
+        displayIdToPackage.remove(displayId)?.let {
+            Log.d(TAG, "Unregistered displayId $displayId (was $it)")
+        }
+    }
+
+    fun getPackageForDisplayId(displayId: Int): String? {
+        return displayIdToPackage[displayId]
+    }
+
+    fun notifyOrientationChanged(displayId: Int, isLandscape: Boolean) {
+        val packageName = displayIdToPackage[displayId] ?: return
+        Log.d(TAG, "Orientation changed for $packageName: isLandscape=$isLandscape")
+        listeners.forEach { it.onWindowOrientationChanged(packageName, isLandscape) }
     }
 }

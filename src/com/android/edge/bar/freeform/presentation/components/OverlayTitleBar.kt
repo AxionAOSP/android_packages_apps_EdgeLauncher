@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Fullscreen
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.PictureInPictureAlt
@@ -59,6 +60,7 @@ fun OverlayTitleBar(
     isContentLight: Boolean,
     isMenuExpanded: Boolean,
     onMenuExpandedChange: (Boolean) -> Unit,
+    onBack: () -> Unit,
     showEducation: Boolean = false,
     onEducationDismissed: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -183,7 +185,12 @@ fun OverlayTitleBar(
                    scaleOut(targetScale = 0.9f, animationSpec = tween(150))
         ) {
             MenuPill(
+                onBack = {
+                    onMenuExpandedChange(false)
+                    onBack()
+                },
                 onClose = {
+
                     onMenuExpandedChange(false)
                     onClose()
                 },
@@ -212,6 +219,7 @@ fun OverlayTitleBar(
 
 @Composable
 private fun MenuPill(
+    onBack: () -> Unit,
     onClose: () -> Unit,
     onMinimize: () -> Unit,
     onHangup: () -> Unit,
@@ -237,6 +245,13 @@ private fun MenuPill(
                 icon = Icons.Rounded.KeyboardArrowUp,
                 contentDescription = "Collapse",
                 onClick = onCollapse,
+                tint = contentColor
+            )
+
+            PillIconButton(
+                icon = Icons.Rounded.ArrowBack,
+                contentDescription = "Back",
+                onClick = onBack,
                 tint = contentColor
             )
             

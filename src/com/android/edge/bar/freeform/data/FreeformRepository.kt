@@ -34,6 +34,10 @@ interface FreeformRepository {
 
     suspend fun launchApp(packageName: String, activityName: String, displayId: Int, userId: Int): Result<Unit>
 
+    suspend fun moveRootTaskToDisplay(taskId: Int, displayId: Int): Result<Unit>
+
+    suspend fun injectBackKey(displayId: Int): Result<Unit>
+
     suspend fun resizeDisplay(appToken: android.os.IBinder, width: Int, height: Int, densityDpi: Int): Result<Unit>
 
     suspend fun releaseDisplay(appToken: android.os.IBinder): Result<Unit>

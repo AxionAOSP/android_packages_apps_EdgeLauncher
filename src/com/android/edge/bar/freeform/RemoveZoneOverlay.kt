@@ -110,20 +110,16 @@ class RemoveZoneOverlay(private val context: Context) {
         val pillWidthPx = pillWidth * density
         val pillHeightPx = pillHeight * density
         val pillTopPx = pillTopOffset * density
-        
-        val pillLeft = (screenWidth - pillWidthPx) / 2
-        val pillRight = pillLeft + pillWidthPx
-        val pillTop = pillTopPx
-        val pillBottom = pillTopPx + pillHeightPx
-        
         val tolerance = FreeformConstants.REMOVE_PILL_TOLERANCE_DP * density
         
-        val inZone = bubbleX >= (pillLeft - tolerance) && 
-               bubbleX <= (pillRight + tolerance) && 
-               bubbleY >= (pillTop - tolerance) && 
-               bubbleY <= (pillBottom + tolerance)
-
-        return inZone
+        val centerX = screenWidth / 2f
+        val halfZoneWidth = (pillWidthPx / 2f) + tolerance
+        val removeZoneBottom = pillTopPx + pillHeightPx + tolerance
+        
+        val inXRange = bubbleX >= (centerX - halfZoneWidth) && bubbleX <= (centerX + halfZoneWidth)
+        val inYRange = bubbleY <= removeZoneBottom
+        
+        return inXRange && inYRange
     }
     
     fun destroy() {

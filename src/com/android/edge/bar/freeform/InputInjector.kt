@@ -16,22 +16,23 @@
 package com.android.edge.bar.freeform
 
 import android.content.Context
+import android.hardware.input.IInputManager
 import android.hardware.input.InputManager
+import android.os.ServiceManager
 import android.os.SystemClock
 import android.util.Log
-import android.view.InputDevice
-import android.view.InputEvent
-import android.view.KeyCharacterMap
-import android.view.KeyEvent
-import android.view.MotionEvent
-import android.view.VelocityTracker
-import android.view.ViewConfiguration
-import com.android.axion.kotlin.math.lerp
+import android.view.*
 
 class InputInjector(private val context: Context) {
 
     private val inputManager: InputManager by lazy {
         context.getSystemService(Context.INPUT_SERVICE) as InputManager
+    }
+
+    private val inputManagerService: IInputManager by lazy {
+        IInputManager.Stub.asInterface(
+            ServiceManager.getService(Context.INPUT_SERVICE)
+        )
     }
 
     var isFocused: Boolean = false
@@ -239,11 +240,19 @@ class InputInjector(private val context: Context) {
             return
         }
         
+        if (displayId == Display.DEFAULT_DISPLAY) {
+            Log.w(TAG, "Attempted to inject key event to default display, aborting to prevent leaks")
+            return
+        }
+        
         val now = SystemClock.uptimeMillis()
+        
+        val flags = KeyEvent.FLAG_FROM_SYSTEM or KeyEvent.FLAG_VIRTUAL_HARD_KEY
         
         val downEvent = KeyEvent(
             now, now, KeyEvent.ACTION_DOWN, keyCode, 0, 0,
-            KeyCharacterMap.VIRTUAL_KEYBOARD, 0, 0,
+            KeyCharacterMap.VIRTUAL_KEYBOARD, 0, 
+            flags,
             InputDevice.SOURCE_KEYBOARD
         ).apply {
             setDisplayId(displayId)
@@ -254,7 +263,7 @@ class InputInjector(private val context: Context) {
             val repeatEvent = KeyEvent(
                 now, now, KeyEvent.ACTION_DOWN, keyCode, 1, 0,
                 KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
-                KeyEvent.FLAG_LONG_PRESS,
+                flags or KeyEvent.FLAG_LONG_PRESS,
                 InputDevice.SOURCE_KEYBOARD
             ).apply {
                 setDisplayId(displayId)
@@ -264,7 +273,8 @@ class InputInjector(private val context: Context) {
         
         val upEvent = KeyEvent(
             now, now, KeyEvent.ACTION_UP, keyCode, 0, 0,
-            KeyCharacterMap.VIRTUAL_KEYBOARD, 0, 0,
+            KeyCharacterMap.VIRTUAL_KEYBOARD, 0, 
+            flags,
             InputDevice.SOURCE_KEYBOARD
         ).apply {
             setDisplayId(displayId)
@@ -273,13 +283,47 @@ class InputInjector(private val context: Context) {
     }
     
     fun injectBackButton(): Boolean {
-        if (!isFocused) {
-            Log.d(TAG, "Window not focused, not injecting back button")
+        if (displayId < 0) {
+            Log.w(TAG, "Display ID not set, cannot inject back button")
             return false
         }
         
-        injectKeyEvent(KeyEvent.KEYCODE_BACK)
-        return true
+        if (displayId == Display.DEFAULT_DISPLAY) {
+            Log.w(TAG, "Attempted to inject back to default display, aborting")
+            return false
+        }
+        
+        val now = SystemClock.uptimeMillis()
+        
+        val downEvent = KeyEvent(
+            now, now,
+            KeyEvent.ACTION_DOWN,
+            KeyEvent.KEYCODE_BACK,
+            0
+        ).apply {
+            source = InputDevice.SOURCE_KEYBOARD
+            setDisplayId(displayId)
+        }
+        
+        val upEvent = KeyEvent(
+            now, now,
+            KeyEvent.ACTION_UP,
+            KeyEvent.KEYCODE_BACK,
+            0
+        ).apply {
+            source = InputDevice.SOURCE_KEYBOARD
+            setDisplayId(displayId)
+        }
+        
+        return try {
+            inputManagerService.injectInputEvent(downEvent, INJECT_INPUT_EVENT_MODE_ASYNC)
+            inputManagerService.injectInputEvent(upEvent, INJECT_INPUT_EVENT_MODE_ASYNC)
+            Log.d(TAG, "Injected back button via IInputManager to display $displayId")
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to inject back button via IInputManager", e)
+            false
+        }
     }
 
     private fun injectMotionEvent(

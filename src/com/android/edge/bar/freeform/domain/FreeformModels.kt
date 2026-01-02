@@ -27,14 +27,14 @@ object FreeformConstants {
     const val HANGUP_WIDTH = 150
     const val HANGUP_HEIGHT = 200
 
-    const val MIN_WINDOW_WIDTH_DP = 135
-    const val MIN_WINDOW_HEIGHT_DP = 197.5f
+    const val MIN_WINDOW_WIDTH_DP = 150
+    const val MIN_WINDOW_HEIGHT_DP = 200f
 
     const val MAX_WINDOW_WIDTH_DP = 1200
     const val MAX_WINDOW_HEIGHT_DP = 1500
 
-    const val DEFAULT_WIDTH_DP = 270
-    const val DEFAULT_HEIGHT_DP = 395
+    const val DEFAULT_WIDTH_DP = 220
+    const val DEFAULT_HEIGHT_DP = 340
     const val DEFAULT_ASPECT_RATIO = DEFAULT_WIDTH_DP.toFloat() / DEFAULT_HEIGHT_DP.toFloat()
 
     const val REMOVE_PILL_WIDTH_DP = 140
@@ -63,9 +63,9 @@ object FreeformConstants {
     const val TITLE_BAR_BUTTON_WIDTH_MIN_DP = 42
     const val TITLE_BAR_BUTTON_WIDTH_MAX_DP = 56
 
-    const val RESIZE_HANDLE_SIZE_DP = 40
-    const val RESIZE_HANDLE_SIZE_MIN_DP = 32
-    const val RESIZE_HANDLE_SIZE_MAX_DP = 48
+    const val RESIZE_HANDLE_SIZE_DP = 56
+    const val RESIZE_HANDLE_SIZE_MIN_DP = 44
+    const val RESIZE_HANDLE_SIZE_MAX_DP = 64
     const val RESIZE_HANDLE_CANVAS_SIZE_DP = 32
     const val RESIZE_HANDLE_CANVAS_MIN_DP = 26
     const val RESIZE_HANDLE_CANVAS_MAX_DP = 40
@@ -76,11 +76,12 @@ object FreeformConstants {
     const val RESIZE_HANDLE_STROKE_MIN_DP = 2.5f
     const val RESIZE_HANDLE_STROKE_MAX_DP = 3.5f
     const val RESIZE_HANDLE_CORNER_RADIUS_DP = 40
+    const val RESIZE_HANDLE_INSET_DP = -16
 
     const val RESIZE_HANDLE_BOTTOM_WIDTH_DP = 100
     const val RESIZE_HANDLE_BOTTOM_WIDTH_MIN_DP = 80
     const val RESIZE_HANDLE_BOTTOM_WIDTH_MAX_DP = 120
-    const val RESIZE_HANDLE_BOTTOM_HEIGHT_DP = 24
+    const val RESIZE_HANDLE_BOTTOM_HEIGHT_DP = 36
     const val RESIZE_HANDLE_BOTTOM_INDICATOR_DP = 56
     const val RESIZE_HANDLE_BOTTOM_INDICATOR_MIN_DP = 48
     const val RESIZE_HANDLE_BOTTOM_INDICATOR_MAX_DP = 64
@@ -91,8 +92,7 @@ object FreeformConstants {
     const val OVERLAY_PILL_PADDING_DP = 6
     const val OVERLAY_PILL_ICON_SIZE_DP = 32
 
-    const val RESIZE_HANDLE_INSET_DP = 4
-    const val RESIZE_HANDLE_BOTTOM_INSET_DP = 8
+    const val RESIZE_HANDLE_BOTTOM_INSET_DP = -8
     
     fun createDefaultWindowState(width: Int, height: Int, x: Int = 0, y: Int = 0): WindowState {
         return WindowState(

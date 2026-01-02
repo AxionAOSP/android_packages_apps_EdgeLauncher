@@ -53,6 +53,8 @@ sealed class WindowEvent {
     object Maximize : WindowEvent()
     
     data class IconLoaded(val icon: Bitmap) : WindowEvent()
+    
+    data class OrientationChanged(val isLandscape: Boolean) : WindowEvent()
 }
 
 sealed class FreeformEffect {
@@ -90,7 +92,9 @@ data class WindowState(
     val appIcon: Bitmap? = null,
     val isResizing: Boolean = false,
     
-    val snapPosition: WindowSnapping.SnapPosition? = null
+    val snapPosition: WindowSnapping.SnapPosition? = null,
+    
+    val isLandscape: Boolean = false
 )
 
 class FreeformStateManager(
@@ -191,6 +195,8 @@ class FreeformStateManager(
             is WindowEvent.Maximize -> handleMaximize()
             
             is WindowEvent.IconLoaded -> updateState { copy(appIcon = event.icon) }
+            
+            is WindowEvent.OrientationChanged -> handleOrientationChanged(event.isLandscape)
         }
     }
     
@@ -198,6 +204,45 @@ class FreeformStateManager(
         surfaceEventsManager.dispatch(SurfaceEvent.ShowVeilRequested(VeilReason.DISPLAY_CREATED))
         surfaceEventsManager.dispatch(SurfaceEvent.OperationStarted("display_init"))
         updateState { copy(displayId = displayId) }
+        freeformWindowManager.registerDisplayId(displayId, packageName)
+    }
+    
+    private suspend fun handleOrientationChanged(isLandscape: Boolean) {
+        if (currentState.isLandscape == isLandscape) return
+        if (currentState.mode != WindowMode.NORMAL) return
+        
+        Log.d(TAG, "Orientation changed to landscape=$isLandscape")
+        
+        surfaceEventsManager.dispatch(SurfaceEvent.ShowVeilRequested(VeilReason.RESIZE_STARTED))
+        surfaceEventsManager.dispatch(SurfaceEvent.OperationStarted("orientation_change"))
+        
+        val displayId = currentState.displayId
+        if (displayId >= 0) {
+            repository.pauseDisplay(displayId)
+        }
+        
+        val newWidth = currentState.height
+        val newHeight = currentState.width
+        
+        updateState {
+            copy(
+                width = newWidth,
+                height = newHeight,
+                isLandscape = isLandscape,
+                isPaused = true
+            )
+        }
+        
+        if (displayId >= 0) {
+            repository.resumeDisplay(displayId)
+        }
+        
+        val (displayWidth, displayHeight) = getDisplayDimensions()
+        _effect.emit(FreeformEffect.ResizeDisplay(displayWidth, displayHeight))
+        
+        delay(FreeformConstants.DELAY_SURFACE_SETTLE_MS)
+        surfaceEventsManager.dispatch(SurfaceEvent.OperationCompleted("orientation_change"))
+        dispatch(WindowEvent.SurfaceSettled)
     }
     
     private fun handleDisplayPaused() {
@@ -246,7 +291,7 @@ class FreeformStateManager(
             val isOffRightEdge = windowRight > screenWidth + threshold
             val isOffLeftEdge = currentState.x < -threshold
             
-            if (isOffRightEdge || isOffLeftEdge) {
+            if ((isOffRightEdge || isOffLeftEdge) && !currentState.isResizing) {
                 scope.launch { enterHangupMode() }
             }
         }
@@ -342,8 +387,14 @@ class FreeformStateManager(
 
     private suspend fun handleHangupTap() {
         if (currentState.mode == WindowMode.HANGUP) {
-            val targetWidth = currentState.savedWidth
-            val targetHeight = currentState.savedHeight
+            var targetWidth = currentState.savedWidth
+            var targetHeight = currentState.savedHeight
+            
+            if (currentState.isLandscape && targetHeight > targetWidth) {
+                val temp = targetWidth
+                targetWidth = targetHeight
+                targetHeight = temp
+            }
             
             val safeX = if (currentState.savedX < 0 || currentState.savedX > screenWidth - targetWidth) {
                 (screenWidth - targetWidth) / 2
@@ -383,8 +434,15 @@ class FreeformStateManager(
         surfaceEventsManager.dispatch(SurfaceEvent.ShowVeilRequested(VeilReason.HANGUP_EXPAND))
         surfaceEventsManager.dispatch(SurfaceEvent.OperationStarted("enter_hangup"))
         
-        val hangupWidthPx = context.dpToPx(hangupWidthDp)
-        val hangupHeightPx = context.dpToPx(hangupHeightDp)
+        val hangupWidthPx: Int
+        val hangupHeightPx: Int
+        if (currentState.isLandscape) {
+            hangupWidthPx = context.dpToPx(hangupHeightDp)
+            hangupHeightPx = context.dpToPx(hangupWidthDp)
+        } else {
+            hangupWidthPx = context.dpToPx(hangupWidthDp)
+            hangupHeightPx = context.dpToPx(hangupHeightDp)
+        }
         
         val centeredX = (screenWidth - currentState.savedWidth) / 2
         val centeredY = (screenHeight - currentState.savedHeight) / 2
@@ -425,19 +483,24 @@ class FreeformStateManager(
     private fun handleResize(newWidth: Int, newHeight: Int) {
         if (currentState.mode == WindowMode.HANGUP) return
 
-        var width = newWidth
-        var height = newHeight
+        val baseMinWidth = context.dpToPx(FreeformConstants.HANGUP_WIDTH)
+        val baseMinHeight = context.dpToPx(FreeformConstants.HANGUP_HEIGHT)
         
-        val minWidthPx = context.dpToPx(FreeformConstants.MIN_WINDOW_WIDTH_DP)
-        val minHeightPx = context.dpToPx(FreeformConstants.MIN_WINDOW_HEIGHT_DP)
-
-        if (newWidth == minWidthPx && newHeight == minHeightPx) {
-            return   
+        val minWidthPx: Int
+        val minHeightPx: Int
+        if (currentState.isLandscape) {
+            minWidthPx = baseMinHeight
+            minHeightPx = baseMinWidth
+        } else {
+            minWidthPx = baseMinWidth
+            minHeightPx = baseMinHeight
         }
 
-        if (newWidth < minWidthPx || newHeight < minHeightPx) {
-            width = minWidthPx
-            height = minHeightPx
+        var width = newWidth.coerceAtLeast(minWidthPx)
+        var height = newHeight.coerceAtLeast(minHeightPx)
+        
+        if (currentState.isLandscape && height > width) {
+            height = width
         }
         
         updateState { copy(width = width, height = height) }
@@ -477,14 +540,14 @@ class FreeformStateManager(
         
         val targetWidth: Int
         val targetHeight: Int
-        val aspectRatio = FreeformConstants.DEFAULT_ASPECT_RATIO
+        val currentAspectRatio = currentState.width.toFloat() / currentState.height.toFloat()
         
-        if (maxWidth / aspectRatio <= maxHeight) {
+        if (maxWidth / currentAspectRatio <= maxHeight) {
             targetWidth = maxWidth
-            targetHeight = (maxWidth / aspectRatio).toInt()
+            targetHeight = (maxWidth / currentAspectRatio).toInt()
         } else {
             targetHeight = maxHeight
-            targetWidth = (maxHeight * aspectRatio).toInt()
+            targetWidth = (maxHeight * currentAspectRatio).toInt()
         }
         
         val targetX = (screenWidth - targetWidth) / 2
@@ -602,6 +665,10 @@ class FreeformStateManager(
         dispatch(WindowEvent.DisplayCreated(displayId))
     }
     
+    fun onOrientationChanged(isLandscape: Boolean) {
+        dispatch(WindowEvent.OrientationChanged(isLandscape))
+    }
+    
     fun isHangupMode(): Boolean = currentState.mode == WindowMode.HANGUP
     
     fun isSurfaceReady(): Boolean = currentState.isSurfaceReady
@@ -611,6 +678,10 @@ class FreeformStateManager(
     }
     
     fun destroy() {
+        val displayId = currentState.displayId
+        if (displayId >= 0) {
+            freeformWindowManager.unregisterDisplayId(displayId)
+        }
         updateState { copy(isDestroyed = true) }
     }
 }

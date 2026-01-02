@@ -17,21 +17,25 @@ package com.android.edge.bar.freeform.data
 
 import android.app.ActivityManager
 import android.app.ActivityOptions
+import android.app.ActivityTaskManager
+import android.app.IFreeformDisplayCallback
+import android.app.IFreeformOverlayManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.SurfaceTexture
 import android.hardware.display.DisplayManager
+import android.hardware.input.IInputManager
 import android.os.IBinder
 import android.os.ServiceManager
+import android.os.SystemClock
 import android.util.Log
 import android.view.Display
+import android.view.InputDevice
+import android.view.KeyEvent
 import android.view.Surface
 import androidx.core.graphics.drawable.toBitmap
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import android.app.IFreeformOverlayManager
-import android.app.IFreeformDisplayCallback
+import kotlinx.coroutines.*
 
 class FreeformRepositoryImpl(
     private val context: Context
@@ -145,6 +149,43 @@ class FreeformRepositoryImpl(
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to launch app", e)
+            Result.failure(e)
+        }
+    }
+    
+    override suspend fun moveRootTaskToDisplay(taskId: Int, displayId: Int): Result<Unit> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            ActivityTaskManager.getService().moveRootTaskToDisplay(taskId, displayId)
+            Log.i(TAG, "Moved task $taskId to display $displayId")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to move task $taskId to display $displayId", e)
+            Result.failure(e)
+        }
+    }
+    
+    override suspend fun injectBackKey(displayId: Int): Result<Unit> = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val inputManagerService = IInputManager.Stub.asInterface(
+                ServiceManager.getService(Context.INPUT_SERVICE)
+            )
+            val now = SystemClock.uptimeMillis()
+            
+            val downEvent = KeyEvent(now, now, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK, 0).apply {
+                source = InputDevice.SOURCE_KEYBOARD
+                setDisplayId(displayId)
+            }
+            val upEvent = KeyEvent(now, now, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK, 0).apply {
+                source = InputDevice.SOURCE_KEYBOARD
+                setDisplayId(displayId)
+            }
+            
+            inputManagerService.injectInputEvent(downEvent, 0)
+            inputManagerService.injectInputEvent(upEvent, 0)
+            Log.d(TAG, "Injected back key to display $displayId")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to inject back key to display $displayId", e)
             Result.failure(e)
         }
     }

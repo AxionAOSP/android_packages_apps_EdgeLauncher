@@ -20,11 +20,16 @@ import android.graphics.Bitmap
 import android.util.Log
 import android.view.TextureView
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.scaleIn as composeScaleIn
 import androidx.compose.animation.scaleOut as composeScaleOut
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,13 +38,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.*
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.android.edge.bar.freeform.FreeformWindowManager
 import com.android.edge.bar.freeform.presentation.components.*
@@ -52,27 +60,13 @@ import com.android.edge.bar.freeform.domain.FreeformConstants.BUBBLE_SIZE_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.DEFAULT_WIDTH_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.DEFAULT_HEIGHT_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.DEFAULT_ASPECT_RATIO
-import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_CORNER_RADIUS_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_SIZE_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_SIZE_MIN_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_SIZE_MAX_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_CANVAS_SIZE_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_CANVAS_MIN_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_CANVAS_MAX_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_ARM_LENGTH_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_ARM_MIN_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_ARM_MAX_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_STROKE_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_STROKE_MIN_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_STROKE_MAX_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_WIDTH_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_WIDTH_MIN_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_WIDTH_MAX_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_HEIGHT_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_INDICATOR_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_INDICATOR_MIN_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_INDICATOR_MAX_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_INDICATOR_HEIGHT_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_INSET_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_INSET_DP
 import com.android.axion.kotlin.math.dpToPx
@@ -88,6 +82,7 @@ fun FreeformWindowContent(
     density: Float,
     scope: CoroutineScope,
     onCloseAndKill: () -> Unit,
+    onBack: () -> Unit,
     onBringToFront: () -> Unit,
     onMaximizeFullscreen: () -> Unit,
     onUpdateWindowLayout: (Int, Int, Int, Int) -> Unit,
@@ -116,6 +111,7 @@ fun FreeformWindowContent(
             sizeFactor = sizeFactor,
             scope = scope,
             onClose = onCloseAndKill,
+            onBack = onBack,
             onMaximizeFullscreen = onMaximizeFullscreen,
             onBringToFront = onBringToFront,
             onSetupTextureView = onSetupTextureView,
@@ -150,20 +146,13 @@ private fun BubbleModeView(
     var isInRemoveZone by remember { mutableStateOf(false) }
     val bubbleSizePx = BUBBLE_SIZE_DP * density
 
-    var currentBubbleX by remember { mutableStateOf(state.x.toFloat()) }
-    var currentBubbleY by remember { mutableStateOf(state.y.toFloat()) }
+    var dragX by remember { mutableFloatStateOf(0f) }
+    var dragY by remember { mutableFloatStateOf(0f) }
+
+    fun getBubbleCenterX() = dragX + bubbleSizePx / 2
+    fun getBubbleCenterY() = dragY + bubbleSizePx / 2
     
-    LaunchedEffect(state.x, state.y) {
-        if (!isBubbleDragging) {
-            currentBubbleX = state.x.toFloat()
-            currentBubbleY = state.y.toFloat()
-        }
-    }
-    
-    fun getBubbleCenterX() = currentBubbleX + bubbleSizePx / 2
-    fun getBubbleCenterY() = currentBubbleY + bubbleSizePx / 2
-    
-    LaunchedEffect(currentBubbleX, currentBubbleY, isBubbleDragging) {
+    LaunchedEffect(dragX, dragY, isBubbleDragging) {
         if (isBubbleDragging) {
             val inZone = freeformWindowManager.isInRemoveZone(getBubbleCenterX(), getBubbleCenterY())
             isInRemoveZone = inZone
@@ -184,13 +173,13 @@ private fun BubbleModeView(
             isHovered = isInRemoveZone,
             onDragStart = {
                 isBubbleDragging = true
-                currentBubbleX = state.x.toFloat()
-                currentBubbleY = state.y.toFloat()
+                dragX = state.x.toFloat()
+                dragY = state.y.toFloat()
                 freeformWindowManager.showRemoveZone()
             },
             onDrag = { deltaX, deltaY ->
-                currentBubbleX += deltaX
-                currentBubbleY += deltaY
+                dragX += deltaX
+                dragY += deltaY
                 stateManager.onDrag(deltaX, deltaY)
             },
             onDragEnd = {
@@ -221,6 +210,7 @@ private fun FullWindowView(
     sizeFactor: Float,
     scope: CoroutineScope,
     onClose: () -> Unit,
+    onBack: () -> Unit,
     onMaximizeFullscreen: () -> Unit,
     onBringToFront: () -> Unit,
     onSetupTextureView: (TextureView) -> Unit,
@@ -242,6 +232,9 @@ private fun FullWindowView(
     val prefs = remember { context.getSharedPreferences("freeform_prefs", Context.MODE_PRIVATE) }
     var showEducation by remember { 
         mutableStateOf(!prefs.getBoolean("education_shown", false))
+    }
+    var showResizeEducation by remember {
+        mutableStateOf(!prefs.getBoolean("resize_education_shown", false))
     }
     
     val isHangupMode = state.mode == WindowMode.HANGUP
@@ -296,6 +289,7 @@ private fun FullWindowView(
             },
             scope = scope,
             onClose = onClose,
+            onBack = onBack,
             onMaximizeFullscreen = onMaximizeFullscreen,
             onBringToFront = onBringToFront,
             onSetDragging = { isDragging = it },
@@ -310,11 +304,13 @@ private fun FullWindowView(
             ResizeHandles(
                 stateManager = stateManager,
                 density = density,
-                cornerRadius = cornerRadius,
                 sizeFactor = sizeFactor,
-                showResizeHints = showResizeHints,
+                showResizeEducation = showResizeEducation,
                 isContentLight = isContentLight,
-                isResizing = isResizing,
+                onResizeEducationDismissed = {
+                    showResizeEducation = false
+                    prefs.edit().putBoolean("resize_education_shown", true).apply()
+                },
                 onResizeStarted = { onResizeStarted() },
                 onResizeEnded = { onResizeEnded() }
             )
@@ -335,6 +331,7 @@ private fun BoxScope.WindowSurface(
     onEducationDismissed: () -> Unit,
     scope: CoroutineScope,
     onClose: () -> Unit,
+    onBack: () -> Unit,
     onMaximizeFullscreen: () -> Unit,
     onBringToFront: () -> Unit,
     onSetDragging: (Boolean) -> Unit,
@@ -432,6 +429,7 @@ private fun BoxScope.WindowSurface(
             if (!isHangupMode) {
                 OverlayTitleBar(
                     onClose = onClose,
+                    onBack = onBack,
                     onMinimize = { stateManager.onMinimize() },
                     onHangup = { stateManager.onHangup() },
                     onMaximizeFullscreen = onMaximizeFullscreen,
@@ -464,18 +462,21 @@ private fun BoxScope.WindowSurface(
 private fun BoxScope.ResizeHandles(
     stateManager: FreeformStateManager,
     density: androidx.compose.ui.unit.Density,
-    cornerRadius: Dp,
     sizeFactor: Float,
-    showResizeHints: Boolean,
+    showResizeEducation: Boolean,
     isContentLight: Boolean,
-    isResizing: Boolean,
+    onResizeEducationDismissed: () -> Unit,
     onResizeStarted: () -> Unit,
     onResizeEnded: () -> Unit
 ) {
     fun currentState() = stateManager.state.value
     
-    val minWidthPx = with(density) { MIN_WINDOW_WIDTH_DP.dp.toPx().toInt() }
-    val minHeightPx = with(density) { MIN_WINDOW_HEIGHT_DP.dp.toPx().toInt() }
+    val s = currentState()
+    val baseMinWidthPx = with(density) { MIN_WINDOW_WIDTH_DP.dp.toPx().toInt() }
+    val baseMinHeightPx = with(density) { MIN_WINDOW_HEIGHT_DP.dp.toPx().toInt() }
+
+    val minWidthPx = if (s.isLandscape) baseMinHeightPx else baseMinWidthPx
+    val minHeightPx = if (s.isLandscape) baseMinWidthPx else baseMinHeightPx
     val maxWidthPx = MAX_WINDOW_WIDTH_DP
     val maxHeightPx = MAX_WINDOW_HEIGHT_DP
 
@@ -485,25 +486,15 @@ private fun BoxScope.ResizeHandles(
     val bottomHandleWidth = (RESIZE_HANDLE_BOTTOM_WIDTH_DP.dp * sizeFactor)
         .coerceIn(RESIZE_HANDLE_BOTTOM_WIDTH_MIN_DP.dp, RESIZE_HANDLE_BOTTOM_WIDTH_MAX_DP.dp)
     val bottomHandleHeight = RESIZE_HANDLE_BOTTOM_HEIGHT_DP.dp
-    val bottomIndicatorWidth = (RESIZE_HANDLE_BOTTOM_INDICATOR_DP.dp * sizeFactor)
-        .coerceIn(RESIZE_HANDLE_BOTTOM_INDICATOR_MIN_DP.dp, RESIZE_HANDLE_BOTTOM_INDICATOR_MAX_DP.dp)
-    val bottomIndicatorHeight = RESIZE_HANDLE_BOTTOM_INDICATOR_HEIGHT_DP.dp
 
-    val handleInset = RESIZE_HANDLE_INSET_DP.dp
-    val bottomInset = RESIZE_HANDLE_BOTTOM_INSET_DP.dp
+    val handleOffset = (-RESIZE_HANDLE_INSET_DP).dp
+    val bottomOffset = (-RESIZE_HANDLE_BOTTOM_INSET_DP).dp
 
     CornerResizeHandle(
         onResize = { deltaX, deltaY ->
             val s = currentState()
-            val newWidth: Int
-            val newHeight: Int
-            if (kotlin.math.abs(deltaX) > kotlin.math.abs(deltaY)) {
-                newWidth = (s.width + deltaX.roundToInt()).coerceIn(minWidthPx, maxWidthPx)
-                newHeight = (newWidth / DEFAULT_ASPECT_RATIO).roundToInt().coerceIn(minHeightPx, maxHeightPx)
-            } else {
-                newHeight = (s.height + deltaY.roundToInt()).coerceIn(minHeightPx, maxHeightPx)
-                newWidth = (newHeight * DEFAULT_ASPECT_RATIO).roundToInt().coerceIn(minWidthPx, maxWidthPx)
-            }
+            val newWidth = (s.width + deltaX.roundToInt()).coerceIn(minWidthPx, maxWidthPx)
+            val newHeight = (s.height + deltaY.roundToInt()).coerceIn(minHeightPx, maxHeightPx)
             
             stateManager.onResize(newWidth, newHeight)
         },
@@ -515,25 +506,17 @@ private fun BoxScope.ResizeHandles(
             onResizeEnded()
             stateManager.onResizeEnd()
         },
-        isLeftCorner = false,
         handleWidth = handleWidth,
         modifier = Modifier
             .align(Alignment.BottomEnd)
-            .padding(end = 16.dp + handleInset, bottom = 20.dp + handleInset)
+            .offset(x = handleOffset, y = handleOffset)
     )
     
     CornerResizeHandle(
         onResize = { deltaX, deltaY ->
             val s = currentState()
-            val newWidth: Int
-            val newHeight: Int
-            if (kotlin.math.abs(deltaX) > kotlin.math.abs(deltaY)) {
-                newWidth = (s.width - deltaX.roundToInt()).coerceIn(minWidthPx, maxWidthPx)
-                newHeight = (newWidth / DEFAULT_ASPECT_RATIO).roundToInt().coerceIn(minHeightPx, maxHeightPx)
-            } else {
-                newHeight = (s.height + deltaY.roundToInt()).coerceIn(minHeightPx, maxHeightPx)
-                newWidth = (newHeight * DEFAULT_ASPECT_RATIO).roundToInt().coerceIn(minWidthPx, maxWidthPx)
-            }
+            val newWidth = (s.width - deltaX.roundToInt()).coerceIn(minWidthPx, maxWidthPx)
+            val newHeight = (s.height + deltaY.roundToInt()).coerceIn(minHeightPx, maxHeightPx)
             val deltaWidth = s.width - newWidth
             
             stateManager.onResize(newWidth, newHeight)
@@ -547,20 +530,18 @@ private fun BoxScope.ResizeHandles(
             onResizeEnded()
             stateManager.onResizeEnd()
         },
-        isLeftCorner = true,
         handleWidth = handleWidth,
         modifier = Modifier
             .align(Alignment.BottomStart)
-            .padding(start = 16.dp + handleInset, bottom = 20.dp + handleInset)
+            .offset(x = -handleOffset, y = handleOffset)
     )
     
     BottomResizeHandle(
         onResize = { deltaY ->
             val s = currentState()
             val newHeight = (s.height + deltaY.roundToInt()).coerceIn(minHeightPx, maxHeightPx)
-            val newWidth = (newHeight * DEFAULT_ASPECT_RATIO).roundToInt().coerceIn(minWidthPx, maxWidthPx)
             
-            stateManager.onResize(newWidth, newHeight)
+            stateManager.onResize(s.width, newHeight)
         },
         onResizeStart = {
             onResizeStarted()
@@ -570,15 +551,53 @@ private fun BoxScope.ResizeHandles(
             onResizeEnded()
             stateManager.onResizeEnd()
         },
-        showIndicator = true,
-        isContentLight = isContentLight,
-        isResizing = isResizing,
         handleWidth = bottomHandleWidth,
         handleHeight = bottomHandleHeight,
-        indicatorWidth = bottomIndicatorWidth,
-        indicatorHeight = bottomIndicatorHeight,
         modifier = Modifier
             .align(Alignment.BottomCenter)
-            .padding(bottom = bottomInset)
+            .offset(y = bottomOffset)
     )
+    
+    val expandedBackgroundColor = if (isContentLight) {
+        Color.Black.copy(alpha = 0.75f)
+    } else {
+        Color.White.copy(alpha = 0.9f)
+    }
+    
+    val expandedContentColor = if (isContentLight) {
+        Color.White
+    } else {
+        Color(0xFF1C1C1E)
+    }
+    
+    AnimatedVisibility(
+        visible = showResizeEducation,
+        enter = fadeIn(animationSpec = tween(300)) + 
+                expandVertically(expandFrom = Alignment.Bottom, animationSpec = tween(300)),
+        exit = fadeOut(animationSpec = tween(200)) + 
+               shrinkVertically(shrinkTowards = Alignment.Bottom, animationSpec = tween(200)),
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .padding(bottom = 28.dp)
+    ) {
+        LaunchedEffect(Unit) {
+            delay(3000)
+            onResizeEducationDismissed()
+        }
+        
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(expandedBackgroundColor)
+                .clickable { onResizeEducationDismissed() }
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+        ) {
+            Text(
+                text = "Drag corners or bottom edge to resize",
+                color = expandedContentColor,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
 }

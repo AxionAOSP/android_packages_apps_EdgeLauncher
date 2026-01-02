@@ -15,27 +15,19 @@
  */
 package com.android.edge.bar.freeform.presentation
 
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.graphics.SurfaceTexture
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.view.Display
-import android.view.MotionEvent
-import android.view.Surface
-import android.view.TextureView
-import android.view.View
-import android.view.WindowManager
-import com.android.edge.bar.freeform.FreeformConfig
-import com.android.edge.bar.freeform.FreeformWindowCompose
-import com.android.edge.bar.freeform.FreeformWindowManager
-import com.android.edge.bar.freeform.InputInjector
-import com.android.edge.bar.freeform.data.FreeformRepository
-import com.android.edge.bar.freeform.data.FreeformRepositoryImpl
-import com.android.edge.bar.freeform.domain.FreeformConstants
+import android.view.*
 import com.android.axion.kotlin.math.dpToPx
-import android.content.ComponentName
-import android.content.Intent
+import com.android.edge.bar.freeform.*
+import com.android.edge.bar.freeform.data.*
+import com.android.edge.bar.freeform.domain.FreeformConstants
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.StateFlow
 
@@ -44,6 +36,7 @@ class FreeformWindowViewModel(
     private val packageName: String,
     private val activityName: String,
     private val userId: Int,
+    private val taskId: Int = -1,
     private val onWindowDead: (() -> Unit)? = null,
     private val serviceScope: CoroutineScope? = null
 ) {
@@ -95,6 +88,14 @@ class FreeformWindowViewModel(
         )
     }
     
+    private val windowEventListener = object : FreeformWindowManager.WindowEventListener {
+        override fun onWindowOrientationChanged(packageName: String, isLandscape: Boolean) {
+            if (packageName == this@FreeformWindowViewModel.packageName) {
+                stateManager.onOrientationChanged(isLandscape)
+            }
+        }
+    }
+    
     init {
         scope.launch {
             stateManager.effect.collect { effect ->
@@ -103,6 +104,7 @@ class FreeformWindowViewModel(
                 }
             }
         }
+        freeformWindowManager.addListener(windowEventListener)
     }
     
     val windowState: StateFlow<WindowState> get() = stateManager.state
@@ -173,16 +175,77 @@ class FreeformWindowViewModel(
         }
     }
 
+    private fun resolveInitialOrientation(packageName: String, activityName: String): Int {
+        return try {
+            val ensureComponent = ComponentName(packageName, activityName)
+            val activityInfo = context.packageManager.getActivityInfo(ensureComponent, 0)
+            activityInfo.screenOrientation
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to resolve initial orientation for $packageName/$activityName", e)
+            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
+
+    private fun isLandscapeOrientation(orientation: Int): Boolean {
+        return when (orientation) {
+            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE,
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE,
+            ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE,
+            ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE -> true
+            else -> false
+        }
+    }
+    
+    private fun isPortraitOrientation(orientation: Int): Boolean {
+        return when (orientation) {
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT,
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT,
+            ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT,
+            ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT -> true
+            else -> false
+        }
+    }
+    
+    private fun resolveInitialLandscape(packageName: String, activityName: String): Boolean {
+        val orientation = resolveInitialOrientation(packageName, activityName)
+        if (isLandscapeOrientation(orientation)) return true
+        if (isPortraitOrientation(orientation)) return false
+        return false
+    }
+
     fun onSurfaceTextureAvailable(
         surface: SurfaceTexture,
         width: Int,
         height: Int,
         onDisplayReady: (Int) -> Unit
     ) {
-        val displayWidth = config.width
-        val displayHeight = config.height
+        val orientation = resolveInitialOrientation(packageName, activityName)
+        val isLandscape = isLandscapeOrientation(orientation)
+        val isPortrait = isPortraitOrientation(orientation)
         
-        Log.i(TAG, "onSurfaceTextureAvailable: callback=${width}x${height}, using config=${displayWidth}x${displayHeight}")
+        Log.i(TAG, "Resolved orientation: $orientation (landscape=$isLandscape, portrait=$isPortrait) for $packageName/$activityName")
+        
+        var displayWidth = config.width
+        var displayHeight = config.height
+        
+        if (isLandscape && displayWidth < displayHeight) {
+            displayWidth = (displayHeight * 0.70f).toInt()
+            val temp = displayHeight
+            displayHeight = config.width.coerceAtMost(temp)
+            displayHeight = config.width
+            Log.i(TAG, "Landscape app detected, adjusted dimensions to ${displayWidth}x${displayHeight}")
+        } else if (!isLandscape && displayWidth > displayHeight) {
+            val temp = displayWidth
+            displayWidth = displayHeight
+            displayHeight = temp
+            Log.i(TAG, "Portrait adjustment, swapped to ${displayWidth}x${displayHeight}")
+        }
+        
+        if (isLandscape) {
+            stateManager.onOrientationChanged(true)
+        }
+        
+        Log.i(TAG, "onSurfaceTextureAvailable: final dimensions ${displayWidth}x${displayHeight}, isLandscape=$isLandscape")
 
         surface.setDefaultBufferSize(displayWidth, displayHeight)
 
@@ -190,28 +253,48 @@ class FreeformWindowViewModel(
         this.displaySurface = displaySurface
 
         scope.launch {
+            suspend fun launchAppOnDisplay(displayId: Int, onDisplayReady: (Int) -> Unit) {
+                repository.launchApp(
+                    packageName = packageName,
+                    activityName = activityName,
+                    displayId = displayId,
+                    userId = userId
+                ).onSuccess {
+                    Log.i(TAG, "App launched: $packageName/$activityName on display $displayId")
+                    delay(FreeformConstants.DELAY_SURFACE_SETTLE_MS)
+                    stateManager.markSurfaceReady()
+                    onDisplayReady(displayId)
+                    delay(FreeformConstants.DELAY_APP_LAUNCH_VEIL_MS)
+                    stateManager.dispatch(WindowEvent.AppLaunchComplete)
+                }.onFailure {
+                    Log.e(TAG, "Failed to launch app", it)
+                    stateManager.dispatch(WindowEvent.AppLaunchComplete)
+                }
+            }
+
             val callback = object : FreeformRepository.FreeformCallback {
                 override fun onDisplayAdded(displayId: Int) {
-                    Log.i(TAG, "onDisplayAdded: $displayId")
+                    Log.i(TAG, "onDisplayAdded: displayId=$displayId, taskId=$taskId, isLandscape=$isLandscape")
                     stateManager.setDisplayId(displayId)
                     inputInjector.setDisplayId(displayId)
 
                     scope.launch {
-                        repository.launchApp(
-                            packageName = packageName,
-                            activityName = activityName,
-                            displayId = displayId,
-                            userId = userId
-                        ).onSuccess {
-                            Log.i(TAG, "App launched: $packageName/$activityName")
-                            delay(FreeformConstants.DELAY_SURFACE_SETTLE_MS)
-                            stateManager.markSurfaceReady()
-                            onDisplayReady(displayId)
-                            delay(FreeformConstants.DELAY_APP_LAUNCH_VEIL_MS)
-                            stateManager.dispatch(WindowEvent.AppLaunchComplete)
-                        }.onFailure {
-                            Log.e(TAG, "Failed to launch app", it)
-                            stateManager.dispatch(WindowEvent.AppLaunchComplete)
+                        if (taskId != -1) {
+                            repository.moveRootTaskToDisplay(taskId, displayId)
+                                .onSuccess {
+                                    Log.i(TAG, "Moved task $taskId to display $displayId")
+                                    delay(FreeformConstants.DELAY_SURFACE_SETTLE_MS)
+                                    stateManager.markSurfaceReady()
+                                    onDisplayReady(displayId)
+                                    delay(FreeformConstants.DELAY_APP_LAUNCH_VEIL_MS)
+                                    stateManager.dispatch(WindowEvent.AppLaunchComplete)
+                                }
+                                .onFailure { e ->
+                                    Log.e(TAG, "Failed to move task $taskId, falling back to launch", e)
+                                    launchAppOnDisplay(displayId, onDisplayReady)
+                                }
+                        } else {
+                            launchAppOnDisplay(displayId, onDisplayReady)
                         }
                     }
                 }
@@ -242,6 +325,22 @@ class FreeformWindowViewModel(
         }
     }
 
+    fun onBackPress() {
+        val currentState = stateManager.state.value
+        val displayId = currentState.displayId
+        
+        if (displayId < 0) {
+            Log.w(TAG, "Cannot inject back press: invalid displayId $displayId")
+            return
+        }
+        
+        scope.launch {
+            repository.injectBackKey(displayId)
+                .onSuccess { Log.d(TAG, "Injected back button press to display $displayId") }
+                .onFailure { Log.w(TAG, "Failed to inject back button press to display $displayId", it) }
+        }
+    }
+
     fun requestFocus() {
         overlayView?.requestFocus()
     }
@@ -265,6 +364,7 @@ class FreeformWindowViewModel(
         }
 
         scope.cancel()
+        freeformWindowManager.removeListener(windowEventListener)
         freeformWindowManager.unregisterWindow(packageName)
     }
 
