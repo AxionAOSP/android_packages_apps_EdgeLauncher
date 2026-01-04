@@ -22,8 +22,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -108,29 +110,29 @@ fun OverlayTitleBar(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(OVERLAY_TITLE_BAR_HEIGHT_DP.dp)
-                    .pointerInput(Unit) {
-                        detectDragGestures(
-                            onDragStart = { onDragStart() },
-                            onDragEnd = { onDragEnd() },
-                            onDrag = { change, dragAmount ->
-                                change.consume()
-                                onDrag(dragAmount.x, dragAmount.y)
-                            }
-                        )
-                    },
+                    .height(OVERLAY_TITLE_BAR_HEIGHT_DP.dp),
                 contentAlignment = Alignment.TopCenter
             ) {
                 Box(
                     modifier = Modifier
-                        .padding(top = 8.dp)
+                        .size(width = 120.dp, height = 32.dp)
+                        .pointerInput(Unit) {
+                            detectDragGestures(
+                                onDragStart = { onDragStart() },
+                                onDragEnd = { onDragEnd() },
+                                onDrag = { change, dragAmount ->
+                                    change.consume()
+                                    onDrag(dragAmount.x, dragAmount.y)
+                                }
+                            )
+                        }
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) {
                             onMenuExpandedChange(true)
                         },
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.TopCenter
                 ) {
                     Box(
                         modifier = Modifier
@@ -237,7 +239,9 @@ private fun MenuPill(
         modifier = modifier.height(40.dp)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp),
+            modifier = Modifier
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

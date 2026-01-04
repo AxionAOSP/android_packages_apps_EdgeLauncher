@@ -92,6 +92,8 @@ class FreeformWindowViewModel(
         override fun onWindowOrientationChanged(packageName: String, isLandscape: Boolean) {
             if (packageName == this@FreeformWindowViewModel.packageName) {
                 stateManager.onOrientationChanged(isLandscape)
+                val currentState = stateManager.state.value
+                saveWindowState(currentState.width, currentState.height, isLandscape)
             }
         }
     }
@@ -170,8 +172,10 @@ class FreeformWindowViewModel(
         scope.launch {
             textureViewRef?.surfaceTexture?.setDefaultBufferSize(width, height)
             val result = repository.resizeDisplay(token, width, height, targetDensity)
-            result.onSuccess { Log.i(TAG, "Virtual display resized to ${width}x${height} at ${targetDensity}dpi") }
-                  .onFailure { Log.e(TAG, "Failed to resize virtual display", it) }
+            result.onSuccess { 
+                Log.i(TAG, "Virtual display resized to ${width}x${height} at ${targetDensity}dpi")
+                saveWindowState(width, height, currentState.isLandscape)
+            }.onFailure { Log.e(TAG, "Failed to resize virtual display", it) }
         }
     }
 
@@ -213,36 +217,82 @@ class FreeformWindowViewModel(
         return false
     }
 
+    
+    private fun getPrefs() = context.getSharedPreferences("freeform_window_prefs", Context.MODE_PRIVATE)
+    private fun getPrefKey(suffix: String) = "${packageName}_${activityName}_$suffix"
+
+    private fun saveWindowState(width: Int, height: Int, isLandscape: Boolean) {
+        getPrefs().edit().apply {
+            putInt(getPrefKey("width"), width)
+            putInt(getPrefKey("height"), height)
+            putBoolean(getPrefKey("is_landscape"), isLandscape)
+            apply()
+        }
+    }
+    
+    private fun clearWindowState() {
+         getPrefs().edit().apply {
+            remove(getPrefKey("width"))
+            remove(getPrefKey("height"))
+            remove(getPrefKey("is_landscape"))
+            apply()
+        }
+    }
+
+    private data class PersistedState(val width: Int, val height: Int, val isLandscape: Boolean)
+
+    private fun restoreWindowState(): PersistedState? {
+        val prefs = getPrefs()
+        if (!prefs.contains(getPrefKey("width"))) return null
+        
+        val width = prefs.getInt(getPrefKey("width"), config.width)
+        val height = prefs.getInt(getPrefKey("height"), config.height)
+        val isLandscape = prefs.getBoolean(getPrefKey("is_landscape"), false)
+        return PersistedState(width, height, isLandscape)
+    }
+
     fun onSurfaceTextureAvailable(
         surface: SurfaceTexture,
         width: Int,
         height: Int,
         onDisplayReady: (Int) -> Unit
     ) {
-        val orientation = resolveInitialOrientation(packageName, activityName)
-        val isLandscape = isLandscapeOrientation(orientation)
-        val isPortrait = isPortraitOrientation(orientation)
-        
-        Log.i(TAG, "Resolved orientation: $orientation (landscape=$isLandscape, portrait=$isPortrait) for $packageName/$activityName")
+        var orientation = resolveInitialOrientation(packageName, activityName)
+        var isLandscape = isLandscapeOrientation(orientation)
+        var isPortrait = isPortraitOrientation(orientation)
         
         var displayWidth = config.width
         var displayHeight = config.height
         
-        if (isLandscape && displayWidth < displayHeight) {
-            displayWidth = (displayHeight * 0.70f).toInt()
-            val temp = displayHeight
-            displayHeight = config.width.coerceAtMost(temp)
-            displayHeight = config.width
-            Log.i(TAG, "Landscape app detected, adjusted dimensions to ${displayWidth}x${displayHeight}")
-        } else if (!isLandscape && displayWidth > displayHeight) {
-            val temp = displayWidth
-            displayWidth = displayHeight
-            displayHeight = temp
-            Log.i(TAG, "Portrait adjustment, swapped to ${displayWidth}x${displayHeight}")
+        val persisted = restoreWindowState()
+        if (persisted != null) {
+            displayWidth = persisted.width
+            displayHeight = persisted.height
+            isLandscape = persisted.isLandscape
+            Log.i(TAG, "Restored persisted state: ${displayWidth}x${displayHeight}, isLandscape=$isLandscape")
+        } else {
+            Log.i(TAG, "Resolved orientation: $orientation (landscape=$isLandscape, portrait=$isPortrait) for $packageName/$activityName")
+            
+            if (isLandscape && displayWidth < displayHeight) {
+                displayWidth = (displayHeight * 0.70f).toInt()
+                val temp = displayHeight
+                displayHeight = config.width.coerceAtMost(temp)
+                displayHeight = config.width
+                Log.i(TAG, "Landscape app detected, adjusted dimensions to ${displayWidth}x${displayHeight}")
+            } else if (!isLandscape && displayWidth > displayHeight) {
+                val temp = displayWidth
+                displayWidth = displayHeight
+                displayHeight = temp
+                Log.i(TAG, "Portrait adjustment, swapped to ${displayWidth}x${displayHeight}")
+            }
         }
+        
+        saveWindowState(displayWidth, displayHeight, isLandscape)
         
         if (isLandscape) {
             stateManager.onOrientationChanged(true)
+        } else {
+             stateManager.onOrientationChanged(false)
         }
         
         Log.i(TAG, "onSurfaceTextureAvailable: final dimensions ${displayWidth}x${displayHeight}, isLandscape=$isLandscape")

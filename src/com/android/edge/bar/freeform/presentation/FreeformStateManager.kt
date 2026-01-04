@@ -485,23 +485,11 @@ class FreeformStateManager(
 
         val baseMinWidth = context.dpToPx(FreeformConstants.HANGUP_WIDTH)
         val baseMinHeight = context.dpToPx(FreeformConstants.HANGUP_HEIGHT)
-        
-        val minWidthPx: Int
-        val minHeightPx: Int
-        if (currentState.isLandscape) {
-            minWidthPx = baseMinHeight
-            minHeightPx = baseMinWidth
-        } else {
-            minWidthPx = baseMinWidth
-            minHeightPx = baseMinHeight
-        }
 
-        var width = newWidth.coerceAtLeast(minWidthPx)
-        var height = newHeight.coerceAtLeast(minHeightPx)
-        
-        if (currentState.isLandscape && height > width) {
-            height = width
-        }
+        val minDimension = Math.min(baseMinWidth, baseMinHeight)
+
+        val width = newWidth.coerceAtLeast(minDimension)
+        val height = newHeight.coerceAtLeast(minDimension)
         
         updateState { copy(width = width, height = height) }
     }
