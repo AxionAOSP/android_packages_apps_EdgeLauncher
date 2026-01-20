@@ -20,6 +20,7 @@ import android.graphics.Bitmap
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.Log
+import android.view.WindowManager
 import com.android.edge.bar.freeform.FreeformWindowManager
 import com.android.edge.bar.freeform.WindowSnapping
 import com.android.edge.bar.freeform.data.FreeformRepository
@@ -68,8 +69,8 @@ enum class WindowMode {
 }
 
 data class WindowState(
-    val x: Int = 0,
-    val y: Int = 0,
+    val x: Float = 0f,
+    val y: Float = 0f,
     val width: Int,
     val height: Int,
     
@@ -82,12 +83,12 @@ data class WindowState(
     val isAppLaunching: Boolean = true,
     val isDestroyed: Boolean = false,
     
-    val savedX: Int = 0,
-    val savedY: Int = 0,
+    val savedX: Float = 0f,
+    val savedY: Float = 0f,
     val savedWidth: Int,
     val savedHeight: Int,
-    val savedBubbleX: Int = -1,
-    val savedBubbleY: Int = -1,
+    val savedBubbleX: Float = -1f,
+    val savedBubbleY: Float = -1f,
     
     val appIcon: Bitmap? = null,
     val isResizing: Boolean = false,
@@ -107,11 +108,11 @@ class FreeformStateManager(
     initialHeight: Int,
     private val hangupWidthDp: Int = FreeformConstants.HANGUP_WIDTH,
     private val hangupHeightDp: Int = FreeformConstants.HANGUP_HEIGHT,
-    private val screenWidth: Int,
-    private val screenHeight: Int,
+    private var screenWidth: Int,
+    private var screenHeight: Int,
     private val densityDpi: Float,
-    initialX: Int = 0,
-    initialY: Int = 0
+    initialX: Float = 0f,
+    initialY: Float = 0f
 ) {
     companion object {
         private const val TAG = "FreeformStateManager"
@@ -213,9 +214,20 @@ class FreeformStateManager(
     
     private suspend fun handleOrientationChanged(isLandscape: Boolean) {
         if (currentState.isLandscape == isLandscape) return
+        
+        Log.d(TAG, "Orientation changed to landscape=$isLandscape (mode=${currentState.mode})")
+        
+        updateState { copy(isLandscape = isLandscape) }
+
+        when (currentState.mode) {
+            WindowMode.BUBBLE -> snapBubbleToSafeZone()
+            WindowMode.HANGUP -> enterHangupMode()
+            WindowMode.NORMAL -> { /* Handled below */ }
+        }
+
         if (currentState.mode != WindowMode.NORMAL) return
         
-        Log.d(TAG, "Orientation changed to landscape=$isLandscape")
+        Log.d(TAG, "Handling window resize for orientation change")
         
         surfaceEventsManager.dispatch(SurfaceEvent.ShowVeilRequested(VeilReason.RESIZE_STARTED))
         surfaceEventsManager.dispatch(SurfaceEvent.OperationStarted("orientation_change"))
@@ -283,8 +295,8 @@ class FreeformStateManager(
     private fun handleDrag(deltaX: Float, deltaY: Float) {
         updateState {
             copy(
-                x = x + deltaX.toInt(),
-                y = y + deltaY.toInt(),
+                x = x + deltaX,
+                y = y + deltaY,
                 snapPosition = null
             )
         }
@@ -315,15 +327,15 @@ class FreeformStateManager(
         val margin = context.dpToPx(16)
         val slotSpacing = context.dpToPx(8)
         
-        val bubbleX: Int
-        val bubbleY: Int
+        val bubbleX: Float
+        val bubbleY: Float
         
-        if (currentState.savedBubbleX >= 0 && currentState.savedBubbleY >= 0) {
+        if (currentState.savedBubbleX >= 0f && currentState.savedBubbleY >= 0f) {
             bubbleX = currentState.savedBubbleX
             bubbleY = currentState.savedBubbleY
         } else {
-            bubbleX = screenWidth - bubbleSizePx - margin
-            bubbleY = margin + (slot * (bubbleSizePx + slotSpacing))
+            bubbleX = (screenWidth - bubbleSizePx - margin).toFloat()
+            bubbleY = (margin + (slot * (bubbleSizePx + slotSpacing))).toFloat()
         }
         
         updateState {
@@ -354,11 +366,20 @@ class FreeformStateManager(
         val targetX = currentState.savedX
         val targetY = currentState.savedY
 
+        val safeTop = context.dpToPx(FreeformConstants.SAFE_ZONE_TOP_DP)
+        val safeBottom = context.dpToPx(FreeformConstants.SAFE_ZONE_BOTTOM_DP)
+        val minY = safeTop.toFloat()
+        val maxY = (screenHeight - safeBottom - 48).toFloat()
+        
+        val clampedY = targetY.coerceIn(minY, maxY)
+        val halfWidth = targetWidth / 2f
+        val clampedX = targetX.coerceIn(-halfWidth, (screenWidth - halfWidth).toFloat())
+
         updateState {
             copy(
                 mode = WindowMode.NORMAL,
-                x = targetX,
-                y = targetY,
+                x = clampedX,
+                y = clampedY,
                 width = targetWidth,
                 height = targetHeight,
                 savedBubbleX = x,
@@ -391,25 +412,19 @@ class FreeformStateManager(
 
     private suspend fun handleHangupTap() {
         if (currentState.mode == WindowMode.HANGUP) {
-            var targetWidth = currentState.savedWidth
-            var targetHeight = currentState.savedHeight
+            val targetWidth = currentState.savedWidth
+            val targetHeight = currentState.savedHeight
+            val safeTop = context.dpToPx(FreeformConstants.SAFE_ZONE_TOP_DP)
+            val safeBottom = context.dpToPx(FreeformConstants.SAFE_ZONE_BOTTOM_DP)
+            val minY = safeTop.toFloat()
+            val maxY = (screenHeight - safeBottom - 48).toFloat()
             
-            if (currentState.isLandscape && targetHeight > targetWidth) {
-                val temp = targetWidth
-                targetWidth = targetHeight
-                targetHeight = temp
-            }
-            
-            val safeX = if (currentState.savedX < 0 || currentState.savedX > screenWidth - targetWidth) {
-                (screenWidth - targetWidth) / 2
+            val safeX = if (currentState.savedX < -targetWidth / 2 || currentState.savedX > screenWidth - targetWidth / 2) {
+                ((screenWidth - targetWidth) / 2).toFloat()
             } else {
                 currentState.savedX
             }
-            val safeY = if (currentState.savedY < 50 || currentState.savedY > screenHeight - 100) {
-                (screenHeight - targetHeight) / 2
-            } else {
-                currentState.savedY
-            }
+            val safeY = currentState.savedY.coerceIn(minY, maxY)
 
             updateState {
                 copy(
@@ -448,16 +463,16 @@ class FreeformStateManager(
             hangupHeightPx = context.dpToPx(hangupHeightDp)
         }
         
-        val centeredX = (screenWidth - currentState.savedWidth) / 2
-        val centeredY = (screenHeight - currentState.savedHeight) / 2
+        val centeredX = ((screenWidth - currentState.savedWidth) / 2).toFloat()
+        val centeredY = ((screenHeight - currentState.savedHeight) / 2).toFloat()
         
         updateState {
             copy(
                 mode = WindowMode.HANGUP,
                 savedX = centeredX,
                 savedY = centeredY,
-                x = screenWidth - hangupWidthPx - 16,
-                y = 16,
+                x = (screenWidth - hangupWidthPx - 16).toFloat(),
+                y = 16f,
                 width = hangupWidthPx,
                 height = hangupHeightPx
             )
@@ -548,8 +563,8 @@ class FreeformStateManager(
             targetWidth = (maxHeight * currentAspectRatio).toInt()
         }
         
-        val targetX = (screenWidth - targetWidth) / 2
-        val targetY = (screenHeight - targetHeight) / 2
+        val targetX = ((screenWidth - targetWidth) / 2).toFloat()
+        val targetY = ((screenHeight - targetHeight) / 2).toFloat()
         
         updateState {
             copy(
@@ -575,20 +590,32 @@ class FreeformStateManager(
     
     private fun snapBubbleToSafeZone() {
         val bubbleSize = currentState.width
-        val safeTop = context.dpToPx(FreeformConstants.SAFE_ZONE_TOP_DP)
-        val safeBottom = context.dpToPx(FreeformConstants.SAFE_ZONE_BOTTOM_DP)
+        val isLandscape = currentState.isLandscape
+
+        val safeTop = if (isLandscape) {
+            context.dpToPx(16)
+        } else {
+            context.dpToPx(FreeformConstants.SAFE_ZONE_TOP_DP)
+        }
+        
+        val safeBottom = if (isLandscape) {
+            context.dpToPx(16)
+        } else {
+            context.dpToPx(FreeformConstants.SAFE_ZONE_BOTTOM_DP)
+        }
+        
         val safeEdge = context.dpToPx(FreeformConstants.SAFE_ZONE_EDGE_DP)
         
-        val minY = safeTop
-        val maxY = screenHeight - safeBottom - bubbleSize
+        val minY = safeTop.toFloat()
+        val maxY = (screenHeight - safeBottom - bubbleSize).toFloat()
         val clampedY = currentState.y.coerceIn(minY, maxY)
         
-        val centerX = currentState.x + bubbleSize / 2
-        val screenCenter = screenWidth / 2
+        val centerX = currentState.x + bubbleSize / 2f
+        val screenCenter = screenWidth / 2f
         val snappedX = if (centerX < screenCenter) {
-            safeEdge
+            safeEdge.toFloat()
         } else {
-            screenWidth - bubbleSize - safeEdge
+            (screenWidth - bubbleSize - safeEdge).toFloat()
         }
         
         updateState { copy(x = snappedX, y = clampedY) }
@@ -598,11 +625,11 @@ class FreeformStateManager(
         val safeTop = context.dpToPx(FreeformConstants.SAFE_ZONE_TOP_DP)
         val safeBottom = context.dpToPx(FreeformConstants.SAFE_ZONE_BOTTOM_DP)
         
-        val minY = safeTop
-        val maxY = screenHeight - safeBottom - 48
+        val minY = safeTop.toFloat()
+        val maxY = (screenHeight - safeBottom - 48).toFloat()
         val clampedY = currentState.y.coerceIn(minY, maxY)
         
-        val halfWidth = currentState.width / 2
+        val halfWidth = currentState.width / 2f
         val clampedX = currentState.x.coerceIn(-halfWidth, screenWidth - halfWidth)
         
         updateState { copy(x = clampedX, y = clampedY) }
@@ -624,7 +651,9 @@ class FreeformStateManager(
     }
     
     fun onDrag(deltaX: Float, deltaY: Float) {
-        dispatch(WindowEvent.Drag(deltaX, deltaY))
+        if (!eventFlow.tryEmit(WindowEvent.Drag(deltaX, deltaY))) {
+            dispatch(WindowEvent.Drag(deltaX, deltaY))
+        }
     }
     
     fun onDragEnd() {
@@ -671,8 +700,21 @@ class FreeformStateManager(
         dispatch(WindowEvent.OrientationChanged(isLandscape))
     }
     
-    fun onBubblePositionUpdate(newY: Int) {
+    fun onBubblePositionUpdate(newY: Float) {
         updateState { copy(y = newY) }
+    }
+
+    fun onScreenDimensionsChanged(width: Int, height: Int) {
+        this.screenWidth = width
+        this.screenHeight = height
+        Log.d(TAG, "Screen dimensions updated in $windowPackageName: ${width}x${height}")
+        scope.launch {
+            when (currentState.mode) {
+                WindowMode.BUBBLE -> snapBubbleToSafeZone()
+                WindowMode.HANGUP -> enterHangupMode()
+                WindowMode.NORMAL -> clampWindowToSafeZone()
+            }
+        }
     }
     
     fun isHangupMode(): Boolean = currentState.mode == WindowMode.HANGUP

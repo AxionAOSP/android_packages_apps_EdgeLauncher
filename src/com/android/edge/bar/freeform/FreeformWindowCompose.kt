@@ -26,6 +26,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.ComposeView
+import kotlin.math.roundToInt
 import androidx.lifecycle.*
 import com.android.edge.bar.freeform.presentation.FreeformWindowContent
 import com.android.edge.bar.freeform.presentation.FreeformWindowViewModel
@@ -67,8 +68,8 @@ class FreeformWindowCompose(
         windowController.initWindowParams(
             width = viewModel.config.width,
             height = viewModel.config.height,
-            x = viewModel.initialX,
-            y = viewModel.initialY
+            x = viewModel.initialX.roundToInt(),
+            y = viewModel.initialY.roundToInt()
         )
 
         val composeView = ComposeView(context).apply {
@@ -114,7 +115,7 @@ class FreeformWindowCompose(
                         closeWindow() 
                     } 
                 },
-                onUpdateWindowLayout = { x, y, w, h -> windowController.updateLayout(x, y, w, h) },
+                onUpdateWindowLayout = { x, y, w, h -> windowController.updateLayout(x.roundToInt(), y.roundToInt(), w, h) },
                 onSetupTextureView = { view ->
                     textureView = view
                     viewModel.setupTextureViewTouch(view)

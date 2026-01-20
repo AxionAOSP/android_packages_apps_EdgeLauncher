@@ -240,6 +240,7 @@ private fun TitleBarButton(
 
 @Composable
 fun MenuPill(
+    onMinimize: () -> Unit,
     onHangup: () -> Unit,
     onMaximizeFullscreen: () -> Unit,
     isContentLight: Boolean,
@@ -282,6 +283,15 @@ fun MenuPill(
             horizontalArrangement = Arrangement.spacedBy(spacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            PillIconButton(
+                icon = Icons.Rounded.Remove,
+                contentDescription = "Minimize",
+                onClick = onMinimize,
+                tint = colors.contentColor,
+                buttonSize = buttonSize,
+                iconSize = iconSize
+            )
+
             PillIconButton(
                 icon = Icons.Rounded.PictureInPictureAlt,
                 contentDescription = "Hangup",

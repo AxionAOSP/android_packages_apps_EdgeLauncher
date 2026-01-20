@@ -70,6 +70,7 @@ class WindowController(
                     WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
             privateFlags = WindowManager.LayoutParams.SYSTEM_FLAG_SHOW_FOR_ALL_USERS or
                     WindowManager.LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY
+            layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
         }
     }
 

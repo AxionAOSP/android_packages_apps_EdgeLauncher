@@ -46,6 +46,9 @@ class FreeformWindowManager private constructor(private val context: Context) {
     private val bubbleSlots = ConcurrentHashMap<String, Int>()
     private var removeZoneOverlay: RemoveZoneOverlay? = null
     
+    private var screenWidth: Int = context.resources.displayMetrics.widthPixels
+    private var screenHeight: Int = context.resources.displayMetrics.heightPixels
+    
     fun getRemoveZoneOverlay(): RemoveZoneOverlay {
         if (removeZoneOverlay == null) {
             removeZoneOverlay = RemoveZoneOverlay(context)
@@ -199,12 +202,12 @@ class FreeformWindowManager private constructor(private val context: Context) {
             bubbleSlots[occupyingPackage] = currentSlot
             bubbleSlots[packageName] = newSlot
             Log.d(TAG, "Swapped bubble slots: $packageName from $currentSlot to $newSlot, $occupyingPackage from $newSlot to $currentSlot")
-            updateBubblePositionsAfterReorder()
+            updateBubblePositionsAfterReorder(packageName)
             return true
         } else if (!bubbleSlots.values.contains(newSlot)) {
             bubbleSlots[packageName] = newSlot
             Log.d(TAG, "Moved $packageName from slot $currentSlot to empty slot $newSlot")
-            updateBubblePositionsAfterReorder()
+            updateBubblePositionsAfterReorder(packageName)
             return true
         }
         
@@ -217,17 +220,18 @@ class FreeformWindowManager private constructor(private val context: Context) {
             .map { it.key }
     }
 
-    fun updateBubblePositionsAfterReorder() {
-        val sortedPackages = getBubblePackagesSortedBySlot()
-        sortedPackages.forEachIndexed { index, packageName ->
+    fun updateBubblePositionsAfterReorder(draggingPackageName: String? = null) {
+        bubbleSlots.forEach { (packageName, slot) ->
+            if (packageName == draggingPackageName) return@forEach
+            
             val window = windows[packageName]
             if (window?.stateManager?.state?.value?.mode == WindowMode.BUBBLE) {
                 val bubbleSizePx = context.dpToPx(FreeformConstants.BUBBLE_SIZE_DP.toFloat())
                 val margin = context.dpToPx(16f)
                 val slotSpacing = context.dpToPx(8f)
-                val newY = margin + (index * (bubbleSizePx + slotSpacing))
+                val newY = margin + (slot * (bubbleSizePx + slotSpacing))
                 
-                window.stateManager.onBubblePositionUpdate(newY)
+                window.stateManager.onBubblePositionUpdate(newY.toFloat())
             }
         }
     }
@@ -252,4 +256,26 @@ class FreeformWindowManager private constructor(private val context: Context) {
         Log.d(TAG, "Orientation changed for $packageName: isLandscape=$isLandscape")
         listeners.forEach { it.onWindowOrientationChanged(packageName, isLandscape) }
     }
+
+    fun notifyOrientationChangedConfig(isLandscape: Boolean) {
+        Log.d(TAG, "Global orientation changed: isLandscape=$isLandscape. Notifying ${windows.size} windows.")
+        windows.keys.forEach { packageName ->
+            listeners.forEach { it.onWindowOrientationChanged(packageName, isLandscape) }
+        }
+    }
+
+    fun updateScreenDimensions(width: Int, height: Int) {
+        if (screenWidth == width && screenHeight == height) return
+        
+        Log.d(TAG, "Updating screen dimensions: ${width}x${height}")
+        screenWidth = width
+        screenHeight = height
+
+        windows.values.forEach { window ->
+            window.stateManager.onScreenDimensionsChanged(width, height)
+        }
+    }
+
+    fun getScreenWidth() = screenWidth
+    fun getScreenHeight() = screenHeight
 }

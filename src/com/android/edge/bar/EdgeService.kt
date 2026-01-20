@@ -170,8 +170,10 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
         taskStackListener = FreeformTaskStackListener(this, freeformWM)
         taskStackListener.register()
 
-        screenWidth = resources.displayMetrics.widthPixels
-        screenHeight = resources.displayMetrics.heightPixels
+        val metrics = windowManager.currentWindowMetrics.bounds
+        screenWidth = metrics.width()
+        screenHeight = metrics.height()
+        freeformWM.updateScreenDimensions(screenWidth, screenHeight)
 
         activityManager.registerUserSwitchObserver(userSwitchObserver, "EdgeService")
         serviceStarted = true
@@ -197,12 +199,18 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        val newWidth = resources.displayMetrics.widthPixels
-        val newHeight = resources.displayMetrics.heightPixels
+        val metrics = windowManager.currentWindowMetrics.bounds
+        val newWidth = metrics.width()
+        val newHeight = metrics.height()
         if (newWidth == screenWidth && newHeight == screenHeight) return
 
         screenWidth = newWidth
         screenHeight = newHeight
+
+        if (::freeformWM.isInitialized) {
+            freeformWM.updateScreenDimensions(newWidth, newHeight)
+            freeformWM.notifyOrientationChangedConfig(newWidth > newHeight)
+        }
 
         if (showSideline) updateSidelinePosition()
         if (isSidebarVisible) edgeSideBar.updateSidebarPosition()

@@ -114,10 +114,11 @@ class RemoveZoneOverlay(private val context: Context) {
         
         val centerX = screenWidth / 2f
         val halfZoneWidth = (pillWidthPx / 2f) + tolerance
+        val removeZoneTop = pillTopPx - tolerance
         val removeZoneBottom = pillTopPx + pillHeightPx + tolerance
         
         val inXRange = bubbleX >= (centerX - halfZoneWidth) && bubbleX <= (centerX + halfZoneWidth)
-        val inYRange = bubbleY <= removeZoneBottom
+        val inYRange = bubbleY >= removeZoneTop && bubbleY <= removeZoneBottom
         
         return inXRange && inYRange
     }

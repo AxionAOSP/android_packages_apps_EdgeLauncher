@@ -89,7 +89,7 @@ fun FreeformWindowContent(
     onBack: () -> Unit,
     onBringToFront: () -> Unit,
     onMaximizeFullscreen: () -> Unit,
-    onUpdateWindowLayout: (Int, Int, Int, Int) -> Unit,
+    onUpdateWindowLayout: (Float, Float, Int, Int) -> Unit,
     onSetupTextureView: (TextureView) -> Unit,
     textureViewListener: TextureView.SurfaceTextureListener
 ) {
@@ -154,11 +154,8 @@ private fun BubbleModeView(
     var isInRemoveZone by remember { mutableStateOf(false) }
     val bubbleSizePx = BUBBLE_SIZE_DP * density
 
-    var dragX by remember { mutableFloatStateOf(0f) }
-    var dragY by remember { mutableFloatStateOf(0f) }
-
-    fun getBubbleCenterX() = dragX + bubbleSizePx / 2
-    fun getBubbleCenterY() = dragY + bubbleSizePx / 2
+    fun getBubbleCenterX() = state.x.toFloat() + bubbleSizePx / 2
+    fun getBubbleCenterY() = state.y.toFloat() + bubbleSizePx / 2
     
     fun getBubbleSlotFromPosition(y: Float): Int {
         val margin = 16 * density
@@ -166,7 +163,7 @@ private fun BubbleModeView(
         return ((y - margin) / (bubbleSizePx + slotSpacing)).toInt().coerceAtLeast(0)
     }
     
-    LaunchedEffect(dragY, isBubbleDragging) {
+    LaunchedEffect(state.y, isBubbleDragging) {
         if (isBubbleDragging) {
             val currentSlot = freeformWindowManager.getBubbleSlot(stateManager.packageName) ?: 0
             val targetSlot = getBubbleSlotFromPosition(getBubbleCenterY())
@@ -177,7 +174,7 @@ private fun BubbleModeView(
         }
     }
     
-    LaunchedEffect(dragX, dragY, isBubbleDragging) {
+    LaunchedEffect(state.x, state.y, isBubbleDragging) {
         if (isBubbleDragging) {
             val inZone = freeformWindowManager.isInRemoveZone(getBubbleCenterX(), getBubbleCenterY())
             isInRemoveZone = inZone
@@ -198,13 +195,9 @@ private fun BubbleModeView(
             isHovered = isInRemoveZone,
             onDragStart = {
                 isBubbleDragging = true
-                dragX = state.x.toFloat()
-                dragY = state.y.toFloat()
                 freeformWindowManager.showRemoveZone()
             },
             onDrag = { deltaX, deltaY ->
-                dragX += deltaX
-                dragY += deltaY
                 stateManager.onDrag(deltaX, deltaY)
             },
             onDragEnd = {
@@ -217,8 +210,8 @@ private fun BubbleModeView(
                 isBubbleDragging = false
                 freeformWindowManager.hideRemoveZone()
                 
-                if (wasInRemoveZone) {
-                    Log.d("BubbleModeView", "Calling onCloseAndKill")
+                if (isInRemoveZone) {
+                    Log.d("BubbleModeView", "Calling onCloseAndKill (dismissed in zone)")
                     onCloseAndKill()
                 } else {
                     stateManager.onDragEnd()
@@ -403,6 +396,10 @@ private fun FullWindowView(
                            composeScaleOut(targetScale = 0.9f, animationSpec = tween(150))
                 ) {
                     MenuPill(
+                        onMinimize = {
+                            isMenuExpanded = false
+                            stateManager.onMinimize()
+                        },
                         onHangup = {
                             isMenuExpanded = false
                             stateManager.onHangup()

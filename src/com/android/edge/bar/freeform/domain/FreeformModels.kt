@@ -94,7 +94,7 @@ object FreeformConstants {
 
     const val RESIZE_HANDLE_BOTTOM_INSET_DP = -8
     
-    fun createDefaultWindowState(width: Int, height: Int, x: Int = 0, y: Int = 0): WindowState {
+    fun createDefaultWindowState(width: Int, height: Int, x: Float = 0f, y: Float = 0f): WindowState {
         return WindowState(
             x = x,
             y = y,

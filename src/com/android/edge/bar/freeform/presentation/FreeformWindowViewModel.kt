@@ -58,8 +58,8 @@ class FreeformWindowViewModel(
 
     val config = FreeformConfig(context = context, densityScale = 0.85f)
 
-    val initialX: Int = (displayMetrics.widthPixels - config.width) / 2
-    val initialY: Int = (displayMetrics.heightPixels - config.height) / 2
+    val initialX: Float = ((displayMetrics.widthPixels - config.width) / 2).toFloat()
+    val initialY: Float = ((displayMetrics.heightPixels - config.height) / 2).toFloat()
     val screenWidth: Int = displayMetrics.widthPixels
     val screenHeight: Int = displayMetrics.heightPixels
     val density: Float = displayMetrics.density
@@ -139,9 +139,9 @@ class FreeformWindowViewModel(
         }
     }
 
-    fun updateWindowLayout(x: Int, y: Int, width: Int, height: Int, windowParams: WindowManager.LayoutParams) {
-        windowParams.x = x
-        windowParams.y = y
+    fun updateWindowLayout(x: Float, y: Float, width: Int, height: Int, windowParams: WindowManager.LayoutParams) {
+        windowParams.x = x.toInt()
+        windowParams.y = y.toInt()
         windowParams.width = width
         windowParams.height = height
 
