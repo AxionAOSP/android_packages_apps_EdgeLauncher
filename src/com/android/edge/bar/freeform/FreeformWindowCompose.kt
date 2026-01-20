@@ -19,6 +19,7 @@ import android.content.Context
 import android.graphics.SurfaceTexture
 import android.util.Log
 import android.view.TextureView
+import com.android.edge.bar.freeform.presentation.FreeformStateManager
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -54,6 +55,8 @@ class FreeformWindowCompose(
         taskId = taskId,
         onWindowDead = { destroy("App killed externally") }
     )
+
+    val stateManager: FreeformStateManager get() = viewModel.stateManager
 
     init {
         viewModel.register(this)

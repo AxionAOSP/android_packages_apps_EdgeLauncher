@@ -17,6 +17,11 @@ package com.android.edge.bar.freeform
 
 import android.content.Context
 import android.util.Log
+import com.android.axion.kotlin.math.dpToPx
+import com.android.edge.bar.freeform.presentation.WindowMode
+import com.android.edge.bar.freeform.FreeformWindowCompose
+import com.android.edge.bar.freeform.presentation.FreeformStateManager
+import com.android.edge.bar.freeform.domain.FreeformConstants
 import java.util.concurrent.ConcurrentHashMap
 
 class FreeformWindowManager private constructor(private val context: Context) {
@@ -183,6 +188,48 @@ class FreeformWindowManager private constructor(private val context: Context) {
 
     fun getBubbleSlot(packageName: String): Int? {
         return bubbleSlots[packageName]
+    }
+
+    fun reorderBubbleSlot(packageName: String, newSlot: Int): Boolean {
+        val currentSlot = bubbleSlots[packageName] ?: return false
+        
+        val occupyingPackage = bubbleSlots.entries.find { it.value == newSlot }?.key
+        
+        if (occupyingPackage != null) {
+            bubbleSlots[occupyingPackage] = currentSlot
+            bubbleSlots[packageName] = newSlot
+            Log.d(TAG, "Swapped bubble slots: $packageName from $currentSlot to $newSlot, $occupyingPackage from $newSlot to $currentSlot")
+            updateBubblePositionsAfterReorder()
+            return true
+        } else if (!bubbleSlots.values.contains(newSlot)) {
+            bubbleSlots[packageName] = newSlot
+            Log.d(TAG, "Moved $packageName from slot $currentSlot to empty slot $newSlot")
+            updateBubblePositionsAfterReorder()
+            return true
+        }
+        
+        return false
+    }
+
+    fun getBubblePackagesSortedBySlot(): List<String> {
+        return bubbleSlots.entries
+            .sortedBy { it.value }
+            .map { it.key }
+    }
+
+    fun updateBubblePositionsAfterReorder() {
+        val sortedPackages = getBubblePackagesSortedBySlot()
+        sortedPackages.forEachIndexed { index, packageName ->
+            val window = windows[packageName]
+            if (window?.stateManager?.state?.value?.mode == WindowMode.BUBBLE) {
+                val bubbleSizePx = context.dpToPx(FreeformConstants.BUBBLE_SIZE_DP.toFloat())
+                val margin = context.dpToPx(16f)
+                val slotSpacing = context.dpToPx(8f)
+                val newY = margin + (index * (bubbleSizePx + slotSpacing))
+                
+                window.stateManager.onBubblePositionUpdate(newY)
+            }
+        }
     }
 
     fun registerDisplayId(displayId: Int, packageName: String) {

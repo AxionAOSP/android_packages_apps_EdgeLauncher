@@ -74,7 +74,7 @@ class FreeformWindowViewModel(
             context = context,
             repository = repository,
             scope = scope,
-            packageName = packageName,
+            windowPackageName = packageName,
             freeformWindowManager = freeformWindowManager,
             initialWidth = config.width,
             initialHeight = config.height,

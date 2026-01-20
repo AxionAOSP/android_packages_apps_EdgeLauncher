@@ -27,7 +27,7 @@ object FreeformConstants {
     const val HANGUP_WIDTH = 150
     const val HANGUP_HEIGHT = 200
 
-    const val MIN_WINDOW_WIDTH_DP = 150
+    const val MIN_WINDOW_WIDTH_DP = 190
     const val MIN_WINDOW_HEIGHT_DP = 200f
 
     const val MAX_WINDOW_WIDTH_DP = 1200

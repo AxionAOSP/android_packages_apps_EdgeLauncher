@@ -21,9 +21,11 @@ import android.util.Log
 import android.view.TextureView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.scaleIn as composeScaleIn
 import androidx.compose.animation.scaleOut as composeScaleOut
@@ -32,6 +34,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -48,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.viewinterop.AndroidView
 import com.android.edge.bar.freeform.FreeformWindowManager
 import com.android.edge.bar.freeform.presentation.components.*
@@ -100,6 +104,9 @@ fun FreeformWindowContent(
     val sizeFactor = (state.width.toFloat() / defaultWidthPx.toFloat()).coerceIn(0.7f, 1.3f)
     val isBubbleMode = state.mode == WindowMode.BUBBLE
 
+    fun onSetDragging(dragging: Boolean) {
+    }
+
     AnimatedVisibility(
         visible = !isBubbleMode,
         enter = fadeIn(),
@@ -114,6 +121,7 @@ fun FreeformWindowContent(
             onBack = onBack,
             onMaximizeFullscreen = onMaximizeFullscreen,
             onBringToFront = onBringToFront,
+            onSetDragging = ::onSetDragging,
             onSetupTextureView = onSetupTextureView,
             textureViewListener = textureViewListener
         )
@@ -151,6 +159,23 @@ private fun BubbleModeView(
 
     fun getBubbleCenterX() = dragX + bubbleSizePx / 2
     fun getBubbleCenterY() = dragY + bubbleSizePx / 2
+    
+    fun getBubbleSlotFromPosition(y: Float): Int {
+        val margin = 16 * density
+        val slotSpacing = 8 * density
+        return ((y - margin) / (bubbleSizePx + slotSpacing)).toInt().coerceAtLeast(0)
+    }
+    
+    LaunchedEffect(dragY, isBubbleDragging) {
+        if (isBubbleDragging) {
+            val currentSlot = freeformWindowManager.getBubbleSlot(stateManager.packageName) ?: 0
+            val targetSlot = getBubbleSlotFromPosition(getBubbleCenterY())
+            
+            if (targetSlot != currentSlot && targetSlot >= 0) {
+                freeformWindowManager.reorderBubbleSlot(stateManager.packageName, targetSlot)
+            }
+        }
+    }
     
     LaunchedEffect(dragX, dragY, isBubbleDragging) {
         if (isBubbleDragging) {
@@ -213,6 +238,7 @@ private fun FullWindowView(
     onBack: () -> Unit,
     onMaximizeFullscreen: () -> Unit,
     onBringToFront: () -> Unit,
+    onSetDragging: (Boolean) -> Unit,
     onSetupTextureView: (TextureView) -> Unit,
     textureViewListener: TextureView.SurfaceTextureListener
 ) {
@@ -226,16 +252,7 @@ private fun FullWindowView(
     var textureViewRef by remember { mutableStateOf<TextureView?>(null) }
     var isContentLight by remember { mutableStateOf(false) }
     
-    var isMenuExpanded by remember { mutableStateOf(false) }
-    
     val context = LocalContext.current
-    val prefs = remember { context.getSharedPreferences("freeform_prefs", Context.MODE_PRIVATE) }
-    var showEducation by remember { 
-        mutableStateOf(!prefs.getBoolean("education_shown", false))
-    }
-    var showResizeEducation by remember {
-        mutableStateOf(!prefs.getBoolean("resize_education_shown", false))
-    }
     
     val isHangupMode = state.mode == WindowMode.HANGUP
     val showResizeHints = (isResizing || isDragging) && !isHangupMode
@@ -273,47 +290,182 @@ private fun FullWindowView(
         }
     }
     
+    val colors = rememberLuminanceColors(isContentLight)
+    
+    val prefs = remember { context.getSharedPreferences("edge_launcher", Context.MODE_PRIVATE) }
+    var showEducation by remember { mutableStateOf(!prefs.getBoolean("education_shown", false)) }
+    
+    val onEducationDismissed = {
+        showEducation = false
+        prefs.edit().putBoolean("education_shown", true).apply()
+    }
+    
+    LaunchedEffect(showEducation) {
+        if (showEducation) {
+            delay(5000)
+            onEducationDismissed()
+        }
+    }
+    
+    val handleWidth = (RESIZE_HANDLE_SIZE_DP.dp * sizeFactor)
+        .coerceIn(RESIZE_HANDLE_SIZE_MIN_DP.dp, RESIZE_HANDLE_SIZE_MAX_DP.dp)
+    var isMenuExpanded by remember { mutableStateOf(false) }
+    var dropdownXOffset by remember { mutableStateOf(0f) }
+
     Box(modifier = Modifier.fillMaxSize()) {
-        WindowSurface(
-            state = state,
-            stateManager = stateManager,
-            isHangupMode = isHangupMode,
-            cornerRadius = cornerRadius,
-            isContentLight = isContentLight,
-            isMenuExpanded = isMenuExpanded,
-            onMenuExpandedChange = { isMenuExpanded = it },
-            showEducation = showEducation,
-            onEducationDismissed = {
-                showEducation = false
-                prefs.edit().putBoolean("education_shown", true).apply()
-            },
-            scope = scope,
-            onClose = onClose,
-            onBack = onBack,
-            onMaximizeFullscreen = onMaximizeFullscreen,
-            onBringToFront = onBringToFront,
-            onSetDragging = { isDragging = it },
-            onSetupTextureView = { view ->
-                textureViewRef = view
-                onSetupTextureView(view)
-            },
-            textureViewListener = textureViewListener
-        )
-        
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            if (!isHangupMode) {
+                TitleBar(
+                    onClose = onClose,
+                    onMinimize = { stateManager.onMinimize() },
+                    onHangup = { stateManager.onHangup() },
+                    onMaximizeFullscreen = onMaximizeFullscreen,
+                    onBack = onBack,
+                    onDrag = { deltaX, deltaY ->
+                        scope.launch(Dispatchers.Main) {
+                            stateManager.onDrag(deltaX, deltaY)
+                        }
+                    },
+                    onDragStart = {
+                        onBringToFront()
+                        onSetDragging(true)
+                    },
+                    onDragEnd = {
+                        stateManager.onDragEnd()
+                        onSetDragging(false)
+                    },
+                    isContentLight = isContentLight,
+                    isMenuExpanded = isMenuExpanded,
+                    onMenuExpandedChange = { isMenuExpanded = it },
+                    appIcon = state.appIcon,
+                    onDropdownOffsetChanged = { dropdownXOffset = it },
+                    showEducation = showEducation,
+                    onEducationDismissed = onEducationDismissed,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+            
+            Box(modifier = Modifier.weight(1f)) {
+                WindowSurface(
+                    state = state,
+                    stateManager = stateManager,
+                    isHangupMode = isHangupMode,
+                    cornerRadius = cornerRadius,
+                    isContentLight = isContentLight,
+                    showEducation = showEducation,
+                    onEducationDismissed = onEducationDismissed,
+                    scope = scope,
+                    onClose = onClose,
+                    onBack = onBack,
+                    onMaximizeFullscreen = onMaximizeFullscreen,
+                    onBringToFront = onBringToFront,
+                    onSetDragging = { isDragging = it },
+                    onSetupTextureView = { view ->
+                        textureViewRef = view
+                        onSetupTextureView(view)
+                    },
+                    textureViewListener = textureViewListener
+                )
+                
+                if (!isHangupMode) {
+                    ResizeHandles(
+                        stateManager = stateManager,
+                        density = density,
+                        sizeFactor = sizeFactor,
+                        isContentLight = isContentLight,
+                        showEducation = showEducation,
+                        onEducationDismissed = onEducationDismissed,
+                        onResizeStarted = { onResizeStarted() },
+                        onResizeEnded = { onResizeEnded() }
+                    )
+                }
+            }
+        }
+
         if (!isHangupMode) {
-            ResizeHandles(
-                stateManager = stateManager,
-                density = density,
-                sizeFactor = sizeFactor,
-                showResizeEducation = showResizeEducation,
-                isContentLight = isContentLight,
-                onResizeEducationDismissed = {
-                    showResizeEducation = false
-                    prefs.edit().putBoolean("resize_education_shown", true).apply()
-                },
-                onResizeStarted = { onResizeStarted() },
-                onResizeEnded = { onResizeEnded() }
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(top = 42.dp),
+                contentAlignment = Alignment.TopStart
+            ) {
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = isMenuExpanded,
+                    modifier = Modifier.offset { IntOffset(dropdownXOffset.toInt(), 0) },
+                    enter = fadeIn(animationSpec = tween(200)) + 
+                            expandVertically(expandFrom = Alignment.Top, animationSpec = tween(200)),
+                    exit = fadeOut(animationSpec = tween(150)) + 
+                           shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(150)) +
+                           composeScaleOut(targetScale = 0.9f, animationSpec = tween(150))
+                ) {
+                    MenuPill(
+                        onHangup = {
+                            isMenuExpanded = false
+                            stateManager.onHangup()
+                        },
+                        onMaximizeFullscreen = {
+                            isMenuExpanded = false
+                            onMaximizeFullscreen()
+                        },
+                        isContentLight = isContentLight,
+                        scaleFactor = 1.0f
+                    )
+                }
+            }
+        }
+
+        androidx.compose.animation.AnimatedVisibility(
+            visible = showEducation && !isMenuExpanded,
+            enter = fadeIn() + expandVertically(expandFrom = Alignment.Bottom),
+            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Bottom),
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset { IntOffset(dropdownXOffset.toInt(), 50) }
+        ) {
+            Surface(
+                color = colors.pillColor,
+                shape = RoundedCornerShape(8.dp),
+                tonalElevation = 4.dp,
+                shadowElevation = 4.dp,
+                modifier = Modifier.clickable { onEducationDismissed() }
+            ) {
+                Text(
+                    text = "Tap to open menu",
+                    color = colors.contentColor,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                )
+            }
+        }
+
+        androidx.compose.animation.AnimatedVisibility(
+            visible = showEducation && !state.isResizing,
+            enter = fadeIn() + expandHorizontally(expandFrom = Alignment.End),
+            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.End),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = (-handleWidth - 8.dp), y = (-handleWidth - 8.dp))
+        ) {
+            Surface(
+                color = colors.pillColor,
+                shape = RoundedCornerShape(8.dp),
+                tonalElevation = 4.dp,
+                shadowElevation = 4.dp,
+                modifier = Modifier.clickable { onEducationDismissed() }
+            ) {
+                Text(
+                    text = "Drag to resize",
+                    color = colors.contentColor,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                )
+            }
         }
     }
 }
@@ -325,8 +477,6 @@ private fun BoxScope.WindowSurface(
     isHangupMode: Boolean,
     cornerRadius: Dp,
     isContentLight: Boolean,
-    isMenuExpanded: Boolean,
-    onMenuExpandedChange: (Boolean) -> Unit,
     showEducation: Boolean,
     onEducationDismissed: () -> Unit,
     scope: CoroutineScope,
@@ -354,19 +504,31 @@ private fun BoxScope.WindowSurface(
                 } else Modifier
             ),
         color = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(cornerRadius)
+        shape = RoundedCornerShape(
+            topStart = if (isHangupMode) cornerRadius else 0.dp,
+            topEnd = if (isHangupMode) cornerRadius else 0.dp,
+            bottomStart = cornerRadius,
+            bottomEnd = cornerRadius
+        )
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(cornerRadius))
+                    .clip(
+                        RoundedCornerShape(
+                            topStart = if (isHangupMode) cornerRadius else 0.dp,
+                            topEnd = if (isHangupMode) cornerRadius else 0.dp,
+                            bottomStart = cornerRadius,
+                            bottomEnd = cornerRadius
+                        )
+                    )
                     .then(
-                        if (!isHangupMode && isMenuExpanded) {
-                            Modifier.pointerInput(isMenuExpanded) {
+                        if (isHangupMode) {
+                            Modifier.pointerInput(Unit) {
                                 detectTapGestures(
                                     onTap = { 
-                                        onMenuExpandedChange(false)
+                                        stateManager.onHangupTap() 
                                     }
                                 )
                             }
@@ -425,35 +587,6 @@ private fun BoxScope.WindowSurface(
                     }
                 }
             }
-            
-            if (!isHangupMode) {
-                OverlayTitleBar(
-                    onClose = onClose,
-                    onBack = onBack,
-                    onMinimize = { stateManager.onMinimize() },
-                    onHangup = { stateManager.onHangup() },
-                    onMaximizeFullscreen = onMaximizeFullscreen,
-                    onDrag = { deltaX, deltaY ->
-                        scope.launch(Dispatchers.Main) {
-                            stateManager.onDrag(deltaX, deltaY)
-                        }
-                    },
-                    onDragStart = {
-                        onBringToFront()
-                        onSetDragging(true)
-                    },
-                    onDragEnd = {
-                        stateManager.onDragEnd()
-                        onSetDragging(false)
-                    },
-                    isContentLight = isContentLight,
-                    isMenuExpanded = isMenuExpanded,
-                    onMenuExpandedChange = onMenuExpandedChange,
-                    showEducation = showEducation,
-                    onEducationDismissed = onEducationDismissed,
-                    modifier = Modifier.align(Alignment.TopCenter)
-                )
-            }
         }
     }
 }
@@ -463,9 +596,9 @@ private fun BoxScope.ResizeHandles(
     stateManager: FreeformStateManager,
     density: androidx.compose.ui.unit.Density,
     sizeFactor: Float,
-    showResizeEducation: Boolean,
     isContentLight: Boolean,
-    onResizeEducationDismissed: () -> Unit,
+    showEducation: Boolean,
+    onEducationDismissed: () -> Unit,
     onResizeStarted: () -> Unit,
     onResizeEnded: () -> Unit
 ) {
@@ -568,36 +701,5 @@ private fun BoxScope.ResizeHandles(
         Color.White
     } else {
         Color(0xFF1C1C1E)
-    }
-    
-    AnimatedVisibility(
-        visible = showResizeEducation,
-        enter = fadeIn(animationSpec = tween(300)) + 
-                expandVertically(expandFrom = Alignment.Bottom, animationSpec = tween(300)),
-        exit = fadeOut(animationSpec = tween(200)) + 
-               shrinkVertically(shrinkTowards = Alignment.Bottom, animationSpec = tween(200)),
-        modifier = Modifier
-            .align(Alignment.BottomCenter)
-            .padding(bottom = 28.dp)
-    ) {
-        LaunchedEffect(Unit) {
-            delay(3000)
-            onResizeEducationDismissed()
-        }
-        
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(expandedBackgroundColor)
-                .clickable { onResizeEducationDismissed() }
-                .padding(horizontal = 12.dp, vertical = 6.dp)
-        ) {
-            Text(
-                text = "Drag corners or bottom edge to resize",
-                color = expandedContentColor,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
     }
 }

@@ -101,7 +101,7 @@ class FreeformStateManager(
     private val context: Context,
     private val repository: FreeformRepository,
     private val scope: CoroutineScope,
-    private val packageName: String,
+    private val windowPackageName: String,
     private val freeformWindowManager: FreeformWindowManager,
     initialWidth: Int,
     initialHeight: Int,
@@ -138,6 +138,8 @@ class FreeformStateManager(
     
     private val currentState: WindowState get() = _state.value
     
+    val packageName: String get() = windowPackageName
+    
     private fun getDisplayDimensions(): Pair<Int, Int> {
         val displayWidth = currentState.width
         val displayHeight = currentState.height
@@ -158,6 +160,8 @@ class FreeformStateManager(
                 }
             }
         }
+        
+        loadAppInfo()
     }
     
     fun dispatch(event: WindowEvent) {
@@ -204,7 +208,7 @@ class FreeformStateManager(
         surfaceEventsManager.dispatch(SurfaceEvent.ShowVeilRequested(VeilReason.DISPLAY_CREATED))
         surfaceEventsManager.dispatch(SurfaceEvent.OperationStarted("display_init"))
         updateState { copy(displayId = displayId) }
-        freeformWindowManager.registerDisplayId(displayId, packageName)
+        freeformWindowManager.registerDisplayId(displayId, windowPackageName)
     }
     
     private suspend fun handleOrientationChanged(isLandscape: Boolean) {
@@ -306,7 +310,7 @@ class FreeformStateManager(
     }
     
     private suspend fun handleMinimize() {
-        val slot = freeformWindowManager.getNextBubbleSlot(packageName)
+        val slot = freeformWindowManager.getNextBubbleSlot(windowPackageName)
         val bubbleSizePx = context.dpToPx(FreeformConstants.BUBBLE_SIZE_DP)
         val margin = context.dpToPx(16)
         val slotSpacing = context.dpToPx(8)
@@ -343,7 +347,7 @@ class FreeformStateManager(
     }
     
     private suspend fun handleBubbleExpand() {
-        freeformWindowManager.releaseBubbleSlot(packageName)
+        freeformWindowManager.releaseBubbleSlot(windowPackageName)
 
         val targetWidth = currentState.savedWidth
         val targetHeight = currentState.savedHeight
@@ -495,7 +499,13 @@ class FreeformStateManager(
     }
 
     private suspend fun handleResizeEnd() {
-        updateState { copy(isResizing = false) }
+        updateState { 
+            copy(
+                isResizing = false,
+                savedWidth = width,
+                savedHeight = height
+            ) 
+        }
 
         val displayId = currentState.displayId
 
@@ -602,11 +612,15 @@ class FreeformStateManager(
         vibrator.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
     }
     
-    fun loadAppIcon() {
+    private fun loadAppInfo() {
         scope.launch {
-            repository.getAppIcon(packageName)
+            repository.getAppIcon(windowPackageName)
                 .onSuccess { dispatch(WindowEvent.IconLoaded(it)) }
         }
+    }
+    
+    fun loadAppIcon() {
+        loadAppInfo()
     }
     
     fun onDrag(deltaX: Float, deltaY: Float) {
@@ -655,6 +669,10 @@ class FreeformStateManager(
     
     fun onOrientationChanged(isLandscape: Boolean) {
         dispatch(WindowEvent.OrientationChanged(isLandscape))
+    }
+    
+    fun onBubblePositionUpdate(newY: Int) {
+        updateState { copy(y = newY) }
     }
     
     fun isHangupMode(): Boolean = currentState.mode == WindowMode.HANGUP
