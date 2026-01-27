@@ -63,9 +63,9 @@ object FreeformConstants {
     const val TITLE_BAR_BUTTON_WIDTH_MIN_DP = 42
     const val TITLE_BAR_BUTTON_WIDTH_MAX_DP = 56
 
-    const val RESIZE_HANDLE_SIZE_DP = 56
-    const val RESIZE_HANDLE_SIZE_MIN_DP = 44
-    const val RESIZE_HANDLE_SIZE_MAX_DP = 64
+    const val RESIZE_HANDLE_SIZE_DP = 48
+    const val RESIZE_HANDLE_SIZE_MIN_DP = 40
+    const val RESIZE_HANDLE_SIZE_MAX_DP = 56
     const val RESIZE_HANDLE_CANVAS_SIZE_DP = 32
     const val RESIZE_HANDLE_CANVAS_MIN_DP = 26
     const val RESIZE_HANDLE_CANVAS_MAX_DP = 40
@@ -76,7 +76,9 @@ object FreeformConstants {
     const val RESIZE_HANDLE_STROKE_MIN_DP = 2.5f
     const val RESIZE_HANDLE_STROKE_MAX_DP = 3.5f
     const val RESIZE_HANDLE_CORNER_RADIUS_DP = 40
-    const val RESIZE_HANDLE_INSET_DP = -16
+    const val RESIZE_HANDLE_INSET_DP = 0
+    const val RESIZE_HANDLE_THICKNESS_DP = 24
+    const val RESIZE_HANDLE_LENGTH_DP = 80
 
     const val RESIZE_HANDLE_BOTTOM_WIDTH_DP = 100
     const val RESIZE_HANDLE_BOTTOM_WIDTH_MIN_DP = 80
@@ -92,7 +94,7 @@ object FreeformConstants {
     const val OVERLAY_PILL_PADDING_DP = 6
     const val OVERLAY_PILL_ICON_SIZE_DP = 32
 
-    const val RESIZE_HANDLE_BOTTOM_INSET_DP = -8
+    const val RESIZE_HANDLE_BOTTOM_INSET_DP = -16
     
     fun createDefaultWindowState(width: Int, height: Int, x: Float = 0f, y: Float = 0f): WindowState {
         return WindowState(

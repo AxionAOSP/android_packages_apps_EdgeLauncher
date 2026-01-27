@@ -122,8 +122,7 @@ class FreeformWindowViewModel(
             val displayId = currentState.displayId
             if (displayId != Display.INVALID_DISPLAY && displayId > 0) {
                 if (event.actionMasked == MotionEvent.ACTION_DOWN) {
-                    val displayHeight = currentState.height
-                    inputInjector.setScale(v.width, v.height, currentState.width, displayHeight)
+                    inputInjector.setScale(v.width, v.height, currentState.width, currentState.height)
                 }
 
                 val result = inputInjector.injectTouchEvent(event)
@@ -272,12 +271,10 @@ class FreeformWindowViewModel(
             Log.i(TAG, "Restored persisted state: ${displayWidth}x${displayHeight}, isLandscape=$isLandscape")
         } else {
             Log.i(TAG, "Resolved orientation: $orientation (landscape=$isLandscape, portrait=$isPortrait) for $packageName/$activityName")
-            
             if (isLandscape && displayWidth < displayHeight) {
-                displayWidth = (displayHeight * 0.70f).toInt()
                 val temp = displayHeight
-                displayHeight = config.width.coerceAtMost(temp)
-                displayHeight = config.width
+                displayWidth = (displayHeight * 1.3f).toInt() 
+                displayHeight = temp.coerceAtMost(config.width)
                 Log.i(TAG, "Landscape app detected, adjusted dimensions to ${displayWidth}x${displayHeight}")
             } else if (!isLandscape && displayWidth > displayHeight) {
                 val temp = displayWidth
@@ -320,6 +317,8 @@ class FreeformWindowViewModel(
                     Log.e(TAG, "Failed to launch app", it)
                     stateManager.dispatch(WindowEvent.AppLaunchComplete)
                 }
+                delay(500)
+                resizeVirtualDisplay(displayWidth, displayHeight)
             }
 
             val callback = object : FreeformRepository.FreeformCallback {

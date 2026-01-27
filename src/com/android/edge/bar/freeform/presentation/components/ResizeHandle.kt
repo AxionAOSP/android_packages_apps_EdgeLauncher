@@ -15,15 +15,21 @@
  */
 package com.android.edge.bar.freeform.presentation.components
 
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.*
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_SIZE_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_WIDTH_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_HEIGHT_DP
+import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_THICKNESS_DP
+import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_LENGTH_DP
 
 @Composable
 fun CornerResizeHandle(
@@ -31,22 +37,51 @@ fun CornerResizeHandle(
     onResizeStart: () -> Unit,
     onResizeEnd: () -> Unit,
     handleWidth: Dp = RESIZE_HANDLE_SIZE_DP.dp,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isLeft: Boolean = false
 ) {
+    val thickness = RESIZE_HANDLE_THICKNESS_DP.dp
+    val length = RESIZE_HANDLE_LENGTH_DP.dp
+    
     Box(
         modifier = modifier
-            .size(handleWidth)
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = { onResizeStart() },
-                    onDragEnd = onResizeEnd,
-                    onDrag = { change, dragAmount ->
-                        change.consume()
-                        onResize(dragAmount.x, dragAmount.y)
+            .size(length)
+    ) {
+        val dragLogic = Modifier.pointerInput(Unit) {
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false)
+                var dragged = false
+                drag(down.id) { change ->
+                    val dragAmount = change.position - change.previousPosition
+                    if (!dragged) {
+                        dragged = true
+                        onResizeStart()
                     }
-                )
+                    change.consume()
+                    onResize(dragAmount.x, dragAmount.y)
+                }
+                if (dragged) {
+                    onResizeEnd()
+                }
             }
-    )
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(thickness)
+                .then(dragLogic)
+        )
+
+        Box(
+            modifier = Modifier
+                .align(if (isLeft) Alignment.CenterStart else Alignment.CenterEnd)
+                .fillMaxHeight()
+                .width(thickness)
+                .then(dragLogic)
+        )
+    }
 }
 
 @Composable
@@ -63,14 +98,22 @@ fun BottomResizeHandle(
             .width(handleWidth)
             .height(handleHeight)
             .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = { onResizeStart() },
-                    onDragEnd = onResizeEnd,
-                    onDrag = { change, dragAmount ->
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    var dragged = false
+                    drag(down.id) { change ->
+                        val dragAmount = change.position - change.previousPosition
+                        if (!dragged) {
+                            dragged = true
+                            onResizeStart()
+                        }
                         change.consume()
                         onResize(dragAmount.y)
                     }
-                )
+                    if (dragged) {
+                        onResizeEnd()
+                    }
+                }
             }
     )
 }

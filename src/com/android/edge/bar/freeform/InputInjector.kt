@@ -49,7 +49,8 @@ class InputInjector(private val context: Context) {
     }
 
     private var currentDownTime: Long = 0L
-    private var scale: Float = 1.0f
+    private var scaleX: Float = 1.0f
+    private var scaleY: Float = 1.0f
     private var velocityTracker: VelocityTracker? = null
     private var lastX: Float = 0f
     private var lastY: Float = 0f
@@ -68,9 +69,8 @@ class InputInjector(private val context: Context) {
     }
     
     fun setScale(viewWidth: Int, viewHeight: Int, displayWidth: Int, displayHeight: Int) {
-        val scaleX = displayWidth.toFloat() / viewWidth
-        val scaleY = displayHeight.toFloat() / viewHeight
-        this.scale = minOf(scaleX, scaleY)
+        this.scaleX = displayWidth.toFloat() / viewWidth
+        this.scaleY = displayHeight.toFloat() / viewHeight
     }
 
     fun injectTouchEvent(event: MotionEvent): Boolean {
@@ -152,11 +152,11 @@ class InputInjector(private val context: Context) {
                 if (event.actionMasked == MotionEvent.ACTION_MOVE && dampingMultiplier < 1.0f) {
                     val deltaX = (oldCoords.x - lastX) * dampingMultiplier
                     val deltaY = (oldCoords.y - lastY) * dampingMultiplier
-                    x = (lastX + deltaX) * scale
-                    y = (lastY + deltaY) * scale
+                    x = (lastX + deltaX) * scaleX
+                    y = (lastY + deltaY) * scaleY
                 } else {
-                    x = oldCoords.x * scale
-                    y = oldCoords.y * scale
+                    x = oldCoords.x * scaleX
+                    y = oldCoords.y * scaleY
                 }
             }
             pointerProperties[i] = pointerProperty
@@ -187,8 +187,8 @@ class InputInjector(private val context: Context) {
             val allHistCoords = Array(event.pointerCount) { p ->
                 MotionEvent.PointerCoords().apply {
                     event.getHistoricalPointerCoords(p, h, this)
-                    x *= scale
-                    y *= scale
+                    x *= scaleX
+                    y *= scaleY
                 }
             }
             newEvent.addBatch(historyTime, allHistCoords, event.metaState)

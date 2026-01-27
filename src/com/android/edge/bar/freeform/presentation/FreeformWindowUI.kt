@@ -337,7 +337,7 @@ private fun FullWindowView(
                     onDropdownOffsetChanged = { dropdownXOffset = it },
                     showEducation = showEducation,
                     onEducationDismissed = onEducationDismissed,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = 24.dp)
                 )
             }
             
@@ -488,7 +488,7 @@ private fun BoxScope.WindowSurface(
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 16.dp, end = 16.dp, bottom = 20.dp)
+            .padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
             .then(
                 if (isHangupMode) {
                     Modifier.pointerInput(Unit) {
@@ -639,7 +639,7 @@ private fun BoxScope.ResizeHandles(
         handleWidth = handleWidth,
         modifier = Modifier
             .align(Alignment.BottomEnd)
-            .offset(x = handleOffset, y = handleOffset)
+            .offset(x = 0.dp, y = 0.dp)
     )
     
     CornerResizeHandle(
@@ -661,9 +661,10 @@ private fun BoxScope.ResizeHandles(
             stateManager.onResizeEnd()
         },
         handleWidth = handleWidth,
+        isLeft = true,
         modifier = Modifier
             .align(Alignment.BottomStart)
-            .offset(x = -handleOffset, y = handleOffset)
+            .offset(x = 0.dp, y = 0.dp)
     )
     
     BottomResizeHandle(
@@ -685,7 +686,7 @@ private fun BoxScope.ResizeHandles(
         handleHeight = bottomHandleHeight,
         modifier = Modifier
             .align(Alignment.BottomCenter)
-            .offset(y = bottomOffset)
+            .offset(y = 0.dp)
     )
     
     val expandedBackgroundColor = if (isContentLight) {
