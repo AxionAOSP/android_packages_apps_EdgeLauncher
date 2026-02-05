@@ -43,7 +43,19 @@ class WindowController(
     private val handler = Handler(Looper.getMainLooper())
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     
-    val windowParams = WindowManager.LayoutParams()
+    val windowParams = WindowManager.LayoutParams().apply {
+        type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+        format = PixelFormat.TRANSLUCENT
+        gravity = Gravity.TOP or Gravity.START
+        flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED or
+                WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
+        privateFlags = WindowManager.LayoutParams.SYSTEM_FLAG_SHOW_FOR_ALL_USERS or
+                WindowManager.LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY
+        layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+        title = "FreeformWindow_$packageName"
+    }
     var composeView: ComposeView? = null
         private set
 
@@ -57,20 +69,10 @@ class WindowController(
 
     fun initWindowParams(width: Int, height: Int, x: Int, y: Int) = runOnMain {
         windowParams.apply {
-            type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
             this.width = width
             this.height = height
             this.x = x
             this.y = y
-            format = PixelFormat.TRANSLUCENT
-            gravity = Gravity.TOP or Gravity.START
-            flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
-                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED or
-                    WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
-            privateFlags = WindowManager.LayoutParams.SYSTEM_FLAG_SHOW_FOR_ALL_USERS or
-                    WindowManager.LayoutParams.PRIVATE_FLAG_TRUSTED_OVERLAY
-            layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
         }
     }
 
@@ -95,6 +97,18 @@ class WindowController(
             }
         } catch (e: Exception) {
             Log.e(TAG, "bringToFront failed", e)
+        }
+    }
+
+    fun bringToBack() = runOnMain {
+        try {
+            composeView?.let { view ->
+                if (view.isAttachedToWindow) {
+                    windowManager.bringToBack(view, null)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "bringToBack failed", e)
         }
     }
 

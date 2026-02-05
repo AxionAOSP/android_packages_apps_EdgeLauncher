@@ -136,6 +136,12 @@ class FreeformWindowManager private constructor(private val context: Context) {
             setFocusedWindow(packageName)
         }
     }
+
+    fun bringAllWindowsToBack() {
+        windows.values.forEach { window ->
+            window.bringToBack()
+        }
+    }
     
     fun onWindowLostFocus(packageName: String) {
         if (focusedWindow == windows[packageName]) {

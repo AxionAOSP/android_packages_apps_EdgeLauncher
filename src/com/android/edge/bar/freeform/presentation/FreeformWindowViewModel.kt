@@ -37,6 +37,7 @@ class FreeformWindowViewModel(
     private val activityName: String,
     private val userId: Int,
     private val taskId: Int = -1,
+    private val desktopMode: Boolean = false,
     private val onWindowDead: (() -> Unit)? = null,
     private val serviceScope: CoroutineScope? = null
 ) {
@@ -47,16 +48,16 @@ class FreeformWindowViewModel(
     private val handler = Handler(Looper.getMainLooper())
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
-    val scope = serviceScope?.plus(SupervisorJob() + Dispatchers.Main) 
+    val scope = serviceScope?.plus(SupervisorJob() + Dispatchers.Main)
         ?: CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     val repository: FreeformRepository = FreeformRepositoryImpl(context)
-    private val inputInjector = InputInjector(context)
+    val inputInjector = InputInjector(context)
     val freeformWindowManager = FreeformWindowManager.getInstance(context)
 
     private val displayMetrics = context.resources.displayMetrics
 
-    val config = FreeformConfig(context = context, densityScale = 0.85f)
+    val config = FreeformConfig(context = context, densityScale = 0.85f, isDesktopMode = desktopMode)
 
     val initialX: Float = ((displayMetrics.widthPixels - config.width) / 2).toFloat()
     val initialY: Float = ((displayMetrics.heightPixels - config.height) / 2).toFloat()
@@ -84,7 +85,8 @@ class FreeformWindowViewModel(
             screenHeight = screenHeight,
             densityDpi = density,
             initialX = initialX,
-            initialY = initialY
+            initialY = initialY,
+            initialMode = if (desktopMode) WindowMode.DESKTOP else WindowMode.NORMAL
         )
     }
     
@@ -218,7 +220,10 @@ class FreeformWindowViewModel(
 
     
     private fun getPrefs() = context.getSharedPreferences("freeform_window_prefs", Context.MODE_PRIVATE)
-    private fun getPrefKey(suffix: String) = "${packageName}_${activityName}_$suffix"
+    private fun getPrefKey(suffix: String): String {
+        val modePrefix = if (desktopMode) "desktop_" else ""
+        return "${packageName}_${activityName}_$modePrefix$suffix"
+    }
 
     private fun saveWindowState(width: Int, height: Int, isLandscape: Boolean) {
         getPrefs().edit().apply {
@@ -317,8 +322,6 @@ class FreeformWindowViewModel(
                     Log.e(TAG, "Failed to launch app", it)
                     stateManager.dispatch(WindowEvent.AppLaunchComplete)
                 }
-                delay(500)
-                resizeVirtualDisplay(displayWidth, displayHeight)
             }
 
             val callback = object : FreeformRepository.FreeformCallback {

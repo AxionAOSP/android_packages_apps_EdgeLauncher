@@ -227,7 +227,7 @@ fun PinnedAppsScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(allApps, key = { it.packageName }) { appInfo ->
+                    items(allApps, key = { it.packageName + "/" + it.activityName }) { appInfo ->
                         val isSelected = appInfo.packageName in selectedPackages
                         
                         ExpressiveAppItem(

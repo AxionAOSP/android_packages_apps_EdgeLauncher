@@ -37,7 +37,8 @@ class FreeformWindowCompose(
     private val packageName: String,
     private val activityName: String,
     private val userId: Int,
-    private val taskId: Int = -1
+    private val taskId: Int = -1,
+    private val desktopMode: Boolean = false
 ) : TextureView.SurfaceTextureListener {
 
     companion object {
@@ -54,6 +55,7 @@ class FreeformWindowCompose(
         activityName = activityName,
         userId = userId,
         taskId = taskId,
+        desktopMode = desktopMode,
         onWindowDead = { destroy("App killed externally") }
     )
 
@@ -120,13 +122,18 @@ class FreeformWindowCompose(
                     textureView = view
                     viewModel.setupTextureViewTouch(view)
                 },
-                textureViewListener = this@FreeformWindowCompose
+                textureViewListener = this@FreeformWindowCompose,
+                inputInjector = viewModel.inputInjector
             )
         }
     }
 
     fun bringToFront() {
         windowController.bringToFront()
+    }
+
+    fun bringToBack() {
+        windowController.bringToBack()
     }
 
     fun onOutsideTouch() {

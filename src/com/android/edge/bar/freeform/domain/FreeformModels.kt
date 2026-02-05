@@ -27,6 +27,15 @@ object FreeformConstants {
     const val HANGUP_WIDTH = 150
     const val HANGUP_HEIGHT = 200
 
+    const val DESKTOP_DEFAULT_WIDTH_DP = 600
+    const val DESKTOP_DEFAULT_HEIGHT_DP = 450
+    const val DESKTOP_MIN_WIDTH_DP = 300 
+    const val DESKTOP_MIN_HEIGHT_DP = 250
+    const val DESKTOP_TITLE_BAR_HEIGHT_DP = 32
+    const val DESKTOP_CORNER_RADIUS_DP = 8
+    const val DESKTOP_TASKBAR_HEIGHT_DP = 56
+    const val DESKTOP_STATUS_BAR_HEIGHT_DP = 32
+
     const val MIN_WINDOW_WIDTH_DP = 190
     const val MIN_WINDOW_HEIGHT_DP = 200f
 

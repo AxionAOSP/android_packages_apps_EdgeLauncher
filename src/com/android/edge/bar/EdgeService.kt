@@ -138,7 +138,10 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
         const val SIDELINE_POSITION_Y_LANDSCAPE = "sideline_position_y_landscape"
 
         const val ACTION_LAUNCH_FREEFORM = "com.android.edge.bar.ACTION_LAUNCH_FREEFORM"
+        const val ACTION_LAUNCH_DESKTOP_FREEFORM = "com.android.edge.bar.ACTION_LAUNCH_DESKTOP_FREEFORM"
+        const val ACTION_BRING_ALL_TO_BACK = "com.android.edge.bar.ACTION_BRING_ALL_TO_BACK"
         const val EXTRA_PACKAGE_NAME = "package_name"
+        const val EXTRA_ACTIVITY_NAME = "activity_name"
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -152,8 +155,23 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
 
         if (intent?.action == ACTION_LAUNCH_FREEFORM) {
             val packageName = intent.getStringExtra(EXTRA_PACKAGE_NAME)
+            val activityName = intent.getStringExtra(EXTRA_ACTIVITY_NAME)
             if (packageName != null) {
-                launchFreeform(packageName)
+                launchFreeform(packageName, activityName)
+            }
+        }
+
+        if (intent?.action == ACTION_LAUNCH_DESKTOP_FREEFORM) {
+            val packageName = intent.getStringExtra(EXTRA_PACKAGE_NAME)
+            val activityName = intent.getStringExtra(EXTRA_ACTIVITY_NAME)
+            if (packageName != null) {
+                launchDesktopFreeform(packageName, activityName)
+            }
+        }
+
+        if (intent?.action == ACTION_BRING_ALL_TO_BACK) {
+            if (::freeformWM.isInitialized) {
+                freeformWM.bringAllWindowsToBack()
             }
         }
 
@@ -394,15 +412,31 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
         return Settings.Secure.getInt(contentResolverRef, key, if (defaultValue) 1 else 0) == 1
     }
 
-    private fun launchFreeform(packageName: String) {
+    private fun launchFreeform(packageName: String, activityName: String? = null) {
         if (freeformWM.hasWindow(packageName)) {
             freeformWM.bringToFront(packageName)
             return
         }
-        
-        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
-        val activityName = launchIntent?.component?.className ?: return
 
-        val window = FreeformWindowCompose(this, packageName, activityName, userId)
+        val targetActivity = activityName ?: run {
+             val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+             launchIntent?.component?.className
+        } ?: return
+
+        val window = FreeformWindowCompose(this, packageName, targetActivity, userId)
+    }
+
+    private fun launchDesktopFreeform(packageName: String, activityName: String? = null) {
+        if (freeformWM.hasWindow(packageName)) {
+            freeformWM.bringToFront(packageName)
+            return
+        }
+
+        val targetActivity = activityName ?: run {
+             val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+             launchIntent?.component?.className
+        } ?: return
+
+        val window = FreeformWindowCompose(this, packageName, targetActivity, userId, desktopMode = true)
     }
 }

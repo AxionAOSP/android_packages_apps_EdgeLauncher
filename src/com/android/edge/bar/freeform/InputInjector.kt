@@ -377,4 +377,52 @@ class InputInjector(private val context: Context) {
             false
         }
     }
+
+    fun injectScrollEvent(x: Float, y: Float, hScrollDelta: Float, vScrollDelta: Float): Boolean {
+        if (displayId < 0) {
+            Log.w(TAG, "Display ID not set, cannot inject scroll event")
+            return false
+        }
+
+        val now = SystemClock.uptimeMillis()
+
+        val scaledX = x * scaleX
+        val scaledY = y * scaleY
+
+        val pointerCoords = MotionEvent.PointerCoords().apply {
+            this.x = scaledX
+            this.y = scaledY
+            setAxisValue(MotionEvent.AXIS_VSCROLL, -vScrollDelta)
+            setAxisValue(MotionEvent.AXIS_HSCROLL, hScrollDelta)
+        }
+
+        val pointerProperties = MotionEvent.PointerProperties().apply {
+            id = 0
+            toolType = MotionEvent.TOOL_TYPE_MOUSE
+        }
+
+        val scrollEvent = MotionEvent.obtain(
+            now,
+            now,
+            MotionEvent.ACTION_SCROLL,
+            1,
+            arrayOf(pointerProperties),
+            arrayOf(pointerCoords),
+            0,
+            0,
+            1.0f,
+            1.0f,
+            0,
+            0,
+            InputDevice.SOURCE_MOUSE,
+            0
+        )
+
+        scrollEvent.setDisplayId(displayId)
+
+        val result = injectInputEvent(scrollEvent)
+        scrollEvent.recycle()
+
+        return result
+    }
 }

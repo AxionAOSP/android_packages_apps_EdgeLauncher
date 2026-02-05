@@ -45,6 +45,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.text.font.FontWeight
@@ -53,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.viewinterop.AndroidView
+import com.android.edge.bar.freeform.InputInjector
 import com.android.edge.bar.freeform.FreeformWindowManager
 import com.android.edge.bar.freeform.presentation.components.*
 import com.android.edge.bar.freeform.domain.FreeformConstants.CORNER_RADIUS_DP
@@ -73,6 +76,9 @@ import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTT
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_HEIGHT_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_INSET_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_INSET_DP
+import com.android.edge.bar.freeform.domain.FreeformConstants.DESKTOP_MIN_WIDTH_DP
+import com.android.edge.bar.freeform.domain.FreeformConstants.DESKTOP_MIN_HEIGHT_DP
+import com.android.edge.bar.freeform.domain.FreeformConstants.DESKTOP_TASKBAR_HEIGHT_DP
 import com.android.axion.kotlin.math.dpToPx
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -91,7 +97,8 @@ fun FreeformWindowContent(
     onMaximizeFullscreen: () -> Unit,
     onUpdateWindowLayout: (Float, Float, Int, Int) -> Unit,
     onSetupTextureView: (TextureView) -> Unit,
-    textureViewListener: TextureView.SurfaceTextureListener
+    textureViewListener: TextureView.SurfaceTextureListener,
+    inputInjector: InputInjector
 ) {
     val state by stateFlow.collectAsState()
     
@@ -123,7 +130,8 @@ fun FreeformWindowContent(
             onBringToFront = onBringToFront,
             onSetDragging = ::onSetDragging,
             onSetupTextureView = onSetupTextureView,
-            textureViewListener = textureViewListener
+            textureViewListener = textureViewListener,
+            inputInjector = inputInjector
         )
     }
     
@@ -233,7 +241,8 @@ private fun FullWindowView(
     onBringToFront: () -> Unit,
     onSetDragging: (Boolean) -> Unit,
     onSetupTextureView: (TextureView) -> Unit,
-    textureViewListener: TextureView.SurfaceTextureListener
+    textureViewListener: TextureView.SurfaceTextureListener,
+    inputInjector: InputInjector
 ) {
     val density = LocalDensity.current
     val cornerRadius = CORNER_RADIUS_DP.dp
@@ -305,40 +314,69 @@ private fun FullWindowView(
     var isMenuExpanded by remember { mutableStateOf(false) }
     var dropdownXOffset by remember { mutableStateOf(0f) }
 
+    val isDesktopMode = state.mode == WindowMode.DESKTOP
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
         ) {
             if (!isHangupMode) {
-                TitleBar(
-                    onClose = onClose,
-                    onMinimize = { stateManager.onMinimize() },
-                    onHangup = { stateManager.onHangup() },
-                    onMaximizeFullscreen = onMaximizeFullscreen,
-                    onBack = onBack,
-                    onDrag = { deltaX, deltaY ->
-                        scope.launch(Dispatchers.Main) {
-                            stateManager.onDrag(deltaX, deltaY)
-                        }
-                    },
-                    onDragStart = {
-                        onBringToFront()
-                        onSetDragging(true)
-                    },
-                    onDragEnd = {
-                        stateManager.onDragEnd()
-                        onSetDragging(false)
-                    },
-                    isContentLight = isContentLight,
-                    isMenuExpanded = isMenuExpanded,
-                    onMenuExpandedChange = { isMenuExpanded = it },
-                    appIcon = state.appIcon,
-                    onDropdownOffsetChanged = { dropdownXOffset = it },
-                    showEducation = showEducation,
-                    onEducationDismissed = onEducationDismissed,
-                    modifier = Modifier.padding(horizontal = 24.dp)
-                )
+                if (isDesktopMode) {
+                    DesktopTitleBar(
+                        onClose = onClose,
+                        onMinimize = { stateManager.onMinimize() },
+                        onBack = onBack,
+                        onDrag = { deltaX, deltaY ->
+                            scope.launch(Dispatchers.Main) {
+                                stateManager.onDrag(deltaX, deltaY)
+                            }
+                        },
+                        onDragStart = {
+                            onBringToFront()
+                            onSetDragging(true)
+                        },
+                        onDragEnd = {
+                            stateManager.onDragEnd()
+                            onSetDragging(false)
+                        },
+                        isContentLight = isContentLight,
+                        isMenuExpanded = isMenuExpanded,
+                        onMenuExpandedChange = { isMenuExpanded = it },
+                        appIcon = state.appIcon,
+                        onDropdownOffsetChanged = { dropdownXOffset = it },
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                } else {
+                    TitleBar(
+                        onClose = onClose,
+                        onMinimize = { stateManager.onMinimize() },
+                        onHangup = { stateManager.onHangup() },
+                        onMaximizeFullscreen = onMaximizeFullscreen,
+                        onBack = onBack,
+                        onDrag = { deltaX, deltaY ->
+                            scope.launch(Dispatchers.Main) {
+                                stateManager.onDrag(deltaX, deltaY)
+                            }
+                        },
+                        onDragStart = {
+                            onBringToFront()
+                            onSetDragging(true)
+                        },
+                        onDragEnd = {
+                            stateManager.onDragEnd()
+                            onSetDragging(false)
+                        },
+                        isContentLight = isContentLight,
+                        isMenuExpanded = isMenuExpanded,
+                        onMenuExpandedChange = { isMenuExpanded = it },
+                        appIcon = state.appIcon,
+                        onDropdownOffsetChanged = { dropdownXOffset = it },
+                        showEducation = showEducation,
+                        onEducationDismissed = onEducationDismissed,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                }
             }
             
             Box(modifier = Modifier.weight(1f)) {
@@ -360,7 +398,8 @@ private fun FullWindowView(
                         textureViewRef = view
                         onSetupTextureView(view)
                     },
-                    textureViewListener = textureViewListener
+                    textureViewListener = textureViewListener,
+                    inputInjector = inputInjector
                 )
                 
                 if (!isHangupMode) {
@@ -372,7 +411,8 @@ private fun FullWindowView(
                         showEducation = showEducation,
                         onEducationDismissed = onEducationDismissed,
                         onResizeStarted = { onResizeStarted() },
-                        onResizeEnded = { onResizeEnded() }
+                        onResizeEnded = { onResizeEnded() },
+                        isDesktopMode = isDesktopMode
                     )
                 }
             }
@@ -383,34 +423,56 @@ private fun FullWindowView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()
-                    .padding(top = 42.dp),
+                    .padding(top = if (isDesktopMode) 32.dp else 42.dp),
                 contentAlignment = Alignment.TopStart
             ) {
                 androidx.compose.animation.AnimatedVisibility(
                     visible = isMenuExpanded,
                     modifier = Modifier.offset { IntOffset(dropdownXOffset.toInt(), 0) },
-                    enter = fadeIn(animationSpec = tween(200)) + 
+                    enter = fadeIn(animationSpec = tween(200)) +
                             expandVertically(expandFrom = Alignment.Top, animationSpec = tween(200)),
-                    exit = fadeOut(animationSpec = tween(150)) + 
+                    exit = fadeOut(animationSpec = tween(150)) +
                            shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(150)) +
                            composeScaleOut(targetScale = 0.9f, animationSpec = tween(150))
                 ) {
-                    MenuPill(
-                        onMinimize = {
-                            isMenuExpanded = false
-                            stateManager.onMinimize()
-                        },
-                        onHangup = {
-                            isMenuExpanded = false
-                            stateManager.onHangup()
-                        },
-                        onMaximizeFullscreen = {
-                            isMenuExpanded = false
-                            onMaximizeFullscreen()
-                        },
-                        isContentLight = isContentLight,
-                        scaleFactor = 1.0f
-                    )
+                    if (isDesktopMode) {
+                        DesktopMenuDropdown(
+                            onResizeToFullscreen = {
+                                isMenuExpanded = false
+                                stateManager.onResizeToFullscreen()
+                            },
+                            onResizeToHalfLeft = {
+                                isMenuExpanded = false
+                                stateManager.onResizeToHalfLeft()
+                            },
+                            onResizeToHalfRight = {
+                                isMenuExpanded = false
+                                stateManager.onResizeToHalfRight()
+                            },
+                            onMaximizeFullscreen = {
+                                isMenuExpanded = false
+                                onMaximizeFullscreen()
+                            },
+                            isContentLight = isContentLight
+                        )
+                    } else {
+                        MenuPill(
+                            onMinimize = {
+                                isMenuExpanded = false
+                                stateManager.onMinimize()
+                            },
+                            onHangup = {
+                                isMenuExpanded = false
+                                stateManager.onHangup()
+                            },
+                            onMaximizeFullscreen = {
+                                isMenuExpanded = false
+                                onMaximizeFullscreen()
+                            },
+                            isContentLight = isContentLight,
+                            scaleFactor = 1.0f
+                        )
+                    }
                 }
             }
         }
@@ -483,7 +545,8 @@ private fun BoxScope.WindowSurface(
     onBringToFront: () -> Unit,
     onSetDragging: (Boolean) -> Unit,
     onSetupTextureView: (TextureView) -> Unit,
-    textureViewListener: TextureView.SurfaceTextureListener
+    textureViewListener: TextureView.SurfaceTextureListener,
+    inputInjector: InputInjector
 ) {
     Surface(
         modifier = Modifier
@@ -529,7 +592,29 @@ private fun BoxScope.WindowSurface(
                                     }
                                 )
                             }
-                        } else Modifier
+                        } else {
+                            Modifier.pointerInput(Unit) {
+                                awaitPointerEventScope {
+                                    while (true) {
+                                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                                        if (event.type == PointerEventType.Scroll) {
+                                            event.changes.forEach { change ->
+                                                val scrollDelta = change.scrollDelta
+                                                if (scrollDelta.x != 0f || scrollDelta.y != 0f) {
+                                                    inputInjector.injectScrollEvent(
+                                                        change.position.x,
+                                                        change.position.y,
+                                                        scrollDelta.x,
+                                                        scrollDelta.y
+                                                    )
+                                                    change.consume()
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     )
             ) {
                 AndroidView(
@@ -597,18 +682,34 @@ private fun BoxScope.ResizeHandles(
     showEducation: Boolean,
     onEducationDismissed: () -> Unit,
     onResizeStarted: () -> Unit,
-    onResizeEnded: () -> Unit
+    onResizeEnded: () -> Unit,
+    isDesktopMode: Boolean = false
 ) {
     fun currentState() = stateManager.state.value
     
     val s = currentState()
-    val baseMinWidthPx = with(density) { MIN_WINDOW_WIDTH_DP.dp.toPx().toInt() }
-    val baseMinHeightPx = with(density) { MIN_WINDOW_HEIGHT_DP.dp.toPx().toInt() }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val displayMetrics = context.resources.displayMetrics
+    
+    val baseMinWidthPx = with(density) { 
+        if (isDesktopMode) DESKTOP_MIN_WIDTH_DP.dp.toPx().toInt() 
+        else MIN_WINDOW_WIDTH_DP.dp.toPx().toInt() 
+    }
+    val baseMinHeightPx = with(density) { 
+        if (isDesktopMode) DESKTOP_MIN_HEIGHT_DP.dp.toPx().toInt() 
+        else MIN_WINDOW_HEIGHT_DP.dp.toPx().toInt() 
+    }
 
     val minWidthPx = if (s.isLandscape) baseMinHeightPx else baseMinWidthPx
     val minHeightPx = if (s.isLandscape) baseMinWidthPx else baseMinHeightPx
-    val maxWidthPx = MAX_WINDOW_WIDTH_DP
-    val maxHeightPx = MAX_WINDOW_HEIGHT_DP
+    
+    val maxWidthPx = if (isDesktopMode) displayMetrics.widthPixels else MAX_WINDOW_WIDTH_DP
+    val maxHeightPx = if (isDesktopMode) {
+        val taskbarPx = with(density) { DESKTOP_TASKBAR_HEIGHT_DP.dp.toPx().toInt() }
+        displayMetrics.heightPixels - taskbarPx
+    } else {
+        MAX_WINDOW_HEIGHT_DP
+    }
 
     val handleWidth = (RESIZE_HANDLE_SIZE_DP.dp * sizeFactor)
         .coerceIn(RESIZE_HANDLE_SIZE_MIN_DP.dp, RESIZE_HANDLE_SIZE_MAX_DP.dp)
