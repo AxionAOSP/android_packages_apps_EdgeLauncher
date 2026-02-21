@@ -20,7 +20,7 @@
     <application
         android:name=".EdgeApplication"
         android:allowBackup="false"
-        android:label="Edge Bar"
+        android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
         android:persistent="true"
         android:theme="@style/Theme.Material3.DayNight.NoActionBar">
@@ -52,7 +52,7 @@
 
         <activity
             android:name=".settings.SettingsActivity"
-            android:label="Edge Launcher"
+            android:label="@string/app_label_settings"
             android:theme="@style/Theme.Material3.DayNight.NoActionBar"
             android:exported="true">
         </activity>

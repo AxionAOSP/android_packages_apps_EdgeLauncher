@@ -44,6 +44,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import com.android.edge.bar.AppHelper
 import com.android.edge.bar.AppInfo
 import com.android.edge.bar.PinnedApps
+import com.android.edge.bar.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,12 +83,12 @@ fun PinnedAppsScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Pinned Apps",
+                            text = stringResource(R.string.pinned_apps_header),
                             fontWeight = FontWeight.Bold
                         )
                         if (selectedPackages.isNotEmpty()) {
                             Text(
-                                text = "${selectedPackages.size} selected",
+                                text = stringResource(R.string.selected_count, selectedPackages.size),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Medium
@@ -105,7 +107,7 @@ fun PinnedAppsScreen(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -127,7 +129,7 @@ fun PinnedAppsScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Save",
+                                text = stringResource(R.string.save),
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -157,7 +159,7 @@ fun PinnedAppsScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "Loading apps...",
+                        text = stringResource(R.string.loading_apps),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -204,13 +206,13 @@ fun PinnedAppsScreen(
                         Spacer(modifier = Modifier.width(14.dp))
                         Column {
                             Text(
-                                text = "Quick Access",
+                                text = stringResource(R.string.quick_access),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Text(
-                                text = "Tap apps to pin them to your sidebar",
+                                text = stringResource(R.string.tap_to_pin_instruction),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                             )
@@ -354,7 +356,7 @@ private fun ExpressiveAppItem(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Check,
-                        contentDescription = "Selected",
+                        contentDescription = stringResource(R.string.selected),
                         tint = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(16.dp)
                     )

@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">Bara laterală</string>
+    <string name="app_label_settings">Lansator lateral</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">Lansator lateral</string>
+    <string name="edge_launcher_subtitle">Personalizați experiența bara laterală</string>
+    <string name="edge_bar_title">Bara laterală</string>
+    <string name="edge_bar_subtitle">Bara laterală acces rapid</string>
+    <string name="pinned_apps_title">Aplicații fixate</string>
+    <string name="pinned_apps_subtitle">Alegeți preferințele dvs.</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">Aplicații fixate</string>
+    <string name="selected_count">%1$d selectat(e)</string>
+    <string name="back">Înapoi</string>
+    <string name="save">Salvare</string>
+    <string name="loading_apps">Se încarcă aplicațiile…</string>
+    <string name="quick_access">Acces rapid</string>
+    <string name="tap_to_pin_instruction">Atingeți aplicațiile pentru a le fixa pe bara laterală</string>
+    <string name="selected">Selectat</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">Închidere</string>
+    <string name="minimize">Minimizare</string>
+    <string name="hangup">Suspendare</string>
+    <string name="fullscreen">Ecran complet</string>
+    <string name="collapse">Restrângere</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">Eliminare</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">Atingeți mânerul de tragere pentru a afișa meniul</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">Atingeți pentru a extinde</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">Nu s-au găsit aplicații</string>
+    <string name="full_screen">Ecran complet</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">Atingeți pentru a deschide meniul</string>
+    <string name="drag_to_resize">Trageți pentru a redimensiona</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">Această aplicație este blocată. Deblocați-o mai întâi.</string>
+</resources>

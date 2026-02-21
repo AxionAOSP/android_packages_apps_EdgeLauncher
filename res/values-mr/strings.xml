@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">एज बार</string>
+    <string name="app_label_settings">एज लॉन्चर</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">एज लॉन्चर</string>
+    <string name="edge_launcher_subtitle">आपले साइडबार अनुभव सानुकूलित करा</string>
+    <string name="edge_bar_title">एज बार</string>
+    <string name="edge_bar_subtitle">द्रुत प्रवेश साइडबार</string>
+    <string name="pinned_apps_title">पिन केलेले ॲप</string>
+    <string name="pinned_apps_subtitle">आपले आवडते निवडा</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">पिन केलेले ॲप</string>
+    <string name="selected_count">%1$d निवडले</string>
+    <string name="back">मागे</string>
+    <string name="save">जतन करा</string>
+    <string name="loading_apps">ॲप लोड होत आहेत…</string>
+    <string name="quick_access">द्रुत प्रवेश</string>
+    <string name="tap_to_pin_instruction">साइडबारमध्ये पिन करण्यासाठी ॲप टॅप करा</string>
+    <string name="selected">निवडले</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">बंद करा</string>
+    <string name="minimize">लहान करा</string>
+    <string name="hangup">हँगअप</string>
+    <string name="fullscreen">पूर्ण स्क्रीन</string>
+    <string name="collapse">संकुचित करा</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">काढा</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">मेनू दाखवण्यासाठी ड्रॅग हँडल टॅप करा</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">विस्तृत करण्यासाठी टॅप करा</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">कोणतीही ॲप सापडली नाही</string>
+    <string name="full_screen">पूर्ण स्क्रीन</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">मेनू उघडण्यासाठी टॅप करा</string>
+    <string name="drag_to_resize">आकार बदलण्यासाठी ड्रॅग करा</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">ही ॲप लॉक केलेली आहे. कृपया प्रथम अनलॉक करा.</string>
+</resources>

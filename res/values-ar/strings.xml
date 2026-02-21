@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">شريط الحافة</string>
+    <string name="app_label_settings">قائمة الحافة</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">قائمة الحافة</string>
+    <string name="edge_launcher_subtitle">خصص تجربة الشريط الجانبي</string>
+    <string name="edge_bar_title">شريط الحافة</string>
+    <string name="edge_bar_subtitle">شريط جانبي للوصول السريع</string>
+    <string name="pinned_apps_title">التطبيقات المثبتة</string>
+    <string name="pinned_apps_subtitle">اختر المفضلة لديك</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">التطبيقات المثبتة</string>
+    <string name="selected_count">تم تحديد %1$d</string>
+    <string name="back">رجوع</string>
+    <string name="save">حفظ</string>
+    <string name="loading_apps">جاري تحميل التطبيقات…</string>
+    <string name="quick_access">الوصول السريع</string>
+    <string name="tap_to_pin_instruction">اضغط على التطبيقات لتثبيتها في الشريط الجانبي</string>
+    <string name="selected">محدد</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">إغلاق</string>
+    <string name="minimize">تصغير</string>
+    <string name="hangup">تعليق</string>
+    <string name="fullscreen">ملء الشاشة</string>
+    <string name="collapse">طي</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">إزالة</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">اضغط على مقبض السحب لإظهار القائمة</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">اضغط للتوسيع</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">لم يتم العثور على تطبيقات</string>
+    <string name="full_screen">ملء الشاشة</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">اضغط لفتح القائمة</string>
+    <string name="drag_to_resize">اسحب لتغيير الحجم</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">هذا التطبيق مقفل. يرجى إلغاء قفله أولاً.</string>
+</resources>

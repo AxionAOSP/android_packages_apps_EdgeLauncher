@@ -24,8 +24,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.android.edge.bar.R
 import com.android.edge.bar.freeform.domain.FreeformConstants
 
 @Composable
@@ -72,7 +74,7 @@ fun RemoveZone(
                         modifier = Modifier.size(18.dp)
                     )
                     Text(
-                        text = "Remove",
+                        text = stringResource(R.string.remove),
                         style = MaterialTheme.typography.labelLarge,
                         fontSize = 14.sp
                     )

@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">Edge Bar</string>
+    <string name="app_label_settings">Edge Launcher</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">Edge Launcher</string>
+    <string name="edge_launcher_subtitle">I-customize ang iyong sidebar experience</string>
+    <string name="edge_bar_title">Edge Bar</string>
+    <string name="edge_bar_subtitle">Mabilis na access sidebar</string>
+    <string name="pinned_apps_title">Naka-pin na Apps</string>
+    <string name="pinned_apps_subtitle">Piliin ang iyong mga paborito</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">Naka-pin na Apps</string>
+    <string name="selected_count">%1$d napili</string>
+    <string name="back">Bumalik</string>
+    <string name="save">I-save</string>
+    <string name="loading_apps">Naglo-load ng apps…</string>
+    <string name="quick_access">Mabilis na Access</string>
+    <string name="tap_to_pin_instruction">I-tap ang mga app para i-pin sa sidebar</string>
+    <string name="selected">Napili</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">Isara</string>
+    <string name="minimize">I-minimize</string>
+    <string name="hangup">I-hangup</string>
+    <string name="fullscreen">Buong screen</string>
+    <string name="collapse">I-collapse</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">Alisin</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">I-tap ang drag handle para ipakita ang menu</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">I-tap para i-expand</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">Walang nahanap na apps</string>
+    <string name="full_screen">Buong screen</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">I-tap para buksan ang menu</string>
+    <string name="drag_to_resize">I-drag para baguhin ang laki</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">Naka-lock ang app na ito. Pakiusap i-unlock muna.</string>
+</resources>

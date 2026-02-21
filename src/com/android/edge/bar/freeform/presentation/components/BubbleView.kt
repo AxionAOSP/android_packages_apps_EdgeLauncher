@@ -29,7 +29,10 @@ import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.pointer.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.*
+import com.android.edge.bar.R
 import com.android.edge.bar.freeform.domain.FreeformConstants.BUBBLE_SIZE_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.BUBBLE_ICON_SIZE_DP
 import kotlin.math.abs
@@ -81,10 +84,11 @@ fun BubbleView(
             },
         contentAlignment = Alignment.Center
     ) {
+        val context = LocalContext.current
         appIcon?.let {
             Image(
                 bitmap = it.asImageBitmap(),
-                contentDescription = "Tap to expand",
+                contentDescription = stringResource(R.string.tap_to_expand),
                 modifier = Modifier
                     .size(BUBBLE_ICON_SIZE_DP.dp)
                     .clip(CircleShape)

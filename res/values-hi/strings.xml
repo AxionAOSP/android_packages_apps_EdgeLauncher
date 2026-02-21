@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">एज बार</string>
+    <string name="app_label_settings">एज लॉन्चर</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">एज लॉन्चर</string>
+    <string name="edge_launcher_subtitle">अपने साइडबार अनुभव को अनुकूलित करें</string>
+    <string name="edge_bar_title">एज बार</string>
+    <string name="edge_bar_subtitle">त्वरित पहुंच साइडबार</string>
+    <string name="pinned_apps_title">पिन किए गए ऐप</string>
+    <string name="pinned_apps_subtitle">अपने पसंदीदा चुनें</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">पिन किए गए ऐप</string>
+    <string name="selected_count">%1$d चयनित</string>
+    <string name="back">वापस</string>
+    <string name="save">सहेजें</string>
+    <string name="loading_apps">ऐप लोड हो रहे हैं…</string>
+    <string name="quick_access">त्वरित पहुंच</string>
+    <string name="tap_to_pin_instruction">ऐप पर टैप करके साइडबार में पिन करें</string>
+    <string name="selected">चयनित</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">बंद करें</string>
+    <string name="minimize">छोटा करें</string>
+    <string name="hangup">हैंगअप</string>
+    <string name="fullscreen">पूर्ण स्क्रीन</string>
+    <string name="collapse">संकुचित करें</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">हटाएं</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">मेनू दिखाने के लिए ड्रैग हैंडल टैप करें</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">विस्तार करने के लिए टैप करें</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">कोई ऐप नहीं मिला</string>
+    <string name="full_screen">पूर्ण स्क्रीन</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">मेनू खोलने के लिए टैप करें</string>
+    <string name="drag_to_resize">आकार बदलने के लिए खींचें</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">यह ऐप लॉक है। कृपया पहले अनलॉक करें।</string>
+</resources>

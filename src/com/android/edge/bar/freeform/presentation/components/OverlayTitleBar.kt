@@ -43,9 +43,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.android.edge.bar.R
 import com.android.edge.bar.freeform.domain.FreeformConstants.OVERLAY_TITLE_BAR_HEIGHT_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.OVERLAY_PILL_ICON_SIZE_DP
 import kotlinx.coroutines.delay
@@ -169,7 +171,7 @@ fun OverlayTitleBar(
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 Text(
-                    text = "Tap drag handle to show menu",
+                    text = stringResource(R.string.tap_drag_handle_hint),
                     color = expandedContentColor,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
@@ -247,42 +249,42 @@ private fun MenuPill(
         ) {
             PillIconButton(
                 icon = Icons.Rounded.KeyboardArrowUp,
-                contentDescription = "Collapse",
+                contentDescription = stringResource(R.string.collapse),
                 onClick = onCollapse,
                 tint = contentColor
             )
 
             PillIconButton(
                 icon = Icons.Rounded.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.back),
                 onClick = onBack,
                 tint = contentColor
             )
             
             PillIconButton(
                 icon = Icons.Rounded.Remove,
-                contentDescription = "Minimize",
+                contentDescription = stringResource(R.string.minimize),
                 onClick = onMinimize,
                 tint = contentColor
             )
             
             PillIconButton(
                 icon = Icons.Rounded.PictureInPictureAlt,
-                contentDescription = "Hangup",
+                contentDescription = stringResource(R.string.hangup),
                 onClick = onHangup,
                 tint = contentColor
             )
             
             PillIconButton(
                 icon = Icons.Rounded.Fullscreen,
-                contentDescription = "Fullscreen",
+                contentDescription = stringResource(R.string.fullscreen),
                 onClick = onMaximizeFullscreen,
                 tint = contentColor
             )
             
             PillIconButton(
                 icon = Icons.Rounded.Close,
-                contentDescription = "Close",
+                contentDescription = stringResource(R.string.close),
                 onClick = onClose,
                 tint = contentColor
             )

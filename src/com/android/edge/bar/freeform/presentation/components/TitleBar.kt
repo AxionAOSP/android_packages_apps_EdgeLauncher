@@ -43,6 +43,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,6 +52,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import com.android.edge.bar.R
 import com.android.edge.bar.freeform.domain.FreeformConstants.TITLE_BAR_BUTTON_WIDTH_MIN_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.TITLE_BAR_HEIGHT_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.TITLE_BAR_ICON_SIZE_DP
@@ -144,7 +146,7 @@ fun TitleBar(
                 TitleBarButton(
                     onClick = onBack,
                     icon = Icons.Rounded.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.back),
                     buttonColor = colors.pillColor,
                     contentColor = colors.contentColor,
                     buttonWidth = buttonWidth,
@@ -194,7 +196,7 @@ fun TitleBar(
                 TitleBarButton(
                     onClick = onClose,
                     icon = Icons.Rounded.Close,
-                    contentDescription = "Close",
+                    contentDescription = stringResource(R.string.close),
                     buttonColor = colors.pillColor,
                     contentColor = colors.contentColor,
                     buttonWidth = buttonWidth,
@@ -285,7 +287,7 @@ fun MenuPill(
         ) {
             PillIconButton(
                 icon = Icons.Rounded.Remove,
-                contentDescription = "Minimize",
+                contentDescription = stringResource(R.string.minimize),
                 onClick = onMinimize,
                 tint = colors.contentColor,
                 buttonSize = buttonSize,
@@ -294,7 +296,7 @@ fun MenuPill(
 
             PillIconButton(
                 icon = Icons.Rounded.PictureInPictureAlt,
-                contentDescription = "Hangup",
+                contentDescription = stringResource(R.string.hangup),
                 onClick = onHangup,
                 tint = colors.contentColor,
                 buttonSize = buttonSize,
@@ -303,7 +305,7 @@ fun MenuPill(
             
             PillIconButton(
                 icon = Icons.Rounded.Fullscreen,
-                contentDescription = "Fullscreen",
+                contentDescription = stringResource(R.string.fullscreen),
                 onClick = onMaximizeFullscreen,
                 tint = colors.contentColor,
                 buttonSize = buttonSize,

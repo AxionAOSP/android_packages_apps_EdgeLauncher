@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">Szélső sáv</string>
+    <string name="app_label_settings">Szélső indító</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">Szélső indító</string>
+    <string name="edge_launcher_subtitle">Szabja testre az oldalsáv élményét</string>
+    <string name="edge_bar_title">Szélső sáv</string>
+    <string name="edge_bar_subtitle">Gyors hozzáférés oldalsáv</string>
+    <string name="pinned_apps_title">Rögzített alkalmazások</string>
+    <string name="pinned_apps_subtitle">Válassza ki kedvenceit</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">Rögzített alkalmazások</string>
+    <string name="selected_count">%1$d kiválasztva</string>
+    <string name="back">Vissza</string>
+    <string name="save">Mentés</string>
+    <string name="loading_apps">Alkalmazások betöltése…</string>
+    <string name="quick_access">Gyors hozzáférés</string>
+    <string name="tap_to_pin_instruction">Érintse meg az alkalmazásokat, hogy rögzítse őket az oldalsávon</string>
+    <string name="selected">Kiválasztva</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">Bezárás</string>
+    <string name="minimize">Kis méret</string>
+    <string name="hangup">Felfüggesztés</string>
+    <string name="fullscreen">Teljes képernyő</string>
+    <string name="collapse">Összecsukás</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">Eltávolítás</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">Érintse meg a húzó fogantyút a menü megjelenítéséhez</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">Érintse meg a kibontáshoz</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">Nem találhatók alkalmazások</string>
+    <string name="full_screen">Teljes képernyő</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">Érintse meg a menü megnyitásához</string>
+    <string name="drag_to_resize">Húzza az átméretezéshez</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">Ez az alkalmazás zárolva van. Kérjük, először oldja fel a zárolást.</string>
+</resources>

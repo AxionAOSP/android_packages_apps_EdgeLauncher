@@ -28,6 +28,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.ui.res.stringResource
+import com.android.edge.bar.R
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -211,7 +213,7 @@ private fun RemoveZoneContent(
                         tint = removeZoneElementColor 
                     )
                     Text(
-                        text = "Remove",
+                        text = stringResource(R.string.remove),
                         fontSize = 14.sp,
                         color = removeZoneElementColor
                     )

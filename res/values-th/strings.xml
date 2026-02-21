@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">แถบขอบ</string>
+    <string name="app_label_settings">ตัวเรียกใช้ขอบ</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">ตัวเรียกใช้ขอบ</string>
+    <string name="edge_launcher_subtitle">ปรับแต่งประสบการณ์แถบด้านข้างของคุณ</string>
+    <string name="edge_bar_title">แถบขอบ</string>
+    <string name="edge_bar_subtitle">แถบด้านข้างการเข้าถึงด่วน</string>
+    <string name="pinned_apps_title">แอปที่ปักหมุด</string>
+    <string name="pinned_apps_subtitle">เลือกรายการโปรดของคุณ</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">แอปที่ปักหมุด</string>
+    <string name="selected_count">เลือก %1$d รายการ</string>
+    <string name="back">กลับ</string>
+    <string name="save">บันทึก</string>
+    <string name="loading_apps">กำลังโหลดแอป…</string>
+    <string name="quick_access">การเข้าถึงด่วน</string>
+    <string name="tap_to_pin_instruction">แตะแอปเพื่อปักหมุดไปยังแถบด้านข้าง</string>
+    <string name="selected">เลือกแล้ว</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">ปิด</string>
+    <string name="minimize">ย่อ</string>
+    <string name="hangup">หยุดชั่วคราว</string>
+    <string name="fullscreen">เต็มหน้าจอ</string>
+    <string name="collapse">ย่อ</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">ลบ</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">แตะที่มือจับลากเพื่อแสดงเมนู</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">แตะเพื่อขยาย</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">ไม่พบแอป</string>
+    <string name="full_screen">เต็มหน้าจอ</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">แตะเพื่อเปิดเมนู</string>
+    <string name="drag_to_resize">ลากเพื่อปรับขนาด</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">แอปนี้ถูกล็อก กรุณาปลดล็อกก่อน</string>
+</resources>

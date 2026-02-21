@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">엣지 바</string>
+    <string name="app_label_settings">엣지 런처</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">엣지 런처</string>
+    <string name="edge_launcher_subtitle">사이드바 경험을 사용자 지정하세요</string>
+    <string name="edge_bar_title">엣지 바</string>
+    <string name="edge_bar_subtitle">빠른 액세스 사이드바</string>
+    <string name="pinned_apps_title">고정된 앱</string>
+    <string name="pinned_apps_subtitle">즐겨찾기를 선택하세요</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">고정된 앱</string>
+    <string name="selected_count">%1$d개 선택됨</string>
+    <string name="back">뒤로</string>
+    <string name="save">저장</string>
+    <string name="loading_apps">앱 로드 중…</string>
+    <string name="quick_access">빠른 액세스</string>
+    <string name="tap_to_pin_instruction">앱을 탭하여 사이드바에 고정</string>
+    <string name="selected">선택됨</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">닫기</string>
+    <string name="minimize">최소화</string>
+    <string name="hangup">일시 중지</string>
+    <string name="fullscreen">전체 화면</string>
+    <string name="collapse">접기</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">제거</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">드래그 핸들을 탭하여 메뉴 표시</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">탭하여 확장</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">앱을 찾을 수 없습니다</string>
+    <string name="full_screen">전체 화면</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">탭하여 메뉴 열기</string>
+    <string name="drag_to_resize">드래그하여 크기 조정</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">이 앱이 잠겨 있습니다. 먼저 잠금을 해제하세요.</string>
+</resources>

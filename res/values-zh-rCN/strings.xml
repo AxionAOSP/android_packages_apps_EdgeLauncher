@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">边缘栏</string>
+    <string name="app_label_settings">边缘启动器</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">边缘启动器</string>
+    <string name="edge_launcher_subtitle">自定义您的侧边栏体验</string>
+    <string name="edge_bar_title">边缘栏</string>
+    <string name="edge_bar_subtitle">快速访问侧边栏</string>
+    <string name="pinned_apps_title">固定应用</string>
+    <string name="pinned_apps_subtitle">选择您的最爱</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">固定应用</string>
+    <string name="selected_count">已选择 %1$d 个</string>
+    <string name="back">返回</string>
+    <string name="save">保存</string>
+    <string name="loading_apps">正在加载应用…</string>
+    <string name="quick_access">快速访问</string>
+    <string name="tap_to_pin_instruction">点击应用以将其固定到侧边栏</string>
+    <string name="selected">已选择</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">关闭</string>
+    <string name="minimize">最小化</string>
+    <string name="hangup">挂起</string>
+    <string name="fullscreen">全屏</string>
+    <string name="collapse">收起</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">移除</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">点击拖动手柄以显示菜单</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">点击展开</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">未找到应用</string>
+    <string name="full_screen">全屏</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">点击打开菜单</string>
+    <string name="drag_to_resize">拖拽调整大小</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">此应用已锁定。请先解锁。</string>
+</resources>

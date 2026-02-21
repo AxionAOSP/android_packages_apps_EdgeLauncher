@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">ಎಡ್ಜ್ ಬಾರ್</string>
+    <string name="app_label_settings">ಎಡ್ಜ್ ಲಾಂಚರ್</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">ಎಡ್ಜ್ ಲಾಂಚರ್</string>
+    <string name="edge_launcher_subtitle">ನಿಮ್ಮ ಸೈಡ್‌ಬಾರ್ ಅನುಭವವನ್ನು ಕಸ್ಟಮೈಸ್ ಮಾಡಿ</string>
+    <string name="edge_bar_title">ಎಡ್ಜ್ ಬಾರ್</string>
+    <string name="edge_bar_subtitle">ತ್ವರಿತ ಪ್ರವೇಶ ಸೈಡ್‌ಬಾರ್</string>
+    <string name="pinned_apps_title">ಪಿನ್ ಮಾಡಿದ ಆ್ಯಪ್‌ಗಳು</string>
+    <string name="pinned_apps_subtitle">ನಿಮ್ಮ ಮೆಚ್ಚಿನವುಗಳನ್ನು ಆಯ್ಕೆ ಮಾಡಿ</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">ಪಿನ್ ಮಾಡಿದ ಆ್ಯಪ್‌ಗಳು</string>
+    <string name="selected_count">%1$d ಆಯ್ಕೆ ಮಾಡಲಾಗಿದೆ</string>
+    <string name="back">ಹಿಂದೆ</string>
+    <string name="save">ಉಳಿಸಿ</string>
+    <string name="loading_apps">ಆ್ಯಪ್‌ಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ…</string>
+    <string name="quick_access">ತ್ವರಿತ ಪ್ರವೇಶ</string>
+    <string name="tap_to_pin_instruction">ಸೈಡ್‌ಬಾರ್‌ಗೆ ಪಿನ್ ಮಾಡಲು ಆ್ಯಪ್‌ಗಳನ್ನು ಟ್ಯಾಪ್ ಮಾಡಿ</string>
+    <string name="selected">ಆಯ್ಕೆ ಮಾಡಲಾಗಿದೆ</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">ಮುಚ್ಚಿ</string>
+    <string name="minimize">ಕಡಿಮೆ ಮಾಡಿ</string>
+    <string name="hangup">ಹ್ಯಾಂಗ್‌ಅಪ್</string>
+    <string name="fullscreen">ಪೂರ್ಣ ಪರದೆ</string>
+    <string name="collapse">ಕುಗ್ಗಿಸಿ</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">ತೆಗೆದುಹಾಕಿ</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">ಮೆನುವನ್ನು ತೋರಿಸಲು ಡ್ರ್ಯಾಗ್ ಹ್ಯಾಂಡಲ್ ಅನ್ನು ಟ್ಯಾಪ್ ಮಾಡಿ</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">ವಿಸ್ತರಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">ಯಾವುದೇ ಆ್ಯಪ್‌ಗಳು ಕಂಡುಬಂದಿಲ್ಲ</string>
+    <string name="full_screen">ಪೂರ್ಣ ಪರದೆ</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">ಮೆನುವನ್ನು ತೆರೆಯಲು ಟ್ಯಾಪ್ ಮಾಡಿ</string>
+    <string name="drag_to_resize">ಗಾತ್ರವನ್ನು ಬದಲಾಯಿಸಲು ಡ್ರ್ಯಾಗ್ ಮಾಡಿ</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">ಈ ಆ್ಯಪ್ ಲಾಕ್ ಮಾಡಲಾಗಿದೆ. ದಯವಿಟ್ಟು ಮೊದಲು ಅನ್‌ಲಾಕ್ ಮಾಡಿ.</string>
+</resources>

@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">Γραμμή Ακμής</string>
+    <string name="app_label_settings">Εκκινητής Ακμής</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">Εκκινητής Ακμής</string>
+    <string name="edge_launcher_subtitle">Προσαρμόστε την εμπειρία σας με την πλευρική γραμμή</string>
+    <string name="edge_bar_title">Γραμμή Ακμής</string>
+    <string name="edge_bar_subtitle">Γρήγορη πρόσβαση πλευρική γραμμή</string>
+    <string name="pinned_apps_title">Καρφιτσωμένες Εφαρμογές</string>
+    <string name="pinned_apps_subtitle">Επιλέξτε τα αγαπημένα σας</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">Καρφιτσωμένες Εφαρμογές</string>
+    <string name="selected_count">Επιλέχθηκαν %1$d</string>
+    <string name="back">Πίσω</string>
+    <string name="save">Αποθήκευση</string>
+    <string name="loading_apps">Φόρτωση εφαρμογών…</string>
+    <string name="quick_access">Γρήγορη Πρόσβαση</string>
+    <string name="tap_to_pin_instruction">Πατήστε στις εφαρμογές για να τις καρφιτσώσετε στην πλευρική γραμμή</string>
+    <string name="selected">Επιλεγμένο</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">Κλείσιμο</string>
+    <string name="minimize">Ελαχιστοποίηση</string>
+    <string name="hangup">Αναστολή</string>
+    <string name="fullscreen">Πλήρης οθόνη</string>
+    <string name="collapse">Σύμπτυξη</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">Αφαίρεση</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">Πατήστε στη λαβή σύρσης για να εμφανίσετε το μενού</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">Πατήστε για επέκταση</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">Δεν βρέθηκαν εφαρμογές</string>
+    <string name="full_screen">Πλήρης οθόνη</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">Πατήστε για άνοιγμα μενού</string>
+    <string name="drag_to_resize">Σύρετε για αλλαγή μεγέθους</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">Αυτή η εφαρμογή είναι κλειδωμένη. Παρακαλώ ξεκλειδώστε την πρώτα.</string>
+</resources>

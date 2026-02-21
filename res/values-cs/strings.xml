@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">Okrajový panel</string>
+    <string name="app_label_settings">Okrajový spouštěč</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">Okrajový spouštěč</string>
+    <string name="edge_launcher_subtitle">Přizpůsobte si svůj postranní panel</string>
+    <string name="edge_bar_title">Okrajový panel</string>
+    <string name="edge_bar_subtitle">Rychlý přístup postranní panel</string>
+    <string name="pinned_apps_title">Připnuté aplikace</string>
+    <string name="pinned_apps_subtitle">Vyberte si své oblíbené</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">Připnuté aplikace</string>
+    <string name="selected_count">Vybráno %1$d</string>
+    <string name="back">Zpět</string>
+    <string name="save">Uložit</string>
+    <string name="loading_apps">Načítání aplikací…</string>
+    <string name="quick_access">Rychlý přístup</string>
+    <string name="tap_to_pin_instruction">Klepněte na aplikace a připněte je na postranní panel</string>
+    <string name="selected">Vybráno</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">Zavřít</string>
+    <string name="minimize">Minimalizovat</string>
+    <string name="hangup">Pozastavit</string>
+    <string name="fullscreen">Celá obrazovka</string>
+    <string name="collapse">Sbalit</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">Odebrat</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">Klepněte na úchyt pro přetažení a zobrazte nabídku</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">Klepněte pro rozbalení</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">Nebyly nalezeny žádné aplikace</string>
+    <string name="full_screen">Celá obrazovka</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">Klepněte pro otevření nabídky</string>
+    <string name="drag_to_resize">Přetáhněte pro změnu velikosti</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">Tato aplikace je uzamčena. Nejprve ji prosím odemkněte.</string>
+</resources>

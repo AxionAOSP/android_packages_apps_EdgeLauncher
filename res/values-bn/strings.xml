@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">এজ বার</string>
+    <string name="app_label_settings">এজ লঞ্চার</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">এজ লঞ্চার</string>
+    <string name="edge_launcher_subtitle">আপনার সাইডবার অভিজ্ঞতা কাস্টমাইজ করুন</string>
+    <string name="edge_bar_title">এজ বার</string>
+    <string name="edge_bar_subtitle">দ্রুত অ্যাক্সেস সাইডবার</string>
+    <string name="pinned_apps_title">পিন করা অ্যাপ</string>
+    <string name="pinned_apps_subtitle">আপনার প্রিয়গুলি বেছে নিন</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">পিন করা অ্যাপ</string>
+    <string name="selected_count">%1$d টি নির্বাচিত</string>
+    <string name="back">পিছনে</string>
+    <string name="save">সংরক্ষণ করুন</string>
+    <string name="loading_apps">অ্যাপ লোড হচ্ছে…</string>
+    <string name="quick_access">দ্রুত অ্যাক্সেস</string>
+    <string name="tap_to_pin_instruction">অ্যাপ ট্যাপ করে সাইডবারে পিন করুন</string>
+    <string name="selected">নির্বাচিত</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">বন্ধ করুন</string>
+    <string name="minimize">ছোট করুন</string>
+    <string name="hangup">হ্যাংআপ</string>
+    <string name="fullscreen">পূর্ণ স্ক্রীন</string>
+    <string name="collapse">সংকুচিত করুন</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">অপসারণ করুন</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">মেনু দেখাতে ড্র্যাগ হ্যান্ডেল ট্যাপ করুন</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">প্রসারিত করতে ট্যাপ করুন</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">কোনো অ্যাপ পাওয়া যায়নি</string>
+    <string name="full_screen">পূর্ণ স্ক্রীন</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">মেনু খুলতে ট্যাপ করুন</string>
+    <string name="drag_to_resize">আকার পরিবর্তন করতে টানুন</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">এই অ্যাপটি লক করা আছে। অনুগ্রহ করে প্রথমে আনলক করুন।</string>
+</resources>

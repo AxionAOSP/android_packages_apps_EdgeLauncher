@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">نوار لبه</string>
+    <string name="app_label_settings">اجرای لبه</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">اجرای لبه</string>
+    <string name="edge_launcher_subtitle">تجربه نوار کناری خود را سفارشی کنید</string>
+    <string name="edge_bar_title">نوار لبه</string>
+    <string name="edge_bar_subtitle">نوار کناری دسترسی سریع</string>
+    <string name="pinned_apps_title">برنامه‌های ثابت شده</string>
+    <string name="pinned_apps_subtitle">مورد علاقه‌های خود را انتخاب کنید</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">برنامه‌های ثابت شده</string>
+    <string name="selected_count">%1$d انتخاب شده</string>
+    <string name="back">بازگشت</string>
+    <string name="save">ذخیره</string>
+    <string name="loading_apps">در حال بارگذاری برنامه‌ها…</string>
+    <string name="quick_access">دسترسی سریع</string>
+    <string name="tap_to_pin_instruction">برنامه‌ها را لمس کنید تا به نوار کناری ثابت شوند</string>
+    <string name="selected">انتخاب شده</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">بستن</string>
+    <string name="minimize">کوچک کردن</string>
+    <string name="hangup">تعلیق</string>
+    <string name="fullscreen">تمام صفحه</string>
+    <string name="collapse">جمع کردن</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">حذف</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">دسته کشیدن را لمس کنید تا منو نمایش داده شود</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">برای گسترش لمس کنید</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">برنامه‌ای یافت نشد</string>
+    <string name="full_screen">تمام صفحه</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">برای باز کردن منو لمس کنید</string>
+    <string name="drag_to_resize">برای تغییر اندازه بکشید</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">این برنامه قفل شده است. لطفاً ابتدا آن را باز کنید.</string>
+</resources>

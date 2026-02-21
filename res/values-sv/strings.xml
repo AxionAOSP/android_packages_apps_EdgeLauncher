@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">Kantfält</string>
+    <string name="app_label_settings">Kantstartare</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">Kantstartare</string>
+    <string name="edge_launcher_subtitle">Anpassa din sidofältupplevelse</string>
+    <string name="edge_bar_title">Kantfält</string>
+    <string name="edge_bar_subtitle">Snabbåtkomst sidofält</string>
+    <string name="pinned_apps_title">Fästa appar</string>
+    <string name="pinned_apps_subtitle">Välj dina favoriter</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">Fästa appar</string>
+    <string name="selected_count">%1$d valda</string>
+    <string name="back">Tillbaka</string>
+    <string name="save">Spara</string>
+    <string name="loading_apps">Laddar appar…</string>
+    <string name="quick_access">Snabbåtkomst</string>
+    <string name="tap_to_pin_instruction">Tryck på appar för att fästa dem på sidofältet</string>
+    <string name="selected">Vald</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">Stäng</string>
+    <string name="minimize">Minimera</string>
+    <string name="hangup">Pausa</string>
+    <string name="fullscreen">Helskärm</string>
+    <string name="collapse">Dölj</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">Ta bort</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">Tryck på drahandtaget för att visa menyn</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">Tryck för att expandera</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">Inga appar hittades</string>
+    <string name="full_screen">Helskärm</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">Tryck för att öppna menyn</string>
+    <string name="drag_to_resize">Dra för att ändra storlek</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">Denna app är låst. Lås upp den först.</string>
+</resources>

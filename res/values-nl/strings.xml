@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">Randbalk</string>
+    <string name="app_label_settings">Randstarter</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">Randstarter</string>
+    <string name="edge_launcher_subtitle">Pas uw zijbalkervaring aan</string>
+    <string name="edge_bar_title">Randbalk</string>
+    <string name="edge_bar_subtitle">Snelle toegang zijbalk</string>
+    <string name="pinned_apps_title">Vastgezette apps</string>
+    <string name="pinned_apps_subtitle">Kies uw favorieten</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">Vastgezette apps</string>
+    <string name="selected_count">%1$d geselecteerd</string>
+    <string name="back">Terug</string>
+    <string name="save">Opslaan</string>
+    <string name="loading_apps">Apps laden…</string>
+    <string name="quick_access">Snelle toegang</string>
+    <string name="tap_to_pin_instruction">Tik op apps om ze aan uw zijbalk vast te zetten</string>
+    <string name="selected">Geselecteerd</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">Sluiten</string>
+    <string name="minimize">Minimaliseren</string>
+    <string name="hangup">Ophangen</string>
+    <string name="fullscreen">Volledig scherm</string>
+    <string name="collapse">Inklappen</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">Verwijderen</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">Tik op sleephendel om menu te tonen</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">Tik om uit te vouwen</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">Geen apps gevonden</string>
+    <string name="full_screen">Volledig scherm</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">Tik om menu te openen</string>
+    <string name="drag_to_resize">Sleep om grootte te wijzigen</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">Deze app is vergrendeld. Ontgrendel deze eerst.</string>
+</resources>

@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">Randleiste</string>
+    <string name="app_label_settings">Randstarter</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">Randstarter</string>
+    <string name="edge_launcher_subtitle">Passen Sie Ihre Seitenleisten-Erfahrung an</string>
+    <string name="edge_bar_title">Randleiste</string>
+    <string name="edge_bar_subtitle">Schnellzugriffs-Seitenleiste</string>
+    <string name="pinned_apps_title">Angeheftete Apps</string>
+    <string name="pinned_apps_subtitle">Wählen Sie Ihre Favoriten</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">Angeheftete Apps</string>
+    <string name="selected_count">%1$d ausgewählt</string>
+    <string name="back">Zurück</string>
+    <string name="save">Speichern</string>
+    <string name="loading_apps">Apps werden geladen…</string>
+    <string name="quick_access">Schnellzugriff</string>
+    <string name="tap_to_pin_instruction">Tippen Sie auf Apps, um sie an Ihre Seitenleiste anzuheften</string>
+    <string name="selected">Ausgewählt</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">Schließen</string>
+    <string name="minimize">Minimieren</string>
+    <string name="hangup">Auflegen</string>
+    <string name="fullscreen">Vollbild</string>
+    <string name="collapse">Einklappen</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">Entfernen</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">Tippen Sie auf den Ziehen-Griff, um das Menü anzuzeigen</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">Tippen zum Erweitern</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">Keine Apps gefunden</string>
+    <string name="full_screen">Vollbild</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">Tippen Sie, um das Menü zu öffnen</string>
+    <string name="drag_to_resize">Ziehen Sie, um die Größe zu ändern</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">Diese App ist gesperrt. Bitte entsperren Sie sie zuerst.</string>
+</resources>

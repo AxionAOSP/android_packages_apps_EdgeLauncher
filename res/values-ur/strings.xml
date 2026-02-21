@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">ایج بار</string>
+    <string name="app_label_settings">ایج لانچر</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">ایج لانچر</string>
+    <string name="edge_launcher_subtitle">اپنے سائیڈبار تجربے کو اپنی مرضی کے مطابق بنائیں</string>
+    <string name="edge_bar_title">ایج بار</string>
+    <string name="edge_bar_subtitle">تیز رسائی سائیڈبار</string>
+    <string name="pinned_apps_title">پن شدہ ایپس</string>
+    <string name="pinned_apps_subtitle">اپنے پسندیدہ منتخب کریں</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">پن شدہ ایپس</string>
+    <string name="selected_count">%1$d منتخب شدہ</string>
+    <string name="back">واپس</string>
+    <string name="save">محفوظ کریں</string>
+    <string name="loading_apps">ایپس لوڈ ہو رہی ہیں…</string>
+    <string name="quick_access">تیز رسائی</string>
+    <string name="tap_to_pin_instruction">سائیڈبار میں پن کرنے کے لیے ایپس پر ٹیپ کریں</string>
+    <string name="selected">منتخب شدہ</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">بند کریں</string>
+    <string name="minimize">چھوٹا کریں</string>
+    <string name="hangup">ہینگ اپ</string>
+    <string name="fullscreen">فل سکرین</string>
+    <string name="collapse">سکیڑیں</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">ہٹائیں</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">مینو دکھانے کے لیے ڈریگ ہینڈل پر ٹیپ کریں</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">پھیلانے کے لیے ٹیپ کریں</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">کوئی ایپ نہیں ملی</string>
+    <string name="full_screen">فل سکرین</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">مینو کھولنے کے لیے ٹیپ کریں</string>
+    <string name="drag_to_resize">سائز تبدیل کرنے کے لیے ڈریگ کریں</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">یہ ایپ لاک ہے۔ براہ کرم پہلے ان لاک کریں۔</string>
+</resources>

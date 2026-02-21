@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">Barra lateral</string>
+    <string name="app_label_settings">Lanzador lateral</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">Lanzador lateral</string>
+    <string name="edge_launcher_subtitle">Personaliza tu experiencia de barra lateral</string>
+    <string name="edge_bar_title">Barra lateral</string>
+    <string name="edge_bar_subtitle">Barra lateral de acceso rápido</string>
+    <string name="pinned_apps_title">Aplicaciones ancladas</string>
+    <string name="pinned_apps_subtitle">Elige tus favoritos</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">Aplicaciones ancladas</string>
+    <string name="selected_count">%1$d seleccionado(s)</string>
+    <string name="back">Atrás</string>
+    <string name="save">Guardar</string>
+    <string name="loading_apps">Cargando aplicaciones…</string>
+    <string name="quick_access">Acceso rápido</string>
+    <string name="tap_to_pin_instruction">Toca las aplicaciones para anclarlas a la barra lateral</string>
+    <string name="selected">Seleccionado</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">Cerrar</string>
+    <string name="minimize">Minimizar</string>
+    <string name="hangup">Suspender</string>
+    <string name="fullscreen">Pantalla completa</string>
+    <string name="collapse">Contraer</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">Eliminar</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">Toca el mango de arrastre para mostrar el menú</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">Toca para expandir</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">No se encontraron aplicaciones</string>
+    <string name="full_screen">Pantalla completa</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">Toca para abrir el menú</string>
+    <string name="drag_to_resize">Arrastra para cambiar el tamaño</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">Esta aplicación está bloqueada. Desbloquéala primero.</string>
+</resources>

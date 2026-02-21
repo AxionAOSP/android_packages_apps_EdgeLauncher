@@ -47,7 +47,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.android.edge.bar.R
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -431,7 +433,7 @@ private fun FullWindowView(
                 modifier = Modifier.clickable { onEducationDismissed() }
             ) {
                 Text(
-                    text = "Tap to open menu",
+                    text = stringResource(R.string.tap_to_open_menu),
                     color = colors.contentColor,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
@@ -456,7 +458,7 @@ private fun FullWindowView(
                 modifier = Modifier.clickable { onEducationDismissed() }
             ) {
                 Text(
-                    text = "Drag to resize",
+                    text = stringResource(R.string.drag_to_resize),
                     color = colors.contentColor,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,

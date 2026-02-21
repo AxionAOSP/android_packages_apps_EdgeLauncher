@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">எட்ஜ் பார்</string>
+    <string name="app_label_settings">எட்ஜ் லான்சர்</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">எட்ஜ் லான்சர்</string>
+    <string name="edge_launcher_subtitle">உங்கள் பக்கப்பட்டியின் அனுபவத்தைத் தனிப்பயனாக்குங்கள்</string>
+    <string name="edge_bar_title">எட்ஜ் பார்</string>
+    <string name="edge_bar_subtitle">விரைவு அணுகல் பக்கப்பட்டி</string>
+    <string name="pinned_apps_title">பின்னப்பட்ட பயன்பாடுகள்</string>
+    <string name="pinned_apps_subtitle">உங்கள் விருப்பங்களைத் தேர்ந்தெடுக்கவும்</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">பின்னப்பட்ட பயன்பாடுகள்</string>
+    <string name="selected_count">%1$d தேர்ந்தெடுக்கப்பட்டது</string>
+    <string name="back">பின்</string>
+    <string name="save">சேமிக்கவும்</string>
+    <string name="loading_apps">பயன்பாடுகள் ஏற்றப்படுகின்றன…</string>
+    <string name="quick_access">விரைவு அணுகல்</string>
+    <string name="tap_to_pin_instruction">பக்கப்பட்டியில் பின்னுவதற்கு பயன்பாடுகளைத் தட்டவும்</string>
+    <string name="selected">தேர்ந்தெடுக்கப்பட்டது</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">மூடு</string>
+    <string name="minimize">சிறிதாக்கு</string>
+    <string name="hangup">இடைநிறுத்து</string>
+    <string name="fullscreen">முழுத்திரை</string>
+    <string name="collapse">சுருக்கு</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">அகற்று</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">மெனுவைக் காட்ட இழுக்கும் கைப்பிடியைத் தட்டவும்</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">விரிவாக்க தட்டவும்</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">பயன்பாடுகள் எதுவும் கிடைக்கவில்லை</string>
+    <string name="full_screen">முழுத்திரை</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">மெனுவைத் திறக்க தட்டவும்</string>
+    <string name="drag_to_resize">அளவை மாற்ற இழுக்கவும்</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">இந்த பயன்பாடு பூட்டப்பட்டுள்ளது. முதலில் திறக்கவும்.</string>
+</resources>

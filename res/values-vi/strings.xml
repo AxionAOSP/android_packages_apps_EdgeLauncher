@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">Thanh cạnh</string>
+    <string name="app_label_settings">Trình khởi chạy cạnh</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">Trình khởi chạy cạnh</string>
+    <string name="edge_launcher_subtitle">Tùy chỉnh trải nghiệm thanh bên của bạn</string>
+    <string name="edge_bar_title">Thanh cạnh</string>
+    <string name="edge_bar_subtitle">Thanh bên truy cập nhanh</string>
+    <string name="pinned_apps_title">Ứng dụng đã ghim</string>
+    <string name="pinned_apps_subtitle">Chọn yêu thích của bạn</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">Ứng dụng đã ghim</string>
+    <string name="selected_count">Đã chọn %1$d</string>
+    <string name="back">Quay lại</string>
+    <string name="save">Lưu</string>
+    <string name="loading_apps">Đang tải ứng dụng…</string>
+    <string name="quick_access">Truy cập nhanh</string>
+    <string name="tap_to_pin_instruction">Chạm vào ứng dụng để ghim vào thanh bên</string>
+    <string name="selected">Đã chọn</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">Đóng</string>
+    <string name="minimize">Thu nhỏ</string>
+    <string name="hangup">Tạm dừng</string>
+    <string name="fullscreen">Toàn màn hình</string>
+    <string name="collapse">Thu gọn</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">Xóa</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">Chạm vào tay cầm kéo để hiển thị menu</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">Chạm để mở rộng</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">Không tìm thấy ứng dụng</string>
+    <string name="full_screen">Toàn màn hình</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">Chạm để mở menu</string>
+    <string name="drag_to_resize">Kéo để thay đổi kích thước</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">Ứng dụng này đã bị khóa. Vui lòng mở khóa trước.</string>
+</resources>

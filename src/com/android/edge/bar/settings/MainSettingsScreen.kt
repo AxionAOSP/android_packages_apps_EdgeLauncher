@@ -46,9 +46,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.android.edge.bar.R
 
 private const val SIDELINE_KEY = "sidebar_feature_enabled"
 
@@ -106,7 +108,7 @@ fun MainSettingsScreen(
                     Spacer(modifier = Modifier.height(20.dp))
                     
                     Text(
-                        text = "Edge Launcher",
+                        text = stringResource(R.string.edge_launcher_title),
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -115,7 +117,7 @@ fun MainSettingsScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     
                     Text(
-                        text = "Customize your sidebar experience",
+                        text = stringResource(R.string.edge_launcher_subtitle),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -128,8 +130,8 @@ fun MainSettingsScreen(
             ) {
                 ExpressiveToggleCard(
                     icon = Icons.Rounded.Widgets,
-                    title = "Edge Bar",
-                    subtitle = "Quick access sidebar",
+                    title = stringResource(R.string.edge_bar_title),
+                    subtitle = stringResource(R.string.edge_bar_subtitle),
                     isChecked = isEdgeBarEnabled,
                     onCheckedChange = { enabled ->
                         isEdgeBarEnabled = enabled
@@ -139,8 +141,8 @@ fun MainSettingsScreen(
                 
                 ExpressiveNavigationCard(
                     icon = Icons.Rounded.PushPin,
-                    title = "Pinned Apps",
-                    subtitle = "Choose your favorites",
+                    title = stringResource(R.string.pinned_apps_title),
+                    subtitle = stringResource(R.string.pinned_apps_subtitle),
                     onClick = onNavigateToPinnedApps
                 )
             }

@@ -39,9 +39,11 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.*
 import androidx.compose.ui.layout.*
 import androidx.compose.ui.platform.*
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.*
+import com.android.edge.bar.R
 import kotlin.math.abs
 
 @Composable
@@ -210,7 +212,7 @@ fun AppDrawerContentView(
             .swipeToDismiss(threshold = 150f, onDismiss = onDismiss)
     ) {
         if (allApps.isEmpty()) {
-            EmptyState(text = "No apps found")
+            EmptyState(text = stringResource(R.string.no_apps_found))
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(4),
@@ -512,7 +514,7 @@ private fun LaunchModePopup(
                     ) {
                         LaunchModeIconButton(
                             icon = Icons.Rounded.OpenInFull,
-                            contentDescription = "Full screen",
+                            contentDescription = stringResource(R.string.full_screen),
                             onClick = onLaunchFull
                         )
                     }

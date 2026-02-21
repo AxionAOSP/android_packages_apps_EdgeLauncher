@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">એજ બાર</string>
+    <string name="app_label_settings">એજ લોન્ચર</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">એજ લોન્ચર</string>
+    <string name="edge_launcher_subtitle">તમારા સાઇડબાર અનુભવને કસ્ટમાઇઝ કરો</string>
+    <string name="edge_bar_title">એજ બાર</string>
+    <string name="edge_bar_subtitle">ઝડપી ઍક્સેસ સાઇડબાર</string>
+    <string name="pinned_apps_title">પિન કરેલા એપ્સ</string>
+    <string name="pinned_apps_subtitle">તમારા મનપસંદ પસંદ કરો</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">પિન કરેલા એપ્સ</string>
+    <string name="selected_count">%1$d પસંદ કર્યા</string>
+    <string name="back">પાછળ</string>
+    <string name="save">સાચવો</string>
+    <string name="loading_apps">એપ્સ લોડ થઈ રહ્યા છે…</string>
+    <string name="quick_access">ઝડપી ઍક્સેસ</string>
+    <string name="tap_to_pin_instruction">એપ્સને ટેપ કરીને સાઇડબારમાં પિન કરો</string>
+    <string name="selected">પસંદ કર્યું</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">બંધ કરો</string>
+    <string name="minimize">ઘટાડો</string>
+    <string name="hangup">હેંગઅપ</string>
+    <string name="fullscreen">પૂર્ણ સ્ક્રીન</string>
+    <string name="collapse">સંકુચિત કરો</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">દૂર કરો</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">મેનુ બતાવવા માટે ડ્રેગ હેન્ડલને ટેપ કરો</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">વિસ્તૃત કરવા માટે ટેપ કરો</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">કોઈ એપ્લિકેશન મળી નથી</string>
+    <string name="full_screen">પૂર્ણ સ્ક્રીન</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">મેનુ ખોલવા માટે ટેપ કરો</string>
+    <string name="drag_to_resize">કદ બદલવા માટે ખેંચો</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">આ એપ્લિકેશન લૉક થયેલ છે. કૃપા કરીને પહેલા અનલૉક કરો.</string>
+</resources>

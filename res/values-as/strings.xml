@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">এজ বাৰ</string>
+    <string name="app_label_settings">এজ লঞ্চাৰ</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">এজ লঞ্চাৰ</string>
+    <string name="edge_launcher_subtitle">আপোনাৰ ছাইডবাৰ অভিজ্ঞতা কাষ্টমাইজ কৰক</string>
+    <string name="edge_bar_title">এজ বাৰ</string>
+    <string name="edge_bar_subtitle">দ্ৰুত প্ৰৱেশ ছাইডবাৰ</string>
+    <string name="pinned_apps_title">পিন কৰা এপসমূহ</string>
+    <string name="pinned_apps_subtitle">আপোনাৰ প্ৰিয়বোৰ বাছনি কৰক</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">পিন কৰা এপসমূহ</string>
+    <string name="selected_count">%1$d টা নিৰ্বাচিত</string>
+    <string name="back">পিছলৈ</string>
+    <string name="save">সংৰক্ষণ কৰক</string>
+    <string name="loading_apps">এপসমূহ ল\'ড হৈ আছে…</string>
+    <string name="quick_access">দ্ৰুত প্ৰৱেশ</string>
+    <string name="tap_to_pin_instruction">এপসমূহ টেপ কৰি ছাইডবাৰত পিন কৰক</string>
+    <string name="selected">নিৰ্বাচিত</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">বন্ধ কৰক</string>
+    <string name="minimize">সৰু কৰক</string>
+    <string name="hangup">হেংআপ</string>
+    <string name="fullscreen">পূৰ্ণ স্ক্ৰীন</string>
+    <string name="collapse">সংকুচিত কৰক</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">আঁতৰাওক</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">মেনু দেখাবলৈ ড্ৰেগ হেণ্ডল টেপ কৰক</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">প্ৰসাৰিত কৰিবলৈ টেপ কৰক</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">কোনো এপ পোৱা নগ\'ল</string>
+    <string name="full_screen">পূৰ্ণ স্ক্ৰীন</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">মেনু খোলাৰ বাবে টেপ কৰক</string>
+    <string name="drag_to_resize">আকাৰ সলনি কৰিবলৈ ড্ৰেগ কৰক</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">এই এপটো লক কৰা আছে। অনুগ্ৰহ কৰি প্ৰথমে আনলক কৰক।</string>
+</resources>

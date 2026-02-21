@@ -1,0 +1,50 @@
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">Бічна панель</string>
+    <string name="app_label_settings">Бічний запуск</string>
+    
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">Бічний запуск</string>
+    <string name="edge_launcher_subtitle">Налаштуйте свій досвід роботи з бічною панеллю</string>
+    <string name="edge_bar_title">Бічна панель</string>
+    <string name="edge_bar_subtitle">Бічна панель швидкого доступу</string>
+    <string name="pinned_apps_title">Закріплені програми</string>
+    <string name="pinned_apps_subtitle">Виберіть улюблені</string>
+    
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">Закріплені програми</string>
+    <string name="selected_count">Вибрано %1$d</string>
+    <string name="back">Назад</string>
+    <string name="save">Зберегти</string>
+    <string name="loading_apps">Завантаження програм…</string>
+    <string name="quick_access">Швидкий доступ</string>
+    <string name="tap_to_pin_instruction">Натисніть на програми, щоб закріпити їх на бічній панелі</string>
+    <string name="selected">Вибрано</string>
+    
+    <!-- Title Bar Actions -->
+    <string name="close">Закрити</string>
+    <string name="minimize">Згорнути</string>
+    <string name="hangup">Призупинити</string>
+    <string name="fullscreen">Повноекранний режим</string>
+    <string name="collapse">Згорнути</string>
+    
+    <!-- Remove Zone -->
+    <string name="remove">Видалити</string>
+    
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">Натисніть на ручку перетягування, щоб показати меню</string>
+    
+    <!-- Bubble View -->
+    <string name="tap_to_expand">Натисніть для розгортання</string>
+    
+    <!-- Edge Content View -->
+    <string name="no_apps_found">Програми не знайдено</string>
+    <string name="full_screen">Повноекранний режим</string>
+    
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">Натисніть, щоб відкрити меню</string>
+    <string name="drag_to_resize">Перетягніть, щоб змінити розмір</string>
+    
+    <!-- App Locked -->
+    <string name="app_locked_message">Ця програма заблокована. Спочатку розблокуйте її.</string>
+</resources>
