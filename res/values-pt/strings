@@ -12,21 +12,21 @@
     <string name="pinned_apps_subtitle">Choose your favorites</string>
     <!-- Pinned Apps Screen -->
     <string name="pinned_apps_header">Pinned Apps</string>
-    <string name="selected_count">%1$d selected</string>
-    <string name="back">Back</string>
-    <string name="save">Save</string>
+    <string name="selected_count">%1$d selecionados</string>
+    <string name="back">Voltar</string>
+    <string name="save">Salvar</string>
     <string name="loading_apps">Loading apps…</string>
     <string name="quick_access">Quick Access</string>
     <string name="tap_to_pin_instruction">Tap apps to pin them to your sidebar</string>
-    <string name="selected">Selected</string>
+    <string name="selected">Selecionado</string>
     <!-- Title Bar Actions -->
-    <string name="close">Close</string>
+    <string name="close">Fechar</string>
     <string name="minimize">Minimize</string>
     <string name="hangup">Hangup</string>
     <string name="fullscreen">Fullscreen</string>
-    <string name="collapse">Collapse</string>
+    <string name="collapse">Recolher</string>
     <!-- Remove Zone -->
-    <string name="remove">Remove</string>
+    <string name="remove">Remover</string>
     <!-- Overlay Title Bar -->
     <string name="tap_drag_handle_hint">Tap drag handle to show menu</string>
     <!-- Bubble View -->
