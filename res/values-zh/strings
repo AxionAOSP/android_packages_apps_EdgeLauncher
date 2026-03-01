@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">Edge Bar</string>
+    <string name="app_label_settings">Edge Launcher</string>
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">Edge Launcher</string>
+    <string name="edge_launcher_subtitle">Customize your sidebar experience</string>
+    <string name="edge_bar_title">Edge Bar</string>
+    <string name="edge_bar_subtitle">Quick access sidebar</string>
+    <string name="pinned_apps_title">Pinned Apps</string>
+    <string name="pinned_apps_subtitle">Choose your favorites</string>
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">Pinned Apps</string>
+    <string name="selected_count">%1$d selected</string>
+    <string name="back">Back</string>
+    <string name="save">Save</string>
+    <string name="loading_apps">Loading apps…</string>
+    <string name="quick_access">Quick Access</string>
+    <string name="tap_to_pin_instruction">Tap apps to pin them to your sidebar</string>
+    <string name="selected">Selected</string>
+    <!-- Title Bar Actions -->
+    <string name="close">Close</string>
+    <string name="minimize">Minimize</string>
+    <string name="hangup">Hangup</string>
+    <string name="fullscreen">Fullscreen</string>
+    <string name="collapse">收起</string>
+    <!-- Remove Zone -->
+    <string name="remove">Remove</string>
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">Tap drag handle to show menu</string>
+    <!-- Bubble View -->
+    <string name="tap_to_expand">Tap to expand</string>
+    <!-- Edge Content View -->
+    <string name="no_apps_found">No apps found</string>
+    <string name="full_screen">Full screen</string>
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">Tap to open menu</string>
+    <string name="drag_to_resize">Drag to resize</string>
+    <!-- App Locked -->
+    <string name="app_locked_message">This app is locked. Please unlock it first.</string>
+</resources>
