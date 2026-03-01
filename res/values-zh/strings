@@ -24,7 +24,7 @@
     <string name="minimize">Minimize</string>
     <string name="hangup">Hangup</string>
     <string name="fullscreen">Fullscreen</string>
-    <string name="collapse">收起</string>
+    <string name="collapse">收合</string>
     <!-- Remove Zone -->
     <string name="remove">Remove</string>
     <!-- Overlay Title Bar -->
