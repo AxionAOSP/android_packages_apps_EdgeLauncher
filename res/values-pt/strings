@@ -21,7 +21,7 @@
     <string name="selected">Selecionado</string>
     <!-- Title Bar Actions -->
     <string name="close">Fechar</string>
-    <string name="minimize">Minimize</string>
+    <string name="minimize">Minimizar</string>
     <string name="hangup">Hangup</string>
     <string name="fullscreen">Fullscreen</string>
     <string name="collapse">Recolher</string>
