@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- App Labels -->
-    <string name="app_name">Edge Bar</string>
-    <string name="app_label_settings">Edge Launcher</string>
+    <string name="app_name">Боковая панель</string>
+    <string name="app_label_settings">Боковой лаунчер</string>
     <!-- Main Settings Screen -->
-    <string name="edge_launcher_title">Edge Launcher</string>
+    <string name="edge_launcher_title">Боковой лаунчер</string>
     <string name="edge_launcher_subtitle">Настройка боковой панели</string>
-    <string name="edge_bar_title">Edge Bar</string>
+    <string name="edge_bar_title">Боковая панель</string>
     <string name="edge_bar_subtitle">Quick access sidebar</string>
     <string name="pinned_apps_title">Закреплённые приложения</string>
     <string name="pinned_apps_subtitle">Выберите любимые</string>
