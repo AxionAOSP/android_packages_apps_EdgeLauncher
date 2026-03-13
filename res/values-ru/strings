@@ -7,7 +7,7 @@
     <string name="edge_launcher_title">Боковой лаунчер</string>
     <string name="edge_launcher_subtitle">Настройка боковой панели</string>
     <string name="edge_bar_title">Боковая панель</string>
-    <string name="edge_bar_subtitle">Quick access sidebar</string>
+    <string name="edge_bar_subtitle">Боковая панель быстрого доступа</string>
     <string name="pinned_apps_title">Закреплённые приложения</string>
     <string name="pinned_apps_subtitle">Выберите любимые</string>
     <!-- Pinned Apps Screen -->
@@ -28,7 +28,7 @@
     <!-- Remove Zone -->
     <string name="remove">Убрать</string>
     <!-- Overlay Title Bar -->
-    <string name="tap_drag_handle_hint">Tap drag handle to show menu</string>
+    <string name="tap_drag_handle_hint">Нажмите на кнопку для отображения меню</string>
     <!-- Bubble View -->
     <string name="tap_to_expand">Нажмите, чтобы раскрыть</string>
     <!-- Edge Content View -->
