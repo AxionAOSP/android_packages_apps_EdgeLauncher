@@ -5,11 +5,11 @@
     <string name="app_label_settings">Kenar Başlatıcı</string>
     <!-- Main Settings Screen -->
     <string name="edge_launcher_title">Kenar Başlatıcı</string>
-    <string name="edge_launcher_subtitle">Yan çubuk deneyiminizi özelleştirin</string>
+    <string name="edge_launcher_subtitle">Yan çubuk deneyimini özelleştirin</string>
     <string name="edge_bar_title">Kenar Çubuğu</string>
     <string name="edge_bar_subtitle">Hızlı erişim yan çubuğu</string>
     <string name="pinned_apps_title">Sabitlenmiş Uygulamalar</string>
-    <string name="pinned_apps_subtitle">Favorilerinizi seçin</string>
+    <string name="pinned_apps_subtitle">Favorileri seçin</string>
     <!-- Pinned Apps Screen -->
     <string name="pinned_apps_header">Sabitlenmiş Uygulamalar</string>
     <string name="selected_count">%1$d seçildi</string>
