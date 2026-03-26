@@ -40,8 +40,12 @@ import android.view.View
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
 import androidx.appcompat.content.res.AppCompatResources
+import com.android.axion.compose.preferences.SettingsFlow
+import com.android.axion.compose.preferences.SettingsType
 import com.android.internal.policy.SystemBarUtils
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlin.coroutines.CoroutineContext
 
 class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
@@ -75,7 +79,9 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
     private lateinit var taskStackListener: FreeformTaskStackListener
 
     private var idleJob: Job? = null
-    
+    private var gameBarActive = false
+    private var gamingModeJob: Job? = null
+
     private val sidelineSettingObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
         override fun onChange(selfChange: Boolean) {
             val enabled = getSecureBoolean(SIDELINE, false)
@@ -132,6 +138,7 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
         private const val IDLE_ALPHA = 0.3f
         private const val FADE_DURATION = 500L
 
+        private const val GAMING_MODE_ACTIVE = "ax_gaming_mode_active"
         const val SIDELINE = "sidebar_feature_enabled"
         const val SIDELINE_POSITION_X = "sideline_position_x"
         const val SIDELINE_POSITION_Y_PORTRAIT = "sideline_position_y_portrait"
@@ -214,7 +221,19 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
             false,
             sidelineSettingObserver
         )
-        
+
+        gamingModeJob = SettingsFlow(contentResolverRef, SettingsType.SECURE)
+            .observeBoolean(GAMING_MODE_ACTIVE)
+            .onEach { active ->
+                if (active == gameBarActive) return@onEach
+                gameBarActive = active
+                mainScope.launch {
+                    if (gameBarActive) hideSidelineView()
+                    else if (showSideline) showSidelineView()
+                }
+            }
+            .launchIn(this)
+
         return START_STICKY
     }
 
@@ -240,6 +259,7 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
     override fun onDestroy() {
         super.onDestroy()
 
+        gamingModeJob?.cancel()
         contentResolverRef.unregisterContentObserver(sidelineSettingObserver)
         
         if (::taskStackListener.isInitialized) {
@@ -274,7 +294,7 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
     }
 
     private fun showSidelineView() {
-        if (isSidelineVisible) return
+        if (isSidelineVisible || gameBarActive) return
 
         mainScope.launch {
             wmLayoutParams.apply {
