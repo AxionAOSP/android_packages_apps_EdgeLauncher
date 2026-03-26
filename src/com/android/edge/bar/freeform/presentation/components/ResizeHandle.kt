@@ -51,14 +51,18 @@ fun CornerResizeHandle(
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
                 var dragged = false
+                var accumulatedX = 0f
+                var accumulatedY = 0f
                 drag(down.id) { change ->
                     val dragAmount = change.position - change.previousPosition
+                    accumulatedX += dragAmount.x
+                    accumulatedY += dragAmount.y
                     if (!dragged) {
                         dragged = true
                         onResizeStart()
                     }
                     change.consume()
-                    onResize(dragAmount.x, dragAmount.y)
+                    onResize(accumulatedX, accumulatedY)
                 }
                 if (dragged) {
                     onResizeEnd()
@@ -101,14 +105,16 @@ fun BottomResizeHandle(
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
                     var dragged = false
+                    var accumulatedY = 0f
                     drag(down.id) { change ->
                         val dragAmount = change.position - change.previousPosition
+                        accumulatedY += dragAmount.y
                         if (!dragged) {
                             dragged = true
                             onResizeStart()
                         }
                         change.consume()
-                        onResize(dragAmount.y)
+                        onResize(accumulatedY)
                     }
                     if (dragged) {
                         onResizeEnd()

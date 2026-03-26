@@ -33,6 +33,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -278,6 +279,9 @@ class EdgeSideBar(
                         ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
                     )
                     setContent {
+                        LaunchedEffect(Unit) {
+                            panelVisible.value = true
+                        }
                         val isDark = isSystemInDarkTheme()
                         val colorScheme = if (isDark) dynamicDarkColorScheme(context)
                             else dynamicLightColorScheme(context)
@@ -316,7 +320,6 @@ class EdgeSideBar(
         mainScope.launch(Dispatchers.Main) {
             try {
                 windowManager.addView(view, lp)
-                panelVisible.value = true
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to add view", e)
             }

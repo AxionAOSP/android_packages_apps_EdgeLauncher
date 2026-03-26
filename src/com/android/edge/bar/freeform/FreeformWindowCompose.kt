@@ -16,6 +16,7 @@
 package com.android.edge.bar.freeform
 
 import android.content.Context
+import android.view.Display
 import android.graphics.SurfaceTexture
 import android.util.Log
 import android.view.TextureView
@@ -38,7 +39,8 @@ class FreeformWindowCompose(
     private val activityName: String,
     private val userId: Int,
     private val taskId: Int = -1,
-    private val desktopMode: Boolean = false
+    private val desktopMode: Boolean = false,
+    private val targetDisplayId: Int = Display.DEFAULT_DISPLAY,
 ) : TextureView.SurfaceTextureListener {
 
     companion object {
@@ -47,7 +49,7 @@ class FreeformWindowCompose(
 
     private lateinit var textureView: TextureView
 
-    private val windowController = WindowController(context, packageName)
+    private val windowController = WindowController(context, packageName, targetDisplayId)
 
     private val viewModel = FreeformWindowViewModel(
         context = context,

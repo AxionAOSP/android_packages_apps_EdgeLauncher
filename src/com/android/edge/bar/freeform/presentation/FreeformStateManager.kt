@@ -46,7 +46,7 @@ sealed class WindowEvent {
     object BubbleTap : WindowEvent()
 
     object ResizeStart : WindowEvent()
-    data class Resize(val newWidth: Int, val newHeight: Int) : WindowEvent()
+    data class Resize(val newWidth: Int, val newHeight: Int, val newX: Float = Float.NaN) : WindowEvent()
     object ResizeEnd : WindowEvent()
 
     object Maximize : WindowEvent()
@@ -195,7 +195,7 @@ class FreeformStateManager(
             is WindowEvent.BubbleTap -> handleBubbleExpand()
             
             is WindowEvent.ResizeStart -> handleResizeStart()
-            is WindowEvent.Resize -> handleResize(event.newWidth, event.newHeight)
+            is WindowEvent.Resize -> handleResize(event.newWidth, event.newHeight, event.newX)
             is WindowEvent.ResizeEnd -> handleResizeEnd()
             is WindowEvent.Maximize -> handleMaximize()
 
@@ -430,7 +430,7 @@ class FreeformStateManager(
         updateState { copy(isPaused = true) }
     }
     
-    private fun handleResize(newWidth: Int, newHeight: Int) {
+    private fun handleResize(newWidth: Int, newHeight: Int, newX: Float) {
         var width: Int
         var height: Int
 
@@ -452,7 +452,11 @@ class FreeformStateManager(
             height = newHeight.coerceAtLeast(minDimension)
         }
 
-        updateState { copy(width = width, height = height) }
+        if (newX.isNaN()) {
+            updateState { copy(width = width, height = height) }
+        } else {
+            updateState { copy(width = width, height = height, x = newX) }
+        }
     }
 
     private suspend fun handleResizeEnd() {
@@ -696,6 +700,10 @@ class FreeformStateManager(
     
     fun onResize(width: Int, height: Int) {
         dispatch(WindowEvent.Resize(width, height))
+    }
+
+    fun onResizeWithPosition(width: Int, height: Int, x: Float) {
+        dispatch(WindowEvent.Resize(width, height, x))
     }
     
     fun onResizeEnd() {

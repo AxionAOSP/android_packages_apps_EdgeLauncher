@@ -36,6 +36,7 @@ import android.os.Process
 import android.os.ServiceManager
 import android.os.UserHandle
 import android.provider.Settings
+import android.view.Display
 import android.view.View
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
@@ -171,8 +172,9 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
         if (intent?.action == ACTION_LAUNCH_DESKTOP_FREEFORM) {
             val packageName = intent.getStringExtra(EXTRA_PACKAGE_NAME)
             val activityName = intent.getStringExtra(EXTRA_ACTIVITY_NAME)
+            val targetDisplayId = intent.getIntExtra("target_display_id", Display.DEFAULT_DISPLAY)
             if (packageName != null) {
-                launchDesktopFreeform(packageName, activityName)
+                launchDesktopFreeform(packageName, activityName, targetDisplayId)
             }
         }
 
@@ -425,7 +427,8 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
         val window = FreeformWindowCompose(this, packageName, targetActivity, userId)
     }
 
-    private fun launchDesktopFreeform(packageName: String, activityName: String? = null) {
+    private fun launchDesktopFreeform(packageName: String, activityName: String? = null,
+            targetDisplayId: Int = Display.DEFAULT_DISPLAY) {
         if (freeformWM.hasWindow(packageName)) {
             freeformWM.bringToFront(packageName)
             return
@@ -436,6 +439,7 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
              launchIntent?.component?.className
         } ?: return
 
-        val window = FreeformWindowCompose(this, packageName, targetActivity, userId, desktopMode = true)
+        val window = FreeformWindowCompose(this, packageName, targetActivity, userId,
+                desktopMode = true, targetDisplayId = targetDisplayId)
     }
 }

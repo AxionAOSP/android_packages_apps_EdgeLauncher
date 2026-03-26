@@ -541,11 +541,10 @@ private fun BoxScope.ResizeHandles(
     onResizeEnded: () -> Unit,
     isDesktopMode: Boolean = false
 ) {
-    fun currentState() = stateManager.state.value
-
-    val s = currentState()
     val context = LocalContext.current
     val displayMetrics = context.resources.displayMetrics
+
+    val s = stateManager.state.value
 
     val baseMinWidthPx = with(density) {
         if (isDesktopMode) DESKTOP_MIN_WIDTH_DP.dp.toPx().toInt()
@@ -574,14 +573,20 @@ private fun BoxScope.ResizeHandles(
         .coerceIn(RESIZE_HANDLE_BOTTOM_WIDTH_MIN_DP.dp, RESIZE_HANDLE_BOTTOM_WIDTH_MAX_DP.dp)
     val bottomHandleHeight = RESIZE_HANDLE_BOTTOM_HEIGHT_DP.dp
 
+    var initialWidth by remember { mutableIntStateOf(0) }
+    var initialHeight by remember { mutableIntStateOf(0) }
+    var initialX by remember { mutableFloatStateOf(0f) }
+
     CornerResizeHandle(
-        onResize = { deltaX, deltaY ->
-            val s = currentState()
-            val newWidth = (s.width + deltaX.roundToInt()).coerceIn(minWidthPx, maxWidthPx)
-            val newHeight = (s.height + deltaY.roundToInt()).coerceIn(minHeightPx, maxHeightPx)
+        onResize = { totalDeltaX, totalDeltaY ->
+            val newWidth = (initialWidth + totalDeltaX.roundToInt()).coerceIn(minWidthPx, maxWidthPx)
+            val newHeight = (initialHeight + totalDeltaY.roundToInt()).coerceIn(minHeightPx, maxHeightPx)
             stateManager.onResize(newWidth, newHeight)
         },
         onResizeStart = {
+            val snap = stateManager.state.value
+            initialWidth = snap.width
+            initialHeight = snap.height
             onResizeStarted()
             stateManager.onResizeStart()
         },
@@ -594,15 +599,17 @@ private fun BoxScope.ResizeHandles(
     )
 
     CornerResizeHandle(
-        onResize = { deltaX, deltaY ->
-            val s = currentState()
-            val newWidth = (s.width - deltaX.roundToInt()).coerceIn(minWidthPx, maxWidthPx)
-            val newHeight = (s.height + deltaY.roundToInt()).coerceIn(minHeightPx, maxHeightPx)
-            val deltaWidth = s.width - newWidth
-            stateManager.onResize(newWidth, newHeight)
-            stateManager.onDrag(deltaWidth.toFloat(), 0f)
+        onResize = { totalDeltaX, totalDeltaY ->
+            val newWidth = (initialWidth - totalDeltaX.roundToInt()).coerceIn(minWidthPx, maxWidthPx)
+            val newHeight = (initialHeight + totalDeltaY.roundToInt()).coerceIn(minHeightPx, maxHeightPx)
+            val widthDelta = initialWidth - newWidth
+            stateManager.onResizeWithPosition(newWidth, newHeight, initialX + widthDelta)
         },
         onResizeStart = {
+            val snap = stateManager.state.value
+            initialWidth = snap.width
+            initialHeight = snap.height
+            initialX = snap.x
             onResizeStarted()
             stateManager.onResizeStart()
         },
@@ -616,12 +623,14 @@ private fun BoxScope.ResizeHandles(
     )
 
     BottomResizeHandle(
-        onResize = { deltaY ->
-            val s = currentState()
-            val newHeight = (s.height + deltaY.roundToInt()).coerceIn(minHeightPx, maxHeightPx)
-            stateManager.onResize(s.width, newHeight)
+        onResize = { totalDeltaY ->
+            val newHeight = (initialHeight + totalDeltaY.roundToInt()).coerceIn(minHeightPx, maxHeightPx)
+            stateManager.onResize(initialWidth, newHeight)
         },
         onResizeStart = {
+            val snap = stateManager.state.value
+            initialWidth = snap.width
+            initialHeight = snap.height
             onResizeStarted()
             stateManager.onResizeStart()
         },

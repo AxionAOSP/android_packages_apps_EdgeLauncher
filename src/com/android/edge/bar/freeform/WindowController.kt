@@ -21,9 +21,11 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.content.Context
 import android.graphics.PixelFormat
+import android.hardware.display.DisplayManager
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.Display
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
@@ -33,7 +35,8 @@ import androidx.compose.ui.platform.ComposeView
 
 class WindowController(
     private val context: Context,
-    private val packageName: String
+    private val packageName: String,
+    private val targetDisplayId: Int = Display.DEFAULT_DISPLAY,
 ) {
     companion object {
         private const val TAG = "WindowController"
@@ -41,7 +44,7 @@ class WindowController(
     }
 
     private val handler = Handler(Looper.getMainLooper())
-    private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    private val windowManager: WindowManager = resolveWindowManager()
     
     val windowParams = WindowManager.LayoutParams().apply {
         type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -201,5 +204,21 @@ class WindowController(
 
     fun removeWindow() = runOnMain {
         removeWindowInternal()
+    }
+
+    private fun resolveWindowManager(): WindowManager {
+        if (targetDisplayId != Display.DEFAULT_DISPLAY
+            && targetDisplayId != Display.INVALID_DISPLAY) {
+            val dm = context.getSystemService(DisplayManager::class.java)
+            val display = dm?.getDisplay(targetDisplayId)
+            if (display != null) {
+                val displayContext = context.createWindowContext(
+                    display,
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    null)
+                return displayContext.getSystemService(WindowManager::class.java)
+            }
+        }
+        return context.getSystemService(WindowManager::class.java)
     }
 }
