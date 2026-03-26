@@ -58,10 +58,4 @@ class FreeformConfig(
     var shouldShowSystemDecorations: Boolean = false
     var refreshRate: Float = 60f
 
-    val hangUpWidth: Int = FreeformConstants.HANGUP_WIDTH
-    val hangUpHeight: Int = FreeformConstants.HANGUP_HEIGHT
-
-    var isHangUp: Boolean = false
-    var notInHangUpX: Int = 0
-    var notInHangUpY: Int = 0
 }

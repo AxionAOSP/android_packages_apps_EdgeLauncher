@@ -46,6 +46,7 @@ import kotlin.coroutines.CoroutineContext
 
 class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
 
+
     private val serviceJob = SupervisorJob()
     private val serviceDispatcher = Dispatchers.Default.limitedParallelism(2)
     override val coroutineContext: CoroutineContext
@@ -122,7 +123,6 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
 
     companion object {
         private const val SIDELINE_WIDTH = 100
-        private const val SIDELINE_MOVE_WIDTH = 200
         private const val SIDELINE_HEIGHT = 200
         private const val OFFSET_PORTRAIT = 20
         private const val OFFSET_LANDSCAPE = 0
@@ -198,7 +198,10 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
 
         edgeSideBar = EdgeSideBar(this, object : EdgeSideBar.Callback {
             override fun onRemove() {
-                if (isSidebarVisible && showSideline) animateShowSideline()
+                if (isSidebarVisible && showSideline) {
+                    updateSidelinePosition()
+                    animateShowSideline()
+                }
                 isSidebarVisible = false
             }
         })
@@ -256,30 +259,6 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
         edgeSideBar.showPanelView()
         isSidebarVisible = true
         animateHideSideline()
-    }
-
-    override fun beginMoveSideline() {
-        wmLayoutParams.width = SIDELINE_MOVE_WIDTH
-        updateViewLayout()
-    }
-
-    override fun moveSideline(xChanged: Int, yChanged: Int, posX: Int, posY: Int) {
-        sidelinePosX = if (posX > screenWidth / 2) 1 else -1
-        wmLayoutParams.x = sidelinePosX * (screenWidth / 2 - offset)
-        wmLayoutParams.y += yChanged
-        updateViewLayout()
-    }
-
-    override fun endMoveSideline() {
-        wmLayoutParams.width = SIDELINE_WIDTH
-        wmLayoutParams.y = constrainY(wmLayoutParams.y)
-        updateViewLayout()
-
-        putSecureInt(SIDELINE_POSITION_X, sidelinePosX)
-        putSecureInt(
-            if (isPortrait) SIDELINE_POSITION_Y_PORTRAIT else SIDELINE_POSITION_Y_LANDSCAPE,
-            wmLayoutParams.y
-        )
     }
 
     private fun constrainY(y: Int): Int {

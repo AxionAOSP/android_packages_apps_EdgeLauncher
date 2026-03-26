@@ -16,25 +16,19 @@
 package com.android.edge.bar.freeform.presentation
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.util.Log
 import android.view.TextureView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.scaleIn as composeScaleIn
 import androidx.compose.animation.scaleOut as composeScaleOut
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -42,18 +36,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.*
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.viewinterop.AndroidView
 import com.android.edge.bar.freeform.InputInjector
 import com.android.edge.bar.freeform.FreeformWindowManager
@@ -65,8 +54,6 @@ import com.android.edge.bar.freeform.domain.FreeformConstants.MAX_WINDOW_WIDTH_D
 import com.android.edge.bar.freeform.domain.FreeformConstants.MAX_WINDOW_HEIGHT_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.BUBBLE_SIZE_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.DEFAULT_WIDTH_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.DEFAULT_HEIGHT_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.DEFAULT_ASPECT_RATIO
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_SIZE_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_SIZE_MIN_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_SIZE_MAX_DP
@@ -74,11 +61,11 @@ import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTT
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_WIDTH_MIN_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_WIDTH_MAX_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_HEIGHT_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_INSET_DP
-import com.android.edge.bar.freeform.domain.FreeformConstants.RESIZE_HANDLE_BOTTOM_INSET_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.DESKTOP_MIN_WIDTH_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.DESKTOP_MIN_HEIGHT_DP
+import com.android.edge.bar.freeform.domain.FreeformConstants.DESKTOP_CORNER_RADIUS_DP
 import com.android.edge.bar.freeform.domain.FreeformConstants.DESKTOP_TASKBAR_HEIGHT_DP
+import com.android.edge.bar.freeform.domain.FreeformConstants.DESKTOP_TITLE_BAR_HEIGHT_DP
 import com.android.axion.kotlin.math.dpToPx
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -245,8 +232,9 @@ private fun FullWindowView(
     inputInjector: InputInjector
 ) {
     val density = LocalDensity.current
-    val cornerRadius = CORNER_RADIUS_DP.dp
-    
+    val isDesktopMode = state.mode == WindowMode.DESKTOP
+    val cornerRadius = if (isDesktopMode) DESKTOP_CORNER_RADIUS_DP.dp else CORNER_RADIUS_DP.dp
+
     var isResizing by remember { mutableStateOf(false) }
     var isDragging by remember { mutableStateOf(false) }
     var hideHandlesJob by remember { mutableStateOf<Job?>(null) }
@@ -256,8 +244,7 @@ private fun FullWindowView(
     
     val context = LocalContext.current
     
-    val isHangupMode = state.mode == WindowMode.HANGUP
-    val showResizeHints = (isResizing || isDragging) && !isHangupMode
+    val showResizeBorder = isResizing || isDragging
     
     val luminanceDetector = remember { SurfaceLuminanceDetector() }
     
@@ -309,91 +296,70 @@ private fun FullWindowView(
         }
     }
     
-    val handleWidth = (RESIZE_HANDLE_SIZE_DP.dp * sizeFactor)
-        .coerceIn(RESIZE_HANDLE_SIZE_MIN_DP.dp, RESIZE_HANDLE_SIZE_MAX_DP.dp)
-    var isMenuExpanded by remember { mutableStateOf(false) }
-    var dropdownXOffset by remember { mutableStateOf(0f) }
+    val resizeBorderColor = Color(0xFF87CEEB)
 
-    val isDesktopMode = state.mode == WindowMode.DESKTOP
+    var isDesktopMenuExpanded by remember { mutableStateOf(false) }
+    var dropdownOffsetX by remember { mutableFloatStateOf(0f) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) {
-            if (!isHangupMode) {
-                if (isDesktopMode) {
-                    DesktopTitleBar(
-                        onClose = onClose,
-                        onMinimize = { stateManager.onMinimize() },
-                        onBack = onBack,
-                        onDrag = { deltaX, deltaY ->
-                            scope.launch(Dispatchers.Main) {
-                                stateManager.onDrag(deltaX, deltaY)
-                            }
-                        },
-                        onDragStart = {
-                            onBringToFront()
-                            onSetDragging(true)
-                        },
-                        onDragEnd = {
-                            stateManager.onDragEnd()
-                            onSetDragging(false)
-                        },
-                        isContentLight = isContentLight,
-                        isMenuExpanded = isMenuExpanded,
-                        onMenuExpandedChange = { isMenuExpanded = it },
-                        appIcon = state.appIcon,
-                        onDropdownOffsetChanged = { dropdownXOffset = it },
-                        modifier = Modifier.padding(horizontal = 24.dp)
-                    )
-                } else {
-                    TitleBar(
-                        onClose = onClose,
-                        onMinimize = { stateManager.onMinimize() },
-                        onHangup = { stateManager.onHangup() },
-                        onMaximizeFullscreen = onMaximizeFullscreen,
-                        onBack = onBack,
-                        onDrag = { deltaX, deltaY ->
-                            scope.launch(Dispatchers.Main) {
-                                stateManager.onDrag(deltaX, deltaY)
-                            }
-                        },
-                        onDragStart = {
-                            onBringToFront()
-                            onSetDragging(true)
-                        },
-                        onDragEnd = {
-                            stateManager.onDragEnd()
-                            onSetDragging(false)
-                        },
-                        isContentLight = isContentLight,
-                        isMenuExpanded = isMenuExpanded,
-                        onMenuExpandedChange = { isMenuExpanded = it },
-                        appIcon = state.appIcon,
-                        onDropdownOffsetChanged = { dropdownXOffset = it },
-                        showEducation = showEducation,
-                        onEducationDismissed = onEducationDismissed,
-                        modifier = Modifier.padding(horizontal = 24.dp)
-                    )
-                }
+            if (isDesktopMode) {
+                DesktopTitleBar(
+                    onClose = onClose,
+                    onMinimize = { stateManager.onMinimize() },
+                    onBack = onBack,
+                    onDrag = { deltaX, deltaY ->
+                        scope.launch(Dispatchers.Main) {
+                            stateManager.onDrag(deltaX, deltaY)
+                        }
+                    },
+                    onDragStart = {
+                        onBringToFront()
+                        onSetDragging(true)
+                    },
+                    onDragEnd = {
+                        stateManager.onDragEnd()
+                        onSetDragging(false)
+                    },
+                    isContentLight = isContentLight,
+                    isMenuExpanded = isDesktopMenuExpanded,
+                    onMenuExpandedChange = { isDesktopMenuExpanded = it },
+                    appIcon = state.appIcon,
+                    onDropdownOffsetChanged = { dropdownOffsetX = it },
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+            } else {
+                TitleBar(
+                    onClose = onClose,
+                    onMinimize = { stateManager.onMinimize() },
+                    onMaximizeFullscreen = onMaximizeFullscreen,
+                    onDrag = { deltaX, deltaY ->
+                        scope.launch(Dispatchers.Main) {
+                            stateManager.onDrag(deltaX, deltaY)
+                        }
+                    },
+                    onDragStart = {
+                        onBringToFront()
+                        onSetDragging(true)
+                    },
+                    onDragEnd = {
+                        stateManager.onDragEnd()
+                        onSetDragging(false)
+                    },
+                    isContentLight = isContentLight,
+                    scaleFactor = sizeFactor,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
             }
-            
+
             Box(modifier = Modifier.weight(1f)) {
                 WindowSurface(
                     state = state,
                     stateManager = stateManager,
-                    isHangupMode = isHangupMode,
                     cornerRadius = cornerRadius,
-                    isContentLight = isContentLight,
-                    showEducation = showEducation,
-                    onEducationDismissed = onEducationDismissed,
                     scope = scope,
-                    onClose = onClose,
-                    onBack = onBack,
-                    onMaximizeFullscreen = onMaximizeFullscreen,
-                    onBringToFront = onBringToFront,
-                    onSetDragging = { isDragging = it },
                     onSetupTextureView = { view ->
                         textureViewRef = view
                         onSetupTextureView(view)
@@ -401,128 +367,71 @@ private fun FullWindowView(
                     textureViewListener = textureViewListener,
                     inputInjector = inputInjector
                 )
-                
-                if (!isHangupMode) {
-                    ResizeHandles(
-                        stateManager = stateManager,
-                        density = density,
-                        sizeFactor = sizeFactor,
-                        isContentLight = isContentLight,
-                        showEducation = showEducation,
-                        onEducationDismissed = onEducationDismissed,
-                        onResizeStarted = { onResizeStarted() },
-                        onResizeEnded = { onResizeEnded() },
-                        isDesktopMode = isDesktopMode
-                    )
-                }
-            }
-        }
 
-        if (!isHangupMode) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(top = if (isDesktopMode) 32.dp else 42.dp),
-                contentAlignment = Alignment.TopStart
-            ) {
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = isMenuExpanded,
-                    modifier = Modifier.offset { IntOffset(dropdownXOffset.toInt(), 0) },
-                    enter = fadeIn(animationSpec = tween(200)) +
-                            expandVertically(expandFrom = Alignment.Top, animationSpec = tween(200)),
-                    exit = fadeOut(animationSpec = tween(150)) +
-                           shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(150)) +
-                           composeScaleOut(targetScale = 0.9f, animationSpec = tween(150))
-                ) {
-                    if (isDesktopMode) {
-                        DesktopMenuDropdown(
-                            onResizeToFullscreen = {
-                                isMenuExpanded = false
-                                stateManager.onResizeToFullscreen()
-                            },
-                            onResizeToHalfLeft = {
-                                isMenuExpanded = false
-                                stateManager.onResizeToHalfLeft()
-                            },
-                            onResizeToHalfRight = {
-                                isMenuExpanded = false
-                                stateManager.onResizeToHalfRight()
-                            },
-                            onMaximizeFullscreen = {
-                                isMenuExpanded = false
-                                onMaximizeFullscreen()
-                            },
-                            isContentLight = isContentLight
-                        )
-                    } else {
-                        MenuPill(
-                            onMinimize = {
-                                isMenuExpanded = false
-                                stateManager.onMinimize()
-                            },
-                            onHangup = {
-                                isMenuExpanded = false
-                                stateManager.onHangup()
-                            },
-                            onMaximizeFullscreen = {
-                                isMenuExpanded = false
-                                onMaximizeFullscreen()
-                            },
-                            isContentLight = isContentLight,
-                            scaleFactor = 1.0f
-                        )
-                    }
-                }
-            }
-        }
-
-        androidx.compose.animation.AnimatedVisibility(
-            visible = showEducation && !isMenuExpanded,
-            enter = fadeIn() + expandVertically(expandFrom = Alignment.Bottom),
-            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Bottom),
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .offset { IntOffset(dropdownXOffset.toInt(), 50) }
-        ) {
-            Surface(
-                color = colors.pillColor,
-                shape = RoundedCornerShape(8.dp),
-                tonalElevation = 4.dp,
-                shadowElevation = 4.dp,
-                modifier = Modifier.clickable { onEducationDismissed() }
-            ) {
-                Text(
-                    text = "Tap to open menu",
-                    color = colors.contentColor,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                ResizeHandles(
+                    stateManager = stateManager,
+                    density = density,
+                    sizeFactor = sizeFactor,
+                    onResizeStarted = { onResizeStarted() },
+                    onResizeEnded = { onResizeEnded() },
+                    isDesktopMode = isDesktopMode
                 )
             }
         }
 
-        androidx.compose.animation.AnimatedVisibility(
-            visible = showEducation && !state.isResizing,
-            enter = fadeIn() + expandHorizontally(expandFrom = Alignment.End),
-            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.End),
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .offset(x = (-handleWidth - 8.dp), y = (-handleWidth - 8.dp))
+        AnimatedVisibility(
+            visible = showResizeBorder,
+            enter = fadeIn(animationSpec = tween(150)),
+            exit = fadeOut(animationSpec = tween(300))
         ) {
-            Surface(
-                color = colors.pillColor,
-                shape = RoundedCornerShape(8.dp),
-                tonalElevation = 4.dp,
-                shadowElevation = 4.dp,
-                modifier = Modifier.clickable { onEducationDismissed() }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
+                    .border(
+                        width = 2.dp,
+                        color = resizeBorderColor,
+                        shape = RoundedCornerShape(cornerRadius)
+                    )
+            )
+        }
+
+        if (isDesktopMode) {
+            AnimatedVisibility(
+                visible = isDesktopMenuExpanded,
+                enter = fadeIn(animationSpec = tween(150)) + expandVertically(
+                    animationSpec = tween(200),
+                    expandFrom = Alignment.Top
+                ),
+                exit = fadeOut(animationSpec = tween(150)) + shrinkVertically(
+                    animationSpec = tween(200),
+                    shrinkTowards = Alignment.Top
+                ),
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(
+                        start = 24.dp + with(density) { dropdownOffsetX.toDp() },
+                        top = DESKTOP_TITLE_BAR_HEIGHT_DP.dp
+                    )
             ) {
-                Text(
-                    text = "Drag to resize",
-                    color = colors.contentColor,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                DesktopMenuDropdown(
+                    onResizeToFullscreen = {
+                        stateManager.onResizeToFullscreen()
+                        isDesktopMenuExpanded = false
+                    },
+                    onResizeToHalfLeft = {
+                        stateManager.onResizeToHalfLeft()
+                        isDesktopMenuExpanded = false
+                    },
+                    onResizeToHalfRight = {
+                        stateManager.onResizeToHalfRight()
+                        isDesktopMenuExpanded = false
+                    },
+                    onMaximizeFullscreen = {
+                        onMaximizeFullscreen()
+                        isDesktopMenuExpanded = false
+                    },
+                    isContentLight = isContentLight
                 )
             }
         }
@@ -533,17 +442,8 @@ private fun FullWindowView(
 private fun BoxScope.WindowSurface(
     state: WindowState,
     stateManager: FreeformStateManager,
-    isHangupMode: Boolean,
     cornerRadius: Dp,
-    isContentLight: Boolean,
-    showEducation: Boolean,
-    onEducationDismissed: () -> Unit,
     scope: CoroutineScope,
-    onClose: () -> Unit,
-    onBack: () -> Unit,
-    onMaximizeFullscreen: () -> Unit,
-    onBringToFront: () -> Unit,
-    onSetDragging: (Boolean) -> Unit,
     onSetupTextureView: (TextureView) -> Unit,
     textureViewListener: TextureView.SurfaceTextureListener,
     inputInjector: InputInjector
@@ -551,22 +451,9 @@ private fun BoxScope.WindowSurface(
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
-            .then(
-                if (isHangupMode) {
-                    Modifier.pointerInput(Unit) {
-                        detectTapGestures(
-                            onTap = { 
-                                stateManager.onHangupTap() 
-                            }
-                        )
-                    }
-                } else Modifier
-            ),
+            .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
         color = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(
-            topStart = if (isHangupMode) cornerRadius else 0.dp,
-            topEnd = if (isHangupMode) cornerRadius else 0.dp,
             bottomStart = cornerRadius,
             bottomEnd = cornerRadius
         )
@@ -577,45 +464,31 @@ private fun BoxScope.WindowSurface(
                     .fillMaxSize()
                     .clip(
                         RoundedCornerShape(
-                            topStart = if (isHangupMode) cornerRadius else 0.dp,
-                            topEnd = if (isHangupMode) cornerRadius else 0.dp,
                             bottomStart = cornerRadius,
                             bottomEnd = cornerRadius
                         )
                     )
-                    .then(
-                        if (isHangupMode) {
-                            Modifier.pointerInput(Unit) {
-                                detectTapGestures(
-                                    onTap = { 
-                                        stateManager.onHangupTap() 
-                                    }
-                                )
-                            }
-                        } else {
-                            Modifier.pointerInput(Unit) {
-                                awaitPointerEventScope {
-                                    while (true) {
-                                        val event = awaitPointerEvent(PointerEventPass.Initial)
-                                        if (event.type == PointerEventType.Scroll) {
-                                            event.changes.forEach { change ->
-                                                val scrollDelta = change.scrollDelta
-                                                if (scrollDelta.x != 0f || scrollDelta.y != 0f) {
-                                                    inputInjector.injectScrollEvent(
-                                                        change.position.x,
-                                                        change.position.y,
-                                                        scrollDelta.x,
-                                                        scrollDelta.y
-                                                    )
-                                                    change.consume()
-                                                }
-                                            }
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                val event = awaitPointerEvent(PointerEventPass.Initial)
+                                if (event.type == PointerEventType.Scroll) {
+                                    event.changes.forEach { change ->
+                                        val scrollDelta = change.scrollDelta
+                                        if (scrollDelta.x != 0f || scrollDelta.y != 0f) {
+                                            inputInjector.injectScrollEvent(
+                                                change.position.x,
+                                                change.position.y,
+                                                scrollDelta.x,
+                                                scrollDelta.y
+                                            )
+                                            change.consume()
                                         }
                                     }
                                 }
                             }
                         }
-                    )
+                    }
             ) {
                 AndroidView(
                     factory = { ctx ->
@@ -628,22 +501,8 @@ private fun BoxScope.WindowSurface(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                if (isHangupMode) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .pointerInput(Unit) {
-                                awaitPointerEventScope {
-                                    while (true) {
-                                        awaitPointerEvent()
-                                    }
-                                }
-                            }
-                    )
-                }
-
                 val showVeil = state.isPaused || !state.isSurfaceReady || state.isAppLaunching
-                androidx.compose.animation.AnimatedVisibility(
+                AnimatedVisibility(
                     visible = showVeil,
                     enter = fadeIn(),
                     exit = fadeOut()
@@ -678,31 +537,28 @@ private fun BoxScope.ResizeHandles(
     stateManager: FreeformStateManager,
     density: androidx.compose.ui.unit.Density,
     sizeFactor: Float,
-    isContentLight: Boolean,
-    showEducation: Boolean,
-    onEducationDismissed: () -> Unit,
     onResizeStarted: () -> Unit,
     onResizeEnded: () -> Unit,
     isDesktopMode: Boolean = false
 ) {
     fun currentState() = stateManager.state.value
-    
+
     val s = currentState()
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     val displayMetrics = context.resources.displayMetrics
-    
-    val baseMinWidthPx = with(density) { 
-        if (isDesktopMode) DESKTOP_MIN_WIDTH_DP.dp.toPx().toInt() 
-        else MIN_WINDOW_WIDTH_DP.dp.toPx().toInt() 
+
+    val baseMinWidthPx = with(density) {
+        if (isDesktopMode) DESKTOP_MIN_WIDTH_DP.dp.toPx().toInt()
+        else MIN_WINDOW_WIDTH_DP.dp.toPx().toInt()
     }
-    val baseMinHeightPx = with(density) { 
-        if (isDesktopMode) DESKTOP_MIN_HEIGHT_DP.dp.toPx().toInt() 
-        else MIN_WINDOW_HEIGHT_DP.dp.toPx().toInt() 
+    val baseMinHeightPx = with(density) {
+        if (isDesktopMode) DESKTOP_MIN_HEIGHT_DP.dp.toPx().toInt()
+        else MIN_WINDOW_HEIGHT_DP.dp.toPx().toInt()
     }
 
     val minWidthPx = if (s.isLandscape) baseMinHeightPx else baseMinWidthPx
     val minHeightPx = if (s.isLandscape) baseMinWidthPx else baseMinHeightPx
-    
+
     val maxWidthPx = if (isDesktopMode) displayMetrics.widthPixels else MAX_WINDOW_WIDTH_DP
     val maxHeightPx = if (isDesktopMode) {
         val taskbarPx = with(density) { DESKTOP_TASKBAR_HEIGHT_DP.dp.toPx().toInt() }
@@ -713,20 +569,16 @@ private fun BoxScope.ResizeHandles(
 
     val handleWidth = (RESIZE_HANDLE_SIZE_DP.dp * sizeFactor)
         .coerceIn(RESIZE_HANDLE_SIZE_MIN_DP.dp, RESIZE_HANDLE_SIZE_MAX_DP.dp)
-    
+
     val bottomHandleWidth = (RESIZE_HANDLE_BOTTOM_WIDTH_DP.dp * sizeFactor)
         .coerceIn(RESIZE_HANDLE_BOTTOM_WIDTH_MIN_DP.dp, RESIZE_HANDLE_BOTTOM_WIDTH_MAX_DP.dp)
     val bottomHandleHeight = RESIZE_HANDLE_BOTTOM_HEIGHT_DP.dp
-
-    val handleOffset = (-RESIZE_HANDLE_INSET_DP).dp
-    val bottomOffset = (-RESIZE_HANDLE_BOTTOM_INSET_DP).dp
 
     CornerResizeHandle(
         onResize = { deltaX, deltaY ->
             val s = currentState()
             val newWidth = (s.width + deltaX.roundToInt()).coerceIn(minWidthPx, maxWidthPx)
             val newHeight = (s.height + deltaY.roundToInt()).coerceIn(minHeightPx, maxHeightPx)
-            
             stateManager.onResize(newWidth, newHeight)
         },
         onResizeStart = {
@@ -738,18 +590,15 @@ private fun BoxScope.ResizeHandles(
             stateManager.onResizeEnd()
         },
         handleWidth = handleWidth,
-        modifier = Modifier
-            .align(Alignment.BottomEnd)
-            .offset(x = 0.dp, y = 0.dp)
+        modifier = Modifier.align(Alignment.BottomEnd)
     )
-    
+
     CornerResizeHandle(
         onResize = { deltaX, deltaY ->
             val s = currentState()
             val newWidth = (s.width - deltaX.roundToInt()).coerceIn(minWidthPx, maxWidthPx)
             val newHeight = (s.height + deltaY.roundToInt()).coerceIn(minHeightPx, maxHeightPx)
             val deltaWidth = s.width - newWidth
-            
             stateManager.onResize(newWidth, newHeight)
             stateManager.onDrag(deltaWidth.toFloat(), 0f)
         },
@@ -763,16 +612,13 @@ private fun BoxScope.ResizeHandles(
         },
         handleWidth = handleWidth,
         isLeft = true,
-        modifier = Modifier
-            .align(Alignment.BottomStart)
-            .offset(x = 0.dp, y = 0.dp)
+        modifier = Modifier.align(Alignment.BottomStart)
     )
-    
+
     BottomResizeHandle(
         onResize = { deltaY ->
             val s = currentState()
             val newHeight = (s.height + deltaY.roundToInt()).coerceIn(minHeightPx, maxHeightPx)
-            
             stateManager.onResize(s.width, newHeight)
         },
         onResizeStart = {
@@ -785,20 +631,6 @@ private fun BoxScope.ResizeHandles(
         },
         handleWidth = bottomHandleWidth,
         handleHeight = bottomHandleHeight,
-        modifier = Modifier
-            .align(Alignment.BottomCenter)
-            .offset(y = 0.dp)
+        modifier = Modifier.align(Alignment.BottomCenter)
     )
-    
-    val expandedBackgroundColor = if (isContentLight) {
-        Color.Black.copy(alpha = 0.75f)
-    } else {
-        Color.White.copy(alpha = 0.9f)
-    }
-    
-    val expandedContentColor = if (isContentLight) {
-        Color.White
-    } else {
-        Color(0xFF1C1C1E)
-    }
 }

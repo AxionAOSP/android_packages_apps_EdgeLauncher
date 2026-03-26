@@ -79,8 +79,6 @@ class FreeformWindowViewModel(
             freeformWindowManager = freeformWindowManager,
             initialWidth = config.width,
             initialHeight = config.height,
-            hangupWidthDp = config.hangUpWidth,
-            hangupHeightDp = config.hangUpHeight,
             screenWidth = screenWidth,
             screenHeight = screenHeight,
             densityDpi = density,
@@ -164,11 +162,7 @@ class FreeformWindowViewModel(
         
         val token = (repository as? FreeformRepositoryImpl)?.getAppToken() ?: return
 
-        val targetDensity = if (currentState.mode == WindowMode.HANGUP) {
-            (config.densityDpi * FreeformConstants.HANGUP_DENSITY_SCALE).toInt()
-        } else {
-            config.densityDpi
-        }
+        val targetDensity = config.densityDpi
 
         scope.launch {
             textureViewRef?.surfaceTexture?.setDefaultBufferSize(width, height)

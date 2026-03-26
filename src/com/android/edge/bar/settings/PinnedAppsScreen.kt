@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.android.edge.bar.AppHelper
 import com.android.edge.bar.AppInfo
+import com.android.edge.bar.MAX_PINNED_APPS
 import com.android.edge.bar.PinnedApps
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -86,7 +87,7 @@ fun PinnedAppsScreen(
                         )
                         if (selectedPackages.isNotEmpty()) {
                             Text(
-                                text = "${selectedPackages.size} selected",
+                                text = "${selectedPackages.size}/$MAX_PINNED_APPS selected",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Medium
@@ -236,8 +237,10 @@ fun PinnedAppsScreen(
                             onClick = {
                                 selectedPackages = if (isSelected) {
                                     selectedPackages - appInfo.packageName
-                                } else {
+                                } else if (selectedPackages.size < MAX_PINNED_APPS) {
                                     selectedPackages + appInfo.packageName
+                                } else {
+                                    selectedPackages
                                 }
                             }
                         )

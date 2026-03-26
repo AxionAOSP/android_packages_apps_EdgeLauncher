@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 AxionOS Project
+ * Copyright (C) 2025-2026 AxionOS Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,17 +27,22 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.android.edge.bar.lifecycle.repeatWhenAttached
+import com.android.edge.bar.settings.SettingsActivity
 import kotlinx.coroutines.*
+import com.android.internal.policy.SystemBarUtils
 import kotlin.math.roundToInt
 
 class EdgeSideBar(
@@ -49,26 +54,33 @@ class EdgeSideBar(
     }
 
     private lateinit var panelView: View
-    private lateinit var appDrawerView: View
 
     @Volatile
     private var isShowing = false
-    @Volatile
-    private var appDrawerState = AppDrawerState.HIDDEN
+
+    private val panelVisible = mutableStateOf(false)
 
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val mainScope = MainScope()
 
     private var sidebarPositionX = 0
     private var sidebarPositionY = 0
-    
     private var xPos = 0
     private var yPos = 0
-    private var sidebarHeight = 0
 
+    private var dragAccumX = 0f
+    private var dragAccumY = 0f
+    private var cachedStatusBarHeight = 0
+    private var cachedNavBarHeight = 0
+
+    private val density get() = context.resources.displayMetrics.density
     private val screenWidth get() = context.resources.displayMetrics.widthPixels
     private val screenHeight get() = context.resources.displayMetrics.heightPixels
     private val isPortrait get() = context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+
+    private val panelWidthPx get() = (PANEL_WIDTH_DP * density).roundToInt()
+    private val panelHeightPx get() = (PANEL_HEIGHT_DP * density).roundToInt()
+    private val marginPx get() = (PANEL_MARGIN_DP * density).roundToInt()
 
     fun showPanelView() {
         Process.setThreadAffinity(Process.myPid(), 2)
@@ -79,20 +91,19 @@ class EdgeSideBar(
             updateSidebarPosition()
             panelView = createComposeView {
                 EdgeContentView(
-                    onAppDrawerClick = { removePanelView(); showAppDrawerView() },
-                    onPanelTap = { removePanelView() },
-                    onPinnedAppClick = { ctx, pkg ->
+                    onPinnedAppClick = { _, pkg ->
                         removePanelView()
                         AppHelper.launchApp(pkg)
                     },
                     onSettingsClick = {
                         removePanelView()
                         context.startActivity(
-                            Intent(context, com.android.edge.bar.settings.SettingsActivity::class.java)
+                            Intent(context, SettingsActivity::class.java)
                                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         )
                     },
-                    sidebarHeight = (sidebarHeight / context.resources.displayMetrics.density).roundToInt()
+                    onDrag = { dx, dy -> handlePanelDrag(dx, dy) },
+                    onDragEnd = { handlePanelDragEnd() }
                 )
             }
             val lp = createPanelLayoutParams()
@@ -105,8 +116,17 @@ class EdgeSideBar(
         synchronized(this) {
             if (::panelView.isInitialized) {
                 if (!isShowing && !force) return
-                removeViewSafely(panelView)
                 isShowing = false
+                if (force) {
+                    panelVisible.value = false
+                    removeViewSafely(panelView)
+                } else {
+                    panelVisible.value = false
+                    mainScope.launch(Dispatchers.Main) {
+                        delay(EXIT_ANIM_DURATION)
+                        removeViewSafely(panelView)
+                    }
+                }
             }
             callback.onRemove()
         }
@@ -115,62 +135,13 @@ class EdgeSideBar(
         Process.setProcessGroup(Process.myPid(), 9)
     }
 
-    fun showAppDrawerView() {
-        Process.setThreadAffinity(Process.myPid(), 2)
-        Process.setThreadGroupAndCpuset(Process.myPid(), Process.THREAD_GROUP_TOP_APP)
-        Process.setProcessGroup(Process.myPid(), Process.THREAD_GROUP_TOP_APP)
-        synchronized(this) {
-            if (appDrawerState != AppDrawerState.HIDDEN) return
-            updateSidebarPosition()
-            
-            val drawerWidth = (screenWidth * 0.8f).roundToInt()
-            val drawerHeight = sidebarHeight
-            
-            val drawerMargin = (8 * context.resources.displayMetrics.density).toInt()
-            
-            val drawerX = if (sidebarPositionX > 0) {
-                (screenWidth / 2) + drawerMargin
-            } else {
-                -(screenWidth / 2) + drawerMargin
-            }
-            
-            appDrawerView = createComposeView {
-                AppDrawerContentView(
-                    onDismiss = {
-                        removeAppDrawerView()
-                        showPanelView()
-                    },
-                    onAppClick = { ctx, pkg ->
-                        removeAppDrawerView()
-                        AppHelper.launchApp(pkg)
-                    },
-                    drawerWidth = (drawerWidth / context.resources.displayMetrics.density).roundToInt(),
-                    drawerHeight = (drawerHeight / context.resources.displayMetrics.density).roundToInt()
-                )
-            }
-            val lp = createAppDrawerLayoutParams(drawerX, yPos)
-            addViewSafely(appDrawerView, lp)
-            appDrawerState = AppDrawerState.EXPANDED
-        }
-    }
-
-    fun removeAppDrawerView() {
-        synchronized(this) {
-            if (appDrawerState == AppDrawerState.HIDDEN) return
-            removeViewSafely(appDrawerView)
-            appDrawerState = AppDrawerState.HIDDEN
-        }
-        Process.setThreadAffinity(Process.myPid(), 1)
-        Process.setThreadGroupAndCpuset(Process.myPid(), 9)
-        Process.setProcessGroup(Process.myPid(), 9)
-    }
-
     fun updateSidebarPosition() {
-        sidebarHeight = if (isPortrait) {
-            (screenHeight * 0.4f).roundToInt()
-        } else {
-            (screenHeight * 0.85f).roundToInt()
-        }
+        cachedStatusBarHeight = SystemBarUtils.getStatusBarHeight(context)
+        cachedNavBarHeight = if (isPortrait) {
+            context.resources.getDimensionPixelSize(
+                com.android.internal.R.dimen.navigation_bar_height
+            )
+        } else 0
 
         sidebarPositionX = Settings.Secure.getInt(
             context.contentResolver,
@@ -193,28 +164,95 @@ class EdgeSideBar(
         }
 
         xPos = if (sidebarPositionX > 0) {
-            screenWidth - SIDEBAR_WIDTH - offset
+            screenWidth - panelWidthPx - marginPx
         } else {
-            offset
+            marginPx
         }
-        
-        yPos = (screenHeight - sidebarHeight) / 2 + sidebarPositionY
+
+        yPos = constrainY((screenHeight - panelHeightPx) / 2 + sidebarPositionY)
 
         if (isShowing) {
             mainScope.launch(Dispatchers.Main) {
                 try {
                     if (panelView.isAttachedToWindow) {
-                        val lp = createPanelLayoutParams()
+                        val lp = panelView.layoutParams as LayoutParams
+                        lp.x = xPos
+                        lp.y = yPos
                         windowManager.updateViewLayout(panelView, lp)
                     }
                 } catch (e: Exception) {
-                    Log.e("EdgeSideBar", "Failed to update view layout", e)
+                    Log.e(TAG, "Failed to update view layout", e)
                 }
             }
         }
     }
 
-    private fun createBaseLayoutParams(): LayoutParams {
+    private fun handlePanelDrag(deltaX: Float, deltaY: Float) {
+        dragAccumX += deltaX
+        val newY = yPos + (dragAccumY + deltaY).roundToInt()
+        val constrainedY = constrainY(newY)
+        dragAccumY += deltaY
+        if (constrainedY != newY) {
+            dragAccumY = (constrainedY - yPos).toFloat()
+        }
+        try {
+            if (::panelView.isInitialized && panelView.isAttachedToWindow) {
+                panelView.translationX = dragAccumX
+                panelView.translationY = dragAccumY
+            }
+        } catch (_: Exception) {}
+    }
+
+    private fun handlePanelDragEnd() {
+        xPos += dragAccumX.roundToInt()
+        yPos = constrainY(yPos + dragAccumY.roundToInt())
+
+        val panelCenterX = xPos + panelWidthPx / 2
+        sidebarPositionX = if (panelCenterX > screenWidth / 2) 1 else -1
+
+        xPos = if (sidebarPositionX > 0) {
+            screenWidth - panelWidthPx - marginPx
+        } else {
+            marginPx
+        }
+
+        yPos = constrainY(yPos)
+        sidebarPositionY = yPos - (screenHeight - panelHeightPx) / 2
+
+        dragAccumX = 0f
+        dragAccumY = 0f
+
+        Settings.Secure.putInt(
+            context.contentResolver,
+            EdgeService.SIDELINE_POSITION_X,
+            sidebarPositionX
+        )
+        Settings.Secure.putInt(
+            context.contentResolver,
+            if (isPortrait) EdgeService.SIDELINE_POSITION_Y_PORTRAIT
+            else EdgeService.SIDELINE_POSITION_Y_LANDSCAPE,
+            sidebarPositionY
+        )
+
+        mainScope.launch(Dispatchers.Main) {
+            try {
+                if (::panelView.isInitialized && panelView.isAttachedToWindow) {
+                    panelView.translationX = 0f
+                    panelView.translationY = 0f
+                    val lp = panelView.layoutParams as LayoutParams
+                    lp.x = xPos
+                    lp.y = yPos
+                    windowManager.updateViewLayout(panelView, lp)
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
+    private fun constrainY(y: Int): Int {
+        return y.coerceIn(cachedStatusBarHeight, screenHeight - panelHeightPx - cachedNavBarHeight)
+    }
+
+    private fun createPanelLayoutParams(): LayoutParams {
         return LayoutParams().apply {
             type = LayoutParams.TYPE_APPLICATION_OVERLAY
             flags = LayoutParams.FLAG_NOT_FOCUSABLE or
@@ -222,31 +260,17 @@ class EdgeSideBar(
                     LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                     LayoutParams.FLAG_HARDWARE_ACCELERATED
             format = PixelFormat.TRANSLUCENT
-            windowAnimations = android.R.style.Animation_Dialog
             layoutInDisplayCutoutMode = LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
             width = LayoutParams.WRAP_CONTENT
             height = LayoutParams.WRAP_CONTENT
-        }
-    }
-
-    private fun createPanelLayoutParams(): LayoutParams {
-        return createBaseLayoutParams().apply {
             gravity = Gravity.TOP or Gravity.START
             x = xPos
             y = yPos
         }
     }
 
-    private fun createAppDrawerLayoutParams(drawerX: Int, drawerY: Int): LayoutParams {
-        return createBaseLayoutParams().apply {
-            gravity = if (isPortrait) Gravity.TOP or Gravity.START
-                    else Gravity.CENTER
-            x = drawerX
-            y = drawerY
-        }
-    }
-
     private fun createComposeView(content: @Composable () -> Unit): ComposeView {
+        val fromRight = sidebarPositionX > 0
         return ComposeView(context).apply {
             repeatWhenAttached {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -255,23 +279,30 @@ class EdgeSideBar(
                     )
                     setContent {
                         val isDark = isSystemInDarkTheme()
-                        val colorScheme = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+                        val colorScheme = if (isDark) dynamicDarkColorScheme(context)
+                            else dynamicLightColorScheme(context)
                         MaterialTheme(colorScheme = colorScheme) {
-                            content()
+                            AnimatedVisibility(
+                                visible = panelVisible.value,
+                                enter = slideInHorizontally(
+                                    initialOffsetX = { if (fromRight) it else -it },
+                                    animationSpec = tween(ENTER_ANIM_DURATION.toInt())
+                                ) + fadeIn(tween(ENTER_ANIM_DURATION.toInt())),
+                                exit = slideOutHorizontally(
+                                    targetOffsetX = { if (fromRight) it else -it },
+                                    animationSpec = tween(EXIT_ANIM_DURATION.toInt())
+                                ) + fadeOut(tween(EXIT_ANIM_DURATION.toInt()))
+                            ) {
+                                content()
+                            }
                         }
                     }
                 }
             }
-            
+
             setOnTouchListener { view, event ->
                 if (event.action == MotionEvent.ACTION_OUTSIDE) {
-                    if (isShowing) {
-                        removePanelView()
-                    }
-                    if (appDrawerState != AppDrawerState.HIDDEN) {
-                        removeAppDrawerView()
-                        showPanelView()
-                    }
+                    if (isShowing) removePanelView()
                     true
                 } else {
                     view.performClick()
@@ -285,9 +316,9 @@ class EdgeSideBar(
         mainScope.launch(Dispatchers.Main) {
             try {
                 windowManager.addView(view, lp)
-                view.animate().translationX(0f).setDuration(300).start()
+                panelVisible.value = true
             } catch (e: Exception) {
-                Log.e("EdgeSideBar", "Failed to add view", e)
+                Log.e(TAG, "Failed to add view", e)
             }
         }
     }
@@ -299,7 +330,7 @@ class EdgeSideBar(
                     windowManager.removeViewImmediate(view)
                 }
             } catch (e: Exception) {
-                Log.e("EdgeSideBar", "Failed to remove view", e)
+                Log.e(TAG, "Failed to remove view", e)
             }
         }
     }
@@ -308,14 +339,12 @@ class EdgeSideBar(
         mainScope.cancel()
     }
 
-    private enum class AppDrawerState { HIDDEN, EXPANDED }
-
-    private val offset: Int
-        get() = if (isPortrait) OFFSET_PORTRAIT else OFFSET_LANDSCAPE
-
     companion object {
-        const val SIDEBAR_WIDTH = 192
-        private const val OFFSET_PORTRAIT = 20
-        private const val OFFSET_LANDSCAPE = 0
+        private const val TAG = "EdgeSideBar"
+        const val PANEL_WIDTH_DP = 130f
+        const val PANEL_HEIGHT_DP = 308f
+        const val PANEL_MARGIN_DP = 10f
+        private const val ENTER_ANIM_DURATION = 250L
+        private const val EXIT_ANIM_DURATION = 200L
     }
 }

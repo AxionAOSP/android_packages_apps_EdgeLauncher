@@ -31,7 +31,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Fullscreen
+import androidx.compose.material.icons.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.PictureInPictureAlt
 import androidx.compose.material.icons.rounded.Remove
@@ -54,7 +54,7 @@ import kotlinx.coroutines.delay
 fun OverlayTitleBar(
     onClose: () -> Unit,
     onMinimize: () -> Unit,
-    onHangup: () -> Unit,
+    onBubble: () -> Unit,
     onMaximizeFullscreen: () -> Unit,
     onDrag: (Float, Float) -> Unit,
     onDragStart: () -> Unit = {},
@@ -200,9 +200,9 @@ fun OverlayTitleBar(
                     onMenuExpandedChange(false)
                     onMinimize()
                 },
-                onHangup = {
+                onBubble = {
                     onMenuExpandedChange(false)
-                    onHangup()
+                    onBubble()
                 },
                 onMaximizeFullscreen = {
                     onMenuExpandedChange(false)
@@ -224,7 +224,7 @@ private fun MenuPill(
     onBack: () -> Unit,
     onClose: () -> Unit,
     onMinimize: () -> Unit,
-    onHangup: () -> Unit,
+    onBubble: () -> Unit,
     onMaximizeFullscreen: () -> Unit,
     onCollapse: () -> Unit,
     backgroundColor: Color,
@@ -268,13 +268,13 @@ private fun MenuPill(
             
             PillIconButton(
                 icon = Icons.Rounded.PictureInPictureAlt,
-                contentDescription = "Hangup",
-                onClick = onHangup,
+                contentDescription = "Bubble",
+                onClick = onBubble,
                 tint = contentColor
             )
             
             PillIconButton(
-                icon = Icons.Rounded.Fullscreen,
+                icon = Icons.Rounded.OpenInNew,
                 contentDescription = "Fullscreen",
                 onClick = onMaximizeFullscreen,
                 tint = contentColor

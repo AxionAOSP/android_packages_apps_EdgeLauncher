@@ -24,9 +24,6 @@ object FreeformConstants {
     const val SAFE_ZONE_BOTTOM_DP = 48
     const val SAFE_ZONE_EDGE_DP = 8
     
-    const val HANGUP_WIDTH = 150
-    const val HANGUP_HEIGHT = 200
-
     const val DESKTOP_DEFAULT_WIDTH_DP = 600
     const val DESKTOP_DEFAULT_HEIGHT_DP = 450
     const val DESKTOP_MIN_WIDTH_DP = 300 
@@ -56,21 +53,20 @@ object FreeformConstants {
     const val DELAY_APP_LAUNCH_VEIL_MS = 200L
     const val DELAY_VEIL_HIDE_MS = 200L
     
-    const val HANGUP_DENSITY_SCALE = 0.6f
-
     const val CORNER_RADIUS_DP = 12
-    const val TITLE_BAR_HEIGHT_DP = 42
-    const val TITLE_BAR_HEIGHT_MIN_DP = 36
-    const val TITLE_BAR_HEIGHT_MAX_DP = 42
-    const val TITLE_BAR_ICON_SIZE_DP = 18
-    const val TITLE_BAR_ICON_SIZE_MIN_DP = 14
-    const val TITLE_BAR_ICON_SIZE_MAX_DP = 20
-    const val TITLE_BAR_DRAG_HANDLE_HEIGHT_DP = 28
+    const val TITLE_BAR_HEIGHT_DP = 28
+    const val TITLE_BAR_HEIGHT_MIN_DP = 24
+    const val TITLE_BAR_HEIGHT_MAX_DP = 36
+    const val TITLE_BAR_ICON_SIZE_DP = 14
+    const val TITLE_BAR_ICON_SIZE_MIN_DP = 11
+    const val TITLE_BAR_ICON_SIZE_MAX_DP = 18
+    const val TITLE_BAR_DRAG_HANDLE_HEIGHT_DP = 3
+    const val TITLE_BAR_DRAG_HANDLE_WIDTH_DP = 32
     const val TITLE_BAR_DRAG_HANDLE_HEIGHT_MIN_DP = 24
     const val TITLE_BAR_DRAG_HANDLE_HEIGHT_MAX_DP = 36
     const val TITLE_BAR_BUTTON_WIDTH_MULTIPLIER = 1.24f
-    const val TITLE_BAR_BUTTON_WIDTH_MIN_DP = 42
-    const val TITLE_BAR_BUTTON_WIDTH_MAX_DP = 56
+    const val TITLE_BAR_BUTTON_WIDTH_MIN_DP = 22
+    const val TITLE_BAR_BUTTON_WIDTH_MAX_DP = 28
 
     const val RESIZE_HANDLE_SIZE_DP = 48
     const val RESIZE_HANDLE_SIZE_MIN_DP = 40

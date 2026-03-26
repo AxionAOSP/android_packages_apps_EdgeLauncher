@@ -25,7 +25,6 @@ enum class VeilReason {
     DISPLAY_PAUSED,
     DISPLAY_STOPPED,
     RESIZE_STARTED,
-    HANGUP_EXPAND,
     BUBBLE_EXPAND
 }
 

@@ -43,9 +43,7 @@ sealed class WindowEvent {
     object DragEnd : WindowEvent()
 
     object Minimize : WindowEvent()
-    object Hangup : WindowEvent()
     object BubbleTap : WindowEvent()
-    object HangupTap : WindowEvent()
 
     object ResizeStart : WindowEvent()
     data class Resize(val newWidth: Int, val newHeight: Int) : WindowEvent()
@@ -69,7 +67,6 @@ sealed class FreeformEffect {
 enum class WindowMode {
     NORMAL,
     BUBBLE,
-    HANGUP,
     DESKTOP
 }
 
@@ -111,8 +108,6 @@ class FreeformStateManager(
     private val freeformWindowManager: FreeformWindowManager,
     initialWidth: Int,
     initialHeight: Int,
-    private val hangupWidthDp: Int = FreeformConstants.HANGUP_WIDTH,
-    private val hangupHeightDp: Int = FreeformConstants.HANGUP_HEIGHT,
     private var screenWidth: Int,
     private var screenHeight: Int,
     private val densityDpi: Float,
@@ -197,9 +192,7 @@ class FreeformStateManager(
             is WindowEvent.DragEnd -> handleDragEnd()
             
             is WindowEvent.Minimize -> handleMinimize()
-            is WindowEvent.Hangup -> enterHangupMode()
             is WindowEvent.BubbleTap -> handleBubbleExpand()
-            is WindowEvent.HangupTap -> handleHangupTap()
             
             is WindowEvent.ResizeStart -> handleResizeStart()
             is WindowEvent.Resize -> handleResize(event.newWidth, event.newHeight)
@@ -232,7 +225,6 @@ class FreeformStateManager(
 
         when (currentState.mode) {
             WindowMode.BUBBLE -> snapBubbleToSafeZone()
-            WindowMode.HANGUP -> enterHangupMode()
             WindowMode.NORMAL, WindowMode.DESKTOP -> { /* Handled below */ }
         }
 
@@ -319,7 +311,7 @@ class FreeformStateManager(
             val isOffLeftEdge = currentState.x < -threshold
 
             if ((isOffRightEdge || isOffLeftEdge) && !currentState.isResizing) {
-                scope.launch { enterHangupMode() }
+                scope.launch { handleMinimize() }
             }
         }
     }
@@ -327,7 +319,6 @@ class FreeformStateManager(
     private fun handleDragEnd() {
         when (currentState.mode) {
             WindowMode.BUBBLE -> snapBubbleToSafeZone()
-            WindowMode.HANGUP -> { /* Already in hangup, nothing to do */ }
             WindowMode.NORMAL, WindowMode.DESKTOP -> clampWindowToSafeZone()
         }
     }
@@ -426,82 +417,6 @@ class FreeformStateManager(
         }
     }
 
-    private suspend fun handleHangupTap() {
-        if (currentState.mode == WindowMode.HANGUP) {
-            val targetWidth = currentState.savedWidth
-            val targetHeight = currentState.savedHeight
-            val safeTop = context.dpToPx(FreeformConstants.SAFE_ZONE_TOP_DP)
-            val safeBottom = context.dpToPx(FreeformConstants.SAFE_ZONE_BOTTOM_DP)
-            val minY = safeTop.toFloat()
-            val maxY = (screenHeight - safeBottom - 48).toFloat()
-            
-            val safeX = if (currentState.savedX < -targetWidth / 2 || currentState.savedX > screenWidth - targetWidth / 2) {
-                ((screenWidth - targetWidth) / 2).toFloat()
-            } else {
-                currentState.savedX
-            }
-            val safeY = currentState.savedY.coerceIn(minY, maxY)
-
-            updateState {
-                copy(
-                    mode = WindowMode.NORMAL,
-                    x = safeX,
-                    y = safeY,
-                    width = targetWidth,
-                    height = targetHeight,
-                    isPaused = false
-                )
-            }
-            
-            surfaceEventsManager.dispatch(SurfaceEvent.ShowVeilRequested(VeilReason.HANGUP_EXPAND))
-            surfaceEventsManager.dispatch(SurfaceEvent.OperationStarted("hangup_expand"))
-            performHapticFeedback()
-            val (displayWidth, displayHeight) = getDisplayDimensions()
-            _effect.emit(FreeformEffect.ResizeDisplay(displayWidth, displayHeight))
-            delay(FreeformConstants.DELAY_SURFACE_SETTLE_MS)
-            updateState { copy(isPaused = false) }
-            handleSurfaceSettled()
-            surfaceEventsManager.dispatch(SurfaceEvent.OperationCompleted("hangup_expand"))
-        }
-    }
-    
-    private suspend fun enterHangupMode() {
-        surfaceEventsManager.dispatch(SurfaceEvent.ShowVeilRequested(VeilReason.HANGUP_EXPAND))
-        surfaceEventsManager.dispatch(SurfaceEvent.OperationStarted("enter_hangup"))
-        
-        val hangupWidthPx: Int
-        val hangupHeightPx: Int
-        if (currentState.isLandscape) {
-            hangupWidthPx = context.dpToPx(hangupHeightDp)
-            hangupHeightPx = context.dpToPx(hangupWidthDp)
-        } else {
-            hangupWidthPx = context.dpToPx(hangupWidthDp)
-            hangupHeightPx = context.dpToPx(hangupHeightDp)
-        }
-        
-        val centeredX = ((screenWidth - currentState.savedWidth) / 2).toFloat()
-        val centeredY = ((screenHeight - currentState.savedHeight) / 2).toFloat()
-        
-        updateState {
-            copy(
-                mode = WindowMode.HANGUP,
-                savedX = centeredX,
-                savedY = centeredY,
-                x = (screenWidth - hangupWidthPx - 16).toFloat(),
-                y = 16f,
-                width = hangupWidthPx,
-                height = hangupHeightPx
-            )
-        }
-        performHapticFeedback()
-        val (displayWidth, displayHeight) = getDisplayDimensions()
-        _effect.emit(FreeformEffect.ResizeDisplay(displayWidth, displayHeight))
-        delay(FreeformConstants.DELAY_SURFACE_SETTLE_MS)
-        surfaceEventsManager.dispatch(SurfaceEvent.SurfaceReady)
-        surfaceEventsManager.dispatch(SurfaceEvent.OperationCompleted("enter_hangup"))
-        surfaceEventsManager.dispatch(SurfaceEvent.HideVeilRequested)
-    }
-    
     private suspend fun handleResizeStart() {
         updateState { copy(isResizing = true) }
         surfaceEventsManager.dispatch(SurfaceEvent.ShowVeilRequested(VeilReason.RESIZE_STARTED))
@@ -516,8 +431,6 @@ class FreeformStateManager(
     }
     
     private fun handleResize(newWidth: Int, newHeight: Int) {
-        if (currentState.mode == WindowMode.HANGUP) return
-
         var width: Int
         var height: Int
 
@@ -532,8 +445,8 @@ class FreeformStateManager(
             width = newWidth.coerceIn(minWidth, maxWidth)
             height = newHeight.coerceIn(minHeight, maxHeight)
         } else {
-            val baseMinWidth = context.dpToPx(FreeformConstants.HANGUP_WIDTH)
-            val baseMinHeight = context.dpToPx(FreeformConstants.HANGUP_HEIGHT)
+            val baseMinWidth = context.dpToPx(FreeformConstants.MIN_WINDOW_WIDTH_DP)
+            val baseMinHeight = context.dpToPx(FreeformConstants.MIN_WINDOW_HEIGHT_DP.toInt())
             val minDimension = Math.min(baseMinWidth, baseMinHeight)
             width = newWidth.coerceAtLeast(minDimension)
             height = newHeight.coerceAtLeast(minDimension)
@@ -773,16 +686,8 @@ class FreeformStateManager(
         dispatch(WindowEvent.Minimize)
     }
     
-    fun onHangup() {
-        dispatch(WindowEvent.Hangup)
-    }
-    
     fun onBubbleTap() {
         dispatch(WindowEvent.BubbleTap)
-    }
-    
-    fun onHangupTap() {
-        dispatch(WindowEvent.HangupTap)
     }
     
     fun onResizeStart() {
@@ -832,13 +737,10 @@ class FreeformStateManager(
         scope.launch {
             when (currentState.mode) {
                 WindowMode.BUBBLE -> snapBubbleToSafeZone()
-                WindowMode.HANGUP -> enterHangupMode()
                 WindowMode.NORMAL, WindowMode.DESKTOP -> clampWindowToSafeZone()
             }
         }
     }
-    
-    fun isHangupMode(): Boolean = currentState.mode == WindowMode.HANGUP
     
     fun isSurfaceReady(): Boolean = currentState.isSurfaceReady
     
