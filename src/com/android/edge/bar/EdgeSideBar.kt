@@ -198,8 +198,10 @@ class EdgeSideBar(
         }
         try {
             if (::panelView.isInitialized && panelView.isAttachedToWindow) {
-                panelView.translationX = dragAccumX
-                panelView.translationY = dragAccumY
+                val lp = panelView.layoutParams as LayoutParams
+                lp.x = xPos + dragAccumX.roundToInt()
+                lp.y = yPos + dragAccumY.roundToInt()
+                windowManager.updateViewLayout(panelView, lp)
             }
         } catch (_: Exception) {}
     }
@@ -238,8 +240,6 @@ class EdgeSideBar(
         mainScope.launch(Dispatchers.Main) {
             try {
                 if (::panelView.isInitialized && panelView.isAttachedToWindow) {
-                    panelView.translationX = 0f
-                    panelView.translationY = 0f
                     val lp = panelView.layoutParams as LayoutParams
                     lp.x = xPos
                     lp.y = yPos
