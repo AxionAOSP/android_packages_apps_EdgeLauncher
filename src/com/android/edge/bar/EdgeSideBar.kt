@@ -60,6 +60,7 @@ class EdgeSideBar(
     private var isShowing = false
 
     private val panelVisible = mutableStateOf(false)
+    private val fromRight = mutableStateOf(true)
 
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val mainScope = MainScope()
@@ -89,7 +90,11 @@ class EdgeSideBar(
         Process.setProcessGroup(Process.myPid(), Process.THREAD_GROUP_TOP_APP)
         synchronized(this) {
             if (isShowing) return
+            if (::panelView.isInitialized && panelView.isAttachedToWindow) {
+                removeViewSafely(panelView)
+            }
             updateSidebarPosition()
+            fromRight.value = sidebarPositionX > 0
             panelView = createComposeView {
                 EdgeContentView(
                     onPinnedAppClick = { _, pkg ->
@@ -118,14 +123,15 @@ class EdgeSideBar(
             if (::panelView.isInitialized) {
                 if (!isShowing && !force) return
                 isShowing = false
+                val viewToRemove = panelView
                 if (force) {
                     panelVisible.value = false
-                    removeViewSafely(panelView)
+                    removeViewSafely(viewToRemove)
                 } else {
                     panelVisible.value = false
                     mainScope.launch(Dispatchers.Main) {
                         delay(EXIT_ANIM_DURATION)
-                        removeViewSafely(panelView)
+                        removeViewSafely(viewToRemove)
                     }
                 }
             }
@@ -212,6 +218,7 @@ class EdgeSideBar(
 
         val panelCenterX = xPos + panelWidthPx / 2
         sidebarPositionX = if (panelCenterX > screenWidth / 2) 1 else -1
+        fromRight.value = sidebarPositionX > 0
 
         xPos = if (sidebarPositionX > 0) {
             screenWidth - panelWidthPx - marginPx
@@ -271,7 +278,6 @@ class EdgeSideBar(
     }
 
     private fun createComposeView(content: @Composable () -> Unit): ComposeView {
-        val fromRight = sidebarPositionX > 0
         return ComposeView(context).apply {
             repeatWhenAttached {
                 repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -285,15 +291,16 @@ class EdgeSideBar(
                         val isDark = isSystemInDarkTheme()
                         val colorScheme = if (isDark) dynamicDarkColorScheme(context)
                             else dynamicLightColorScheme(context)
+                        val slideRight = fromRight.value
                         MaterialTheme(colorScheme = colorScheme) {
                             AnimatedVisibility(
                                 visible = panelVisible.value,
                                 enter = slideInHorizontally(
-                                    initialOffsetX = { if (fromRight) it else -it },
+                                    initialOffsetX = { if (slideRight) it else -it },
                                     animationSpec = tween(ENTER_ANIM_DURATION.toInt())
                                 ) + fadeIn(tween(ENTER_ANIM_DURATION.toInt())),
                                 exit = slideOutHorizontally(
-                                    targetOffsetX = { if (fromRight) it else -it },
+                                    targetOffsetX = { if (slideRight) it else -it },
                                     animationSpec = tween(EXIT_ANIM_DURATION.toInt())
                                 ) + fadeOut(tween(EXIT_ANIM_DURATION.toInt()))
                             ) {
@@ -318,22 +325,16 @@ class EdgeSideBar(
 
     private fun addViewSafely(view: View, lp: LayoutParams) {
         mainScope.launch(Dispatchers.Main) {
-            try {
-                windowManager.addView(view, lp)
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to add view", e)
-            }
+            runCatching { windowManager.addView(view, lp) }
         }
     }
 
     private fun removeViewSafely(view: View) {
         mainScope.launch(Dispatchers.Main) {
-            try {
+            runCatching {
                 if (view.isAttachedToWindow) {
                     windowManager.removeViewImmediate(view)
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to remove view", e)
             }
         }
     }
