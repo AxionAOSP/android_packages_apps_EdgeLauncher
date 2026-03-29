@@ -7,23 +7,23 @@
     <string name="edge_launcher_title">Edge Launcher</string>
     <string name="edge_launcher_subtitle">Customize your sidebar experience</string>
     <string name="edge_bar_title">Edge Bar</string>
-    <string name="edge_bar_subtitle">Quick access sidebar</string>
-    <string name="pinned_apps_title">Pinned Apps</string>
-    <string name="pinned_apps_subtitle">Choose your favorites</string>
+    <string name="edge_bar_subtitle">Barra lateral de acesso rápido</string>
+    <string name="pinned_apps_title">Aplicativos fixados</string>
+    <string name="pinned_apps_subtitle">Escolha os seus favoritos</string>
     <!-- Pinned Apps Screen -->
-    <string name="pinned_apps_header">Pinned Apps</string>
+    <string name="pinned_apps_header">Aplicativos fixados</string>
     <string name="selected_count">%1$d selecionados</string>
     <string name="back">Voltar</string>
     <string name="save">Salvar</string>
-    <string name="loading_apps">Loading apps…</string>
-    <string name="quick_access">Quick Access</string>
-    <string name="tap_to_pin_instruction">Tap apps to pin them to your sidebar</string>
+    <string name="loading_apps">Carregando apps…</string>
+    <string name="quick_access">Acesso Rápido</string>
+    <string name="tap_to_pin_instruction">Toque em apps para fixá-los na barra lateral</string>
     <string name="selected">Selecionado</string>
     <!-- Title Bar Actions -->
     <string name="close">Fechar</string>
     <string name="minimize">Minimizar</string>
-    <string name="hangup">Hangup</string>
-    <string name="fullscreen">Fullscreen</string>
+    <string name="hangup">Desligar</string>
+    <string name="fullscreen">Tela cheia</string>
     <string name="collapse">Recolher</string>
     <!-- Remove Zone -->
     <string name="remove">Remover</string>
