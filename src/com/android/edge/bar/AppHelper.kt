@@ -17,20 +17,41 @@ package com.android.edge.bar
 
 import android.app.ActivityManager
 import android.app.FreeformLauncher
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
+import android.os.IBinder
+import android.os.Process
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
+import com.android.wm.shell.bubbles.IBubbles
+import com.android.wm.shell.shared.bubbles.BubbleAnythingFlagHelper
+import com.android.wm.shell.shared.bubbles.logging.EntryPoint
 
 object AppHelper {
 
     private val iconCache = mutableMapOf<String, Painter?>()
+    private var sBubbles: IBubbles? = null
+
+    fun bindBubbleService(context: Context) {
+        if (!isBubbleSupported()) return
+        val intent = Intent("com.android.systemui.action.BUBBLE_LAUNCHER")
+            .setPackage("com.android.systemui")
+        context.bindService(intent, object : ServiceConnection {
+            override fun onServiceConnected(name: ComponentName, service: IBinder) {
+                sBubbles = IBubbles.Stub.asInterface(service)
+            }
+            override fun onServiceDisconnected(name: ComponentName) {
+                sBubbles = null
+            }
+        }, Context.BIND_AUTO_CREATE)
+    }
 
     fun getInstalledApps(context: Context): List<AppInfo> {
         val pm = context.packageManager
@@ -67,6 +88,25 @@ object AppHelper {
         }
     }
     
+    fun isBubbleSupported(): Boolean = BubbleAnythingFlagHelper.enableCreateAnyBubble()
+
+    fun launchAsBubble(context: Context, packageName: String, activityName: String) {
+        try {
+            val bubbles = sBubbles ?: run {
+                Log.e("AppHelper", "Bubble service not connected")
+                return
+            }
+            val intent = Intent().apply {
+                setClassName(packageName, activityName)
+                setPackage(packageName)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            bubbles.showAppBubble(intent, Process.myUserHandle(), EntryPoint.LAUNCHER_ICON_MENU, null)
+        } catch (e: Exception) {
+            Log.e("AppHelper", "Failed to launch as bubble: ${e.message}")
+        }
+    }
+
     fun killApp(context: Context, packageName: String) {
         try {
             val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager

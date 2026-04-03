@@ -48,6 +48,8 @@ class EdgeApplication : Application() {
         }
         registerReceiver(sidebarReceiver, filter)
 
+        AppHelper.bindBubbleService(this)
+
         if (isFeatureEnabled()) {
             Log.d(TAG, "Feature enabled, starting EdgeService")
             startEdgeService()

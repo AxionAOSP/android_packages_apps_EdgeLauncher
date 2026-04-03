@@ -109,7 +109,8 @@ class EdgeSideBar(
                         )
                     },
                     onDrag = { dx, dy -> handlePanelDrag(dx, dy) },
-                    onDragEnd = { handlePanelDragEnd() }
+                    onDragEnd = { handlePanelDragEnd() },
+                    panelOnRight = fromRight.value
                 )
             }
             val lp = createPanelLayoutParams()

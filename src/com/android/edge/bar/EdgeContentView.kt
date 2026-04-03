@@ -23,9 +23,9 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ChatBubble
 import androidx.compose.material.icons.rounded.OpenInBrowser
 import androidx.compose.material.icons.rounded.OpenInFull
 import androidx.compose.material.icons.rounded.Settings
@@ -34,7 +34,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -43,9 +42,14 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
+import com.android.edge.bar.R
+import kotlin.math.roundToInt
 
 val PANEL_WIDTH = 130.dp
 val PANEL_HEIGHT = 308.dp
@@ -70,6 +74,7 @@ fun EdgeContentView(
     onSettingsClick: () -> Unit,
     onDrag: (deltaX: Float, deltaY: Float) -> Unit,
     onDragEnd: () -> Unit,
+    panelOnRight: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -147,6 +152,7 @@ fun EdgeContentView(
                                     onLongClick = { bounds ->
                                         activePopup = PopupState(
                                             packageName = pinnedApps[index].packageName,
+                                            activityName = pinnedApps[index].activityName,
                                             anchorBounds = bounds
                                         )
                                     }
@@ -179,6 +185,7 @@ fun EdgeContentView(
     activePopup?.let { popup ->
         LaunchModePopup(
             anchorBounds = popup.anchorBounds,
+            panelOnRight = panelOnRight,
             onDismiss = { activePopup = null },
             onLaunchFull = {
                 AppHelper.launchAppFull(context, popup.packageName)
@@ -187,7 +194,12 @@ fun EdgeContentView(
             onLaunchFreeform = {
                 AppHelper.launchApp(popup.packageName)
                 activePopup = null
-            }
+            },
+            onLaunchBubble = {
+                AppHelper.launchAsBubble(context, popup.packageName, popup.activityName)
+                activePopup = null
+            },
+            bubbleSupported = remember { AppHelper.isBubbleSupported() }
         )
     }
 }
@@ -256,76 +268,81 @@ private fun AppIconButton(
 @Composable
 private fun LaunchModePopup(
     anchorBounds: Rect,
+    panelOnRight: Boolean,
     onDismiss: () -> Unit,
     onLaunchFull: () -> Unit,
-    onLaunchFreeform: () -> Unit
+    onLaunchFreeform: () -> Unit,
+    onLaunchBubble: () -> Unit,
+    bubbleSupported: Boolean
 ) {
     val density = LocalDensity.current
-    val configuration = LocalConfiguration.current
-    val screenWidth = with(density) { configuration.screenWidthDp.dp.toPx() }
 
-    val popupWidth = 120.dp
-    val popupWidthPx = with(density) { popupWidth.toPx() }
+    val menuWidth = 210.dp
+    val caretSize = 14.dp
+    val caretHalf = caretSize / 2
+    val gap = 4.dp
+    val spacing = 1.dp
+    val itemHeight = 52.dp
+    val itemCount = if (bubbleSupported) 3 else 2
+    val menuHeight = itemHeight * itemCount + spacing * (itemCount - 1)
 
-    val anchorCenterX = (anchorBounds.left + anchorBounds.right) / 2f
-    var offsetX = anchorCenterX - (popupWidthPx / 2f)
+    val anchorCenterYPx = (anchorBounds.top + anchorBounds.bottom) / 2f
+    val menuHalfPx = with(density) { (menuHeight / 2).toPx() }
+    val popupY = (anchorCenterYPx - menuHalfPx).roundToInt()
 
-    val margin = with(density) { 8.dp.toPx() }
-    offsetX = offsetX.coerceIn(margin, screenWidth - popupWidthPx - margin)
+    val popupX = if (panelOnRight) {
+        anchorBounds.left - with(density) { (menuWidth + gap + caretHalf).toPx() }.roundToInt()
+    } else {
+        anchorBounds.right + with(density) { (gap + caretHalf).toPx() }.roundToInt()
+    }
 
-    val offsetY = anchorBounds.bottom.toFloat() + with(density) { 8.dp.toPx() }
+    val arrowOffsetY = with(density) { (menuHeight / 2 - caretHalf).toPx() }.roundToInt()
 
     Popup(
-        offset = IntOffset(offsetX.toInt(), offsetY.toInt()),
+        offset = IntOffset(popupX, popupY),
         onDismissRequest = onDismiss
     ) {
-        Surface(
-            shape = RoundedCornerShape(32.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.96f),
-            tonalElevation = 3.dp,
-            modifier = Modifier
-                .width(popupWidth)
-                .border(
-                    width = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(32.dp)
-                )
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+        Box {
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceBright,
+                shape = RoundedCornerShape(2.dp),
                 modifier = Modifier
-                    .padding(horizontal = 14.dp, vertical = 12.dp)
-                    .fillMaxWidth()
-            ) {
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    LaunchModeIconButton(
-                        icon = Icons.Rounded.OpenInFull,
-                        contentDescription = "Full screen",
-                        onClick = onLaunchFull
+                    .size(caretSize)
+                    .offset(
+                        x = if (panelOnRight) menuWidth - caretHalf else 0.dp,
+                        y = with(density) { arrowOffsetY.toDp() }
                     )
-                }
+                    .graphicsLayer { rotationZ = 45f }
+            ) {}
 
-                Box(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .height(32.dp)
-                        .background(
-                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.8f),
-                            shape = RoundedCornerShape(0.5.dp)
-                        )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(spacing),
+                modifier = Modifier
+                    .width(menuWidth)
+                    .offset(x = if (panelOnRight) 0.dp else caretHalf)
+                    .zIndex(1f)
+            ) {
+                PopupMenuItem(
+                    icon = Icons.Rounded.OpenInFull,
+                    label = stringResource(R.string.edge_popup_full_screen),
+                    isFirst = true,
+                    isLast = false,
+                    onClick = onLaunchFull
                 )
-
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    LaunchModeIconButton(
-                        icon = Icons.Rounded.OpenInBrowser,
-                        contentDescription = "Freeform",
-                        onClick = onLaunchFreeform
+                PopupMenuItem(
+                    icon = Icons.Rounded.OpenInBrowser,
+                    label = stringResource(R.string.edge_popup_freeform),
+                    isFirst = false,
+                    isLast = !bubbleSupported,
+                    onClick = onLaunchFreeform
+                )
+                if (bubbleSupported) {
+                    PopupMenuItem(
+                        icon = Icons.Rounded.ChatBubble,
+                        label = stringResource(R.string.edge_popup_bubble),
+                        isFirst = false,
+                        isLast = true,
+                        onClick = onLaunchBubble
                     )
                 }
             }
@@ -334,50 +351,52 @@ private fun LaunchModePopup(
 }
 
 @Composable
-private fun LaunchModeIconButton(
+private fun PopupMenuItem(
     icon: ImageVector,
-    contentDescription: String,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.9f),
-    contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    label: String,
+    isFirst: Boolean,
+    isLast: Boolean,
     onClick: () -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.92f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessHigh
-        )
-    )
-
-    Box(
-        contentAlignment = Alignment.Center,
+    val topRadius = if (isFirst) 16.dp else 4.dp
+    val bottomRadius = if (isLast) 16.dp else 4.dp
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(
+            topStart = topRadius,
+            topEnd = topRadius,
+            bottomStart = bottomRadius,
+            bottomEnd = bottomRadius
+        ),
+        color = MaterialTheme.colorScheme.surfaceBright,
+        shadowElevation = 4.dp,
         modifier = Modifier
-            .size(48.dp)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clip(CircleShape)
-            .background(containerColor)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = ripple(bounded = true, radius = 24.dp),
-                onClick = onClick
-            )
+            .fillMaxWidth()
+            .height(52.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = contentColor,
-            modifier = Modifier.size(22.dp)
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 12.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
+            )
+        }
     }
 }
 
 private data class PopupState(
     val packageName: String,
+    val activityName: String,
     val anchorBounds: Rect
 )
