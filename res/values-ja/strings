@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">エッジバー</string>
+    <string name="app_label_settings">エッジランチャー</string>
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">エッジランチャー</string>
+    <string name="edge_launcher_subtitle">Customize your sidebar experience</string>
+    <string name="edge_bar_title">エッジバー</string>
+    <string name="edge_bar_subtitle">クイックアクセスサイドバー</string>
+    <string name="pinned_apps_title">固定したアプリ</string>
+    <string name="pinned_apps_subtitle">お気に入りを選択してください</string>
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">固定したアプリ</string>
+    <string name="selected_count">%1$d個選択</string>
+    <string name="back">戻る</string>
+    <string name="save">保存</string>
+    <string name="loading_apps">アプリを読み込み中…</string>
+    <string name="quick_access">クイックアクセス</string>
+    <string name="tap_to_pin_instruction">Tap apps to pin them to your sidebar</string>
+    <string name="selected">選択済み</string>
+    <!-- Title Bar Actions -->
+    <string name="close">閉じる</string>
+    <string name="minimize">最小化</string>
+    <string name="hangup">Hangup</string>
+    <string name="fullscreen">フルスクリーン</string>
+    <string name="collapse">折りたたむ</string>
+    <!-- Remove Zone -->
+    <string name="remove">削除</string>
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">Tap drag handle to show menu</string>
+    <!-- Bubble View -->
+    <string name="tap_to_expand">Tap to expand</string>
+    <!-- Edge Content View -->
+    <string name="no_apps_found">アプリがありません</string>
+    <string name="full_screen">フルスクリーン</string>
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">タップでメニューを開く</string>
+    <string name="drag_to_resize">ドラッグでリサイズ</string>
+    <!-- App Locked -->
+    <string name="app_locked_message">This app is locked. Please unlock it first.</string>
+</resources>

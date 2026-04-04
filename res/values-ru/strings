@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">Боковая панель</string>
+    <string name="app_label_settings">Боковой лаунчер</string>
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">Боковой лаунчер</string>
+    <string name="edge_launcher_subtitle">Настройка боковой панели</string>
+    <string name="edge_bar_title">Боковая панель</string>
+    <string name="edge_bar_subtitle">Боковая панель быстрого доступа</string>
+    <string name="pinned_apps_title">Закреплённые приложения</string>
+    <string name="pinned_apps_subtitle">Выберите любимые</string>
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">Закреплённые приложения</string>
+    <string name="selected_count">Выбрано: %1$d</string>
+    <string name="back">Назад</string>
+    <string name="save">Сохранить</string>
+    <string name="loading_apps">Загрузка приложений…</string>
+    <string name="quick_access">Быстрый доступ</string>
+    <string name="tap_to_pin_instruction">Нажмите на приложения, чтобы закрепить их на боковой панели</string>
+    <string name="selected">Выбрано</string>
+    <!-- Title Bar Actions -->
+    <string name="close">Закрыть</string>
+    <string name="minimize">Свернуть</string>
+    <string name="hangup">Отклонить</string>
+    <string name="fullscreen">На весь экран</string>
+    <string name="collapse">Свернуть</string>
+    <!-- Remove Zone -->
+    <string name="remove">Убрать</string>
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">Нажмите на кнопку для отображения меню</string>
+    <!-- Bubble View -->
+    <string name="tap_to_expand">Нажмите, чтобы раскрыть</string>
+    <!-- Edge Content View -->
+    <string name="no_apps_found">Приложения не найдены</string>
+    <string name="full_screen">На весь экран</string>
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">Нажмите для открытия меню</string>
+    <string name="drag_to_resize">Перетащите для изменения размера</string>
+    <!-- App Locked -->
+    <string name="app_locked_message">Это приложение заблокировано. Сначала разблокируйте.</string>
+</resources>

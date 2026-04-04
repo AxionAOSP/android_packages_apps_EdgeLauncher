@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Labels -->
+    <string name="app_name">Kenar Çubuğu</string>
+    <string name="app_label_settings">Kenar Başlatıcı</string>
+    <!-- Main Settings Screen -->
+    <string name="edge_launcher_title">Kenar Başlatıcı</string>
+    <string name="edge_launcher_subtitle">Yan çubuk deneyimini özelleştirin</string>
+    <string name="edge_bar_title">Kenar Çubuğu</string>
+    <string name="edge_bar_subtitle">Hızlı erişim yan çubuğu</string>
+    <string name="pinned_apps_title">Sabitlenmiş Uygulamalar</string>
+    <string name="pinned_apps_subtitle">Favorileri seçin</string>
+    <!-- Pinned Apps Screen -->
+    <string name="pinned_apps_header">Sabitlenmiş Uygulamalar</string>
+    <string name="selected_count">%1$d seçildi</string>
+    <string name="back">Geri</string>
+    <string name="save">Kaydet</string>
+    <string name="loading_apps">Uygulamalar yükleniyor…</string>
+    <string name="quick_access">Hızlı Erişim</string>
+    <string name="tap_to_pin_instruction">Uygulamalara dokunarak yan çubuğa sabitleyin</string>
+    <string name="selected">Seçildi</string>
+    <!-- Title Bar Actions -->
+    <string name="close">Kapat</string>
+    <string name="minimize">Küçült</string>
+    <string name="hangup">Kaydet</string>
+    <string name="fullscreen">Tam Ekran</string>
+    <string name="collapse">Daralt</string>
+    <!-- Remove Zone -->
+    <string name="remove">Sil</string>
+    <!-- Overlay Title Bar -->
+    <string name="tap_drag_handle_hint">Tutamaca dokunup sürükleyerek menüyü gösterin</string>
+    <!-- Bubble View -->
+    <string name="tap_to_expand">Genişletmek için dokunun</string>
+    <!-- Edge Content View -->
+    <string name="no_apps_found">Hiçbir uygulama bulunamadı</string>
+    <string name="full_screen">Tam ekran</string>
+    <!-- Freeform Window UI -->
+    <string name="tap_to_open_menu">Menüyü açmak için dokunun</string>
+    <string name="drag_to_resize">Yeniden boyutlandırmak için sürükleyin</string>
+    <!-- App Locked -->
+    <string name="app_locked_message">Bu uygulama kilitli. Önce kilidini açın.</string>
+</resources>
