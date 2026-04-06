@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_locked_message">Это приложение заблокировано. Сначала разблокируйте.</string>
+    <string name="edge_all_apps">Все приложения</string>
+    <string name="edge_popup_full_screen">На весь экран</string>
+    <string name="edge_popup_freeform">Freeform</string>
+    <string name="edge_popup_bubble">Подсказка</string>
+</resources>
