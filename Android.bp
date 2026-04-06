@@ -33,6 +33,7 @@ android_app {
         "kotlinx-coroutines-core",
         "ax_kt",
         "ax_compose",
+        "PlatformComposeSceneTransitionLayout",
     ],
     
     plugins: ["androidx.room_room-compiler-plugin"],

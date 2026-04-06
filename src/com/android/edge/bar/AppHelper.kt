@@ -15,6 +15,7 @@
  */
 package com.android.edge.bar
 
+import java.util.concurrent.ConcurrentHashMap
 import android.app.ActivityManager
 import android.app.FreeformLauncher
 import android.content.ComponentName
@@ -36,7 +37,7 @@ import com.android.wm.shell.shared.bubbles.logging.EntryPoint
 
 object AppHelper {
 
-    private val iconCache = mutableMapOf<String, Painter?>()
+    private val iconCache = ConcurrentHashMap<String, Painter>()
     private var sBubbles: IBubbles? = null
 
     fun bindBubbleService(context: Context) {
@@ -131,7 +132,7 @@ object AppHelper {
                 val fallbackBitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
                 BitmapPainter(fallbackBitmap.asImageBitmap())
             }
-        }!!
+        }
     }
 }
 

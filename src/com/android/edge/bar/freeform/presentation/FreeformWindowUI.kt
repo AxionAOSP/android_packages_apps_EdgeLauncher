@@ -251,7 +251,7 @@ private fun FullWindowView(
     LaunchedEffect(textureViewRef) {
         textureViewRef?.let { view ->
             while (isActive) {
-                delay(500)
+                delay(2000)
                 val bitmap = luminanceDetector.captureBitmap(view)
                 isContentLight = luminanceDetector.isContentLight(bitmap)
                 bitmap?.recycle()

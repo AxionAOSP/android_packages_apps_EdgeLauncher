@@ -156,8 +156,6 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
-        Process.setThreadGroupAndCpuset(Process.myPid(), 9)
-        Process.setProcessGroup(Process.myPid(), 9)
 
         userId = UserHandle.myUserId()
 
@@ -414,9 +412,14 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
     }
 
     private fun launchFreeform(packageName: String, activityName: String? = null) {
-        if (freeformWM.hasWindow(packageName)) {
-            freeformWM.bringToFront(packageName)
-            return
+        val existing = freeformWM.getWindow(packageName)
+        if (existing != null) {
+            if (existing.desktopMode) {
+                freeformWM.closeWindow(packageName)
+            } else {
+                freeformWM.bringToFront(packageName)
+                return
+            }
         }
 
         val targetActivity = activityName ?: run {
@@ -429,9 +432,14 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
 
     private fun launchDesktopFreeform(packageName: String, activityName: String? = null,
             targetDisplayId: Int = Display.DEFAULT_DISPLAY) {
-        if (freeformWM.hasWindow(packageName)) {
-            freeformWM.bringToFront(packageName)
-            return
+        val existing = freeformWM.getWindow(packageName)
+        if (existing != null) {
+            if (!existing.desktopMode) {
+                freeformWM.closeWindow(packageName)
+            } else {
+                freeformWM.bringToFront(packageName)
+                return
+            }
         }
 
         val targetActivity = activityName ?: run {

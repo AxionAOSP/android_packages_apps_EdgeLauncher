@@ -20,26 +20,32 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.provider.Settings
-import android.os.Process
 import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
-import androidx.compose.animation.*
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.activity.OnBackPressedDispatcher
+import androidx.activity.OnBackPressedDispatcherOwner
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import com.android.edge.bar.lifecycle.repeatWhenAttached
 import com.android.edge.bar.settings.SettingsActivity
 import kotlinx.coroutines.*
@@ -52,6 +58,12 @@ class EdgeSideBar(
 ) {
     interface Callback {
         fun onRemove()
+    }
+
+    private val noOpBackDispatcherOwner = object : OnBackPressedDispatcherOwner {
+        override val onBackPressedDispatcher = OnBackPressedDispatcher()
+        private val reg = LifecycleRegistry(this).apply { currentState = Lifecycle.State.RESUMED }
+        override val lifecycle: Lifecycle get() = reg
     }
 
     private lateinit var panelView: View
@@ -85,9 +97,6 @@ class EdgeSideBar(
     private val marginPx get() = (PANEL_MARGIN_DP * density).roundToInt()
 
     fun showPanelView() {
-        Process.setThreadAffinity(Process.myPid(), 2)
-        Process.setThreadGroupAndCpuset(Process.myPid(), Process.THREAD_GROUP_TOP_APP)
-        Process.setProcessGroup(Process.myPid(), Process.THREAD_GROUP_TOP_APP)
         synchronized(this) {
             if (isShowing) return
             if (::panelView.isInitialized && panelView.isAttachedToWindow) {
@@ -138,9 +147,6 @@ class EdgeSideBar(
             }
             callback.onRemove()
         }
-        Process.setThreadAffinity(Process.myPid(), 1)
-        Process.setThreadGroupAndCpuset(Process.myPid(), 9)
-        Process.setProcessGroup(Process.myPid(), 9)
     }
 
     fun updateSidebarPosition() {
@@ -286,26 +292,40 @@ class EdgeSideBar(
                         ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
                     )
                     setContent {
-                        LaunchedEffect(Unit) {
-                            panelVisible.value = true
-                        }
-                        val isDark = isSystemInDarkTheme()
-                        val colorScheme = if (isDark) dynamicDarkColorScheme(context)
-                            else dynamicLightColorScheme(context)
-                        val slideRight = fromRight.value
-                        MaterialTheme(colorScheme = colorScheme) {
-                            AnimatedVisibility(
-                                visible = panelVisible.value,
-                                enter = slideInHorizontally(
-                                    initialOffsetX = { if (slideRight) it else -it },
-                                    animationSpec = tween(ENTER_ANIM_DURATION.toInt())
-                                ) + fadeIn(tween(ENTER_ANIM_DURATION.toInt())),
-                                exit = slideOutHorizontally(
-                                    targetOffsetX = { if (slideRight) it else -it },
-                                    animationSpec = tween(EXIT_ANIM_DURATION.toInt())
-                                ) + fadeOut(tween(EXIT_ANIM_DURATION.toInt()))
-                            ) {
-                                content()
+                        CompositionLocalProvider(
+                            LocalOnBackPressedDispatcherOwner provides noOpBackDispatcherOwner
+                        ) {
+                            val isDark = isSystemInDarkTheme()
+                            val colorScheme = if (isDark) dynamicDarkColorScheme(context)
+                                else dynamicLightColorScheme(context)
+                            val slideRight = fromRight.value
+                            val visibility = remember { Animatable(0f) }
+                            LaunchedEffect(panelVisible.value) {
+                                if (panelVisible.value) {
+                                    visibility.animateTo(
+                                        1f,
+                                        tween(ENTER_ANIM_DURATION.toInt())
+                                    )
+                                } else {
+                                    visibility.animateTo(
+                                        0f,
+                                        tween(EXIT_ANIM_DURATION.toInt())
+                                    )
+                                }
+                            }
+                            LaunchedEffect(Unit) {
+                                panelVisible.value = true
+                            }
+                            MaterialTheme(colorScheme = colorScheme) {
+                                Box(
+                                    modifier = Modifier.graphicsLayer {
+                                        alpha = visibility.value
+                                        val dir = if (slideRight) 1f else -1f
+                                        translationX = dir * 40f * (1f - visibility.value)
+                                    }
+                                ) {
+                                    content()
+                                }
                             }
                         }
                     }
@@ -347,7 +367,7 @@ class EdgeSideBar(
     companion object {
         private const val TAG = "EdgeSideBar"
         const val PANEL_WIDTH_DP = 130f
-        const val PANEL_HEIGHT_DP = 308f
+        const val PANEL_HEIGHT_DP = 336f
         const val PANEL_MARGIN_DP = 10f
         private const val ENTER_ANIM_DURATION = 250L
         private const val EXIT_ANIM_DURATION = 200L

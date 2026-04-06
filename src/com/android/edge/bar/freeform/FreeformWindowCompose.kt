@@ -39,7 +39,7 @@ class FreeformWindowCompose(
     private val activityName: String,
     private val userId: Int,
     private val taskId: Int = -1,
-    private val desktopMode: Boolean = false,
+    val desktopMode: Boolean = false,
     private val targetDisplayId: Int = Display.DEFAULT_DISPLAY,
 ) : TextureView.SurfaceTextureListener {
 

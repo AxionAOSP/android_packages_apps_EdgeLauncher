@@ -68,7 +68,7 @@ class SurfaceLuminanceDetector {
 
     fun captureBitmap(textureView: TextureView): Bitmap? {
         return try {
-            textureView.bitmap
+            textureView.getBitmap(32, 8)
         } catch (e: Exception) {
             null
         }
@@ -117,4 +117,3 @@ fun rememberSurfaceLuminance(
     return isContentLight
 }
 
-private const val SAMPLE_DELAY_MS = 500L
