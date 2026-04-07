@@ -33,6 +33,7 @@ android_app {
         "kotlinx-coroutines-core",
         "ax_kt",
         "ax_compose",
+        "wm_shell_bubbles_aidl",
         "PlatformComposeSceneTransitionLayout",
     ],
     
