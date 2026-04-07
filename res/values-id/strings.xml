@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_locked_message">Aplikasi ini terkunci. silahkan untuk membukanya terlebih dahulu.</string>
+    <string name="edge_all_apps">Semua aplikasi</string>
+    <string name="edge_popup_full_screen">Layar penuh</string>
+    <string name="edge_popup_freeform">Freeform</string>
+    <string name="edge_popup_bubble">Gelembung</string>
+</resources>
