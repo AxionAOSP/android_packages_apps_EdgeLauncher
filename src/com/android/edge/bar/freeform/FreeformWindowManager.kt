@@ -18,6 +18,7 @@ package com.android.edge.bar.freeform
 import android.content.Context
 import android.util.Log
 import com.android.axion.kotlin.math.dpToPx
+import com.android.internal.R as InternalR
 import com.android.edge.bar.freeform.presentation.WindowMode
 import com.android.edge.bar.freeform.FreeformWindowCompose
 import com.android.edge.bar.freeform.presentation.FreeformStateManager
@@ -233,9 +234,9 @@ class FreeformWindowManager private constructor(private val context: Context) {
             val window = windows[packageName]
             if (window?.stateManager?.state?.value?.mode == WindowMode.BUBBLE) {
                 val bubbleSizePx = context.dpToPx(FreeformConstants.BUBBLE_SIZE_DP.toFloat())
-                val margin = context.dpToPx(16f)
+                val topOffset = context.resources.getDimensionPixelSize(InternalR.dimen.status_bar_height).toFloat()
                 val slotSpacing = context.dpToPx(8f)
-                val newY = margin + (slot * (bubbleSizePx + slotSpacing))
+                val newY = topOffset + (slot * (bubbleSizePx + slotSpacing))
                 
                 window.stateManager.onBubblePositionUpdate(newY.toFloat())
             }

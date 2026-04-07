@@ -27,6 +27,7 @@ import com.android.edge.bar.freeform.data.FreeformRepository
 import com.android.edge.bar.freeform.data.FreeformRepositoryImpl
 import com.android.edge.bar.freeform.domain.FreeformConstants
 import com.android.axion.kotlin.math.dpToPx
+import com.android.internal.R as InternalR
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -118,6 +119,9 @@ class FreeformStateManager(
     companion object {
         private const val TAG = "FreeformStateManager"
     }
+
+    private val statusBarHeight: Int
+        get() = context.resources.getDimensionPixelSize(InternalR.dimen.status_bar_height)
 
     private val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
@@ -296,12 +300,20 @@ class FreeformStateManager(
     }
     
     private fun handleDrag(deltaX: Float, deltaY: Float) {
+        val minY = statusBarHeight.toFloat()
         updateState {
-            copy(
-                x = x + deltaX,
-                y = y + deltaY,
-                snapPosition = null
-            )
+            when (mode) {
+                WindowMode.BUBBLE -> copy(
+                    x = (x + deltaX).coerceIn(0f, (screenWidth - width).toFloat()),
+                    y = (y + deltaY).coerceIn(minY, (screenHeight - height).toFloat()),
+                    snapPosition = null
+                )
+                WindowMode.NORMAL, WindowMode.DESKTOP -> copy(
+                    x = x + deltaX,
+                    y = (y + deltaY).coerceIn(minY, (screenHeight - height).toFloat()),
+                    snapPosition = null
+                )
+            }
         }
 
         if (currentState.mode == WindowMode.NORMAL) {
@@ -331,18 +343,19 @@ class FreeformStateManager(
 
         val slot = freeformWindowManager.getNextBubbleSlot(windowPackageName)
         val bubbleSizePx = context.dpToPx(FreeformConstants.BUBBLE_SIZE_DP)
-        val margin = context.dpToPx(16)
+        val topOffset = statusBarHeight
         val slotSpacing = context.dpToPx(8)
+        val edgeMargin = context.dpToPx(16)
 
         val bubbleX: Float
         val bubbleY: Float
 
-        if (currentState.savedBubbleX >= 0f && currentState.savedBubbleY >= 0f) {
+        if (currentState.savedBubbleX >= 0f && currentState.savedBubbleY >= statusBarHeight.toFloat()) {
             bubbleX = currentState.savedBubbleX
             bubbleY = currentState.savedBubbleY
         } else {
-            bubbleX = (screenWidth - bubbleSizePx - margin).toFloat()
-            bubbleY = (margin + (slot * (bubbleSizePx + slotSpacing))).toFloat()
+            bubbleX = (screenWidth - bubbleSizePx - edgeMargin).toFloat()
+            bubbleY = (topOffset + (slot * (bubbleSizePx + slotSpacing))).toFloat()
         }
 
         updateState {
@@ -373,11 +386,10 @@ class FreeformStateManager(
         val targetX = currentState.savedX
         val targetY = currentState.savedY
 
-        val safeTop = context.dpToPx(FreeformConstants.SAFE_ZONE_TOP_DP)
         val safeBottom = context.dpToPx(FreeformConstants.SAFE_ZONE_BOTTOM_DP)
-        val minY = safeTop.toFloat()
+        val minY = statusBarHeight.toFloat()
         val maxY = (screenHeight - safeBottom - 48).toFloat()
-        
+
         val clampedY = targetY.coerceIn(minY, maxY)
         val halfWidth = targetWidth / 2f
         val clampedX = targetX.coerceIn(-halfWidth, (screenWidth - halfWidth).toFloat())
@@ -621,7 +633,7 @@ class FreeformStateManager(
         val safeTop = if (isLandscape) {
             context.dpToPx(16)
         } else {
-            context.dpToPx(FreeformConstants.SAFE_ZONE_TOP_DP)
+            statusBarHeight
         }
         
         val safeBottom = if (isLandscape) {
@@ -648,7 +660,7 @@ class FreeformStateManager(
     }
     
     private fun clampWindowToSafeZone() {
-        val safeTop = context.dpToPx(FreeformConstants.SAFE_ZONE_TOP_DP)
+        val safeTop = statusBarHeight
         val safeBottom = context.dpToPx(FreeformConstants.SAFE_ZONE_BOTTOM_DP)
         
         val minY = safeTop.toFloat()
