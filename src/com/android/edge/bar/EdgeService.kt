@@ -213,6 +213,8 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
             }
         })
 
+        launch { AppHelper.loadAppsCached(this@EdgeService) }
+
         showSideline = getSecureBoolean(SIDELINE, false)
         if (showSideline) showSidelineView()
         

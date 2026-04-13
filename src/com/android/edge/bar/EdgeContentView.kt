@@ -73,8 +73,8 @@ private val ALL_APPS_ICON_SIZE = 34.dp
 private val ALL_APPS_ICON_CORNER = 10.dp
 
 private val HANDLE_AREA_HEIGHT = 40.dp
-private val HANDLE_WIDTH = 16.dp
-private val HANDLE_HEIGHT = 3.dp
+private val HANDLE_WIDTH = 32.dp
+private val HANDLE_HEIGHT = 4.dp
 
 private val SETTINGS_AREA_HEIGHT = 42.dp
 private val SETTINGS_ICON_SIZE = 16.dp
@@ -127,13 +127,12 @@ fun EdgeContentView(
     val allAppsWidth = (screenWidthDp * 0.72f).coerceIn(300.dp, 400.dp)
     val allAppsHeight = (screenHeightDp * 0.65f).coerceIn(400.dp, 580.dp)
 
-    val allApps by produceState(initialValue = emptyList<AppInfo>()) {
-        val apps = withContext(Dispatchers.Default) {
-            val loaded = AppHelper.getInstalledApps(context)
-            loaded.forEach { AppHelper.getAppPainter(context, it.packageName, it.icon) }
-            loaded
+    val allApps by produceState(initialValue = AppHelper.getCachedAppsOrEmpty()) {
+        if (value.isEmpty()) {
+            value = withContext(Dispatchers.Default) {
+                AppHelper.loadAppsCached(context)
+            }
         }
-        value = apps
     }
 
     val pinnedApps by produceState(initialValue = emptyList<AppInfo>(), key1 = allApps) {
@@ -250,7 +249,7 @@ private fun ContentScope.EdgePanelCard(
                         .width(HANDLE_WIDTH)
                         .height(HANDLE_HEIGHT)
                         .clip(RoundedCornerShape(HANDLE_HEIGHT / 2))
-                        .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant)
                 )
             }
 

@@ -40,6 +40,19 @@ object AppHelper {
     private val iconCache = ConcurrentHashMap<String, Painter>()
     private var sBubbles: IBubbles? = null
 
+    @Volatile
+    private var cachedApps: List<AppInfo>? = null
+
+    fun getCachedAppsOrEmpty(): List<AppInfo> = cachedApps ?: emptyList()
+
+    fun loadAppsCached(context: Context): List<AppInfo> {
+        cachedApps?.let { return it }
+        val loaded = getInstalledApps(context)
+        loaded.forEach { getAppPainter(context, it.packageName, it.icon) }
+        cachedApps = loaded
+        return loaded
+    }
+
     fun bindBubbleService(context: Context) {
         if (!isBubbleSupported()) return
         val intent = Intent("com.android.systemui.action.BUBBLE_LAUNCHER")
