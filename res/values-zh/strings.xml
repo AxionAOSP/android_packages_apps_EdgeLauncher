@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_locked_message">此應用程式已鎖定。請先解鎖。</string>
-    <string name="edge_all_apps">所有應用程式</string>
-    <string name="edge_popup_full_screen">全螢幕</string>
-    <string name="edge_popup_freeform">自由視窗</string>
-    <string name="edge_popup_bubble">氣泡</string>
-    <string name="edge_settings_title">Edge Launcher</string>
-    <string name="edge_settings_subtitle">自訂你的側邊欄體驗</string>
-    <string name="edge_settings_group_general">一般</string>
-    <string name="edge_settings_group_gaming">遊戲</string>
-    <string name="edge_settings_sidebar_title">Edge bar</string>
-    <string name="edge_settings_sidebar_summary">快速存取側邊欄</string>
-    <string name="edge_settings_pinned_title">Pinned apps</string>
-    <string name="edge_settings_pinned_summary">選擇你最喜愛的應用程式</string>
-    <string name="edge_settings_hide_in_gamespace_title">Hide during GameSpace</string>
-    <string name="edge_settings_hide_in_gamespace_summary">Hide the sidebar when GameSpace is active</string>
-    <string name="edge_pinned_apps_title">Pinned apps</string>
-    <string name="edge_pinned_apps_count">%1$d/%2$d selected</string>
-    <string name="edge_pinned_apps_loading">Loading apps\u2026</string>
-    <string name="edge_pinned_apps_hint_title">Quick access</string>
-    <string name="edge_pinned_apps_hint_summary">輕觸應用程式以固定至側邊欄</string>
-    <string name="edge_pinned_apps_save">儲存</string>
+    <string name="app_locked_message">此应用已锁定。请先解锁。</string>
+    <string name="edge_all_apps">所有应用</string>
+    <string name="edge_popup_full_screen">全屏</string>
+    <string name="edge_popup_freeform">自由窗口</string>
+    <string name="edge_popup_bubble">气泡</string>
+    <string name="edge_settings_title">侧边栏</string>
+    <string name="edge_settings_subtitle">自定义侧边栏</string>
+    <string name="edge_settings_group_general">通用</string>
+    <string name="edge_settings_group_gaming">游戏中</string>
+    <string name="edge_settings_sidebar_title">边缘栏</string>
+    <string name="edge_settings_sidebar_summary">快速访问侧边栏</string>
+    <string name="edge_settings_pinned_title">已固定应用</string>
+    <string name="edge_settings_pinned_summary">选择您的收藏</string>
+    <string name="edge_settings_hide_in_gamespace_title">在 GameSpace 中隐藏</string>
+    <string name="edge_settings_hide_in_gamespace_summary">GameSpace 活动时隐藏侧边栏</string>
+    <string name="edge_pinned_apps_title">已固定应用</string>
+    <string name="edge_pinned_apps_count">%1$d/%2$d已选中</string>
+    <string name="edge_pinned_apps_loading">正在加载应用\u2026</string>
+    <string name="edge_pinned_apps_hint_title">快速访问</string>
+    <string name="edge_pinned_apps_hint_summary">点击应用程序以固定到您的侧边栏</string>
+    <string name="edge_pinned_apps_save">保存</string>
 </resources>
