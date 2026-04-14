@@ -141,6 +141,7 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
 
         private const val GAMING_MODE_ACTIVE = "ax_gaming_mode_active"
         const val SIDELINE = "sidebar_feature_enabled"
+        const val HIDE_IN_GAMING_MODE = "sidebar_hide_in_gaming_mode"
         const val SIDELINE_POSITION_X = "sideline_position_x"
         const val SIDELINE_POSITION_Y_PORTRAIT = "sideline_position_y_portrait"
         const val SIDELINE_POSITION_Y_LANDSCAPE = "sideline_position_y_landscape"
@@ -230,8 +231,11 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
                 if (active == gameBarActive) return@onEach
                 gameBarActive = active
                 mainScope.launch {
-                    if (gameBarActive) hideSidelineView()
-                    else if (showSideline) showSidelineView()
+                    if (gameBarActive && getSecureBoolean(HIDE_IN_GAMING_MODE, true)) {
+                        hideSidelineView()
+                    } else if (showSideline) {
+                        showSidelineView()
+                    }
                 }
             }
             .launchIn(this)
@@ -296,7 +300,8 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
     }
 
     private fun showSidelineView() {
-        if (isSidelineVisible || gameBarActive) return
+        if (isSidelineVisible) return
+        if (gameBarActive && getSecureBoolean(HIDE_IN_GAMING_MODE, true)) return
 
         mainScope.launch {
             wmLayoutParams.apply {

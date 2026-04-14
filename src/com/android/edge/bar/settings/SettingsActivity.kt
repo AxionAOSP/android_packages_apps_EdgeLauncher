@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 AxionOS Project
+ * Copyright (C) 2025-2026 AxionOS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,39 +19,32 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
+import com.android.axion.compose.theme.AxionTheme
 
 class SettingsActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
+
         setContent {
-            val context = LocalContext.current
-            val isDark = isSystemInDarkTheme()
-            val colorScheme = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-            
             var currentScreen by remember { mutableStateOf<SettingsScreen>(SettingsScreen.Main) }
-            
-            MaterialTheme(colorScheme = colorScheme) {
+
+            AxionTheme {
                 when (currentScreen) {
                     is SettingsScreen.Main -> {
                         MainSettingsScreen(
-                            onNavigateToPinnedApps = { currentScreen = SettingsScreen.PinnedApps }
+                            onBack = { finish() },
+                            onNavigateToPinnedApps = { currentScreen = SettingsScreen.PinnedApps },
                         )
                     }
                     is SettingsScreen.PinnedApps -> {
                         PinnedAppsScreen(
-                            onBack = { currentScreen = SettingsScreen.Main }
+                            onBack = { currentScreen = SettingsScreen.Main },
                         )
                     }
                 }
