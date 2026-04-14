@@ -3,6 +3,22 @@
     <string name="app_locked_message">Это приложение заблокировано. Сначала разблокируйте.</string>
     <string name="edge_all_apps">Все приложения</string>
     <string name="edge_popup_full_screen">На весь экран</string>
-    <string name="edge_popup_freeform">Freeform</string>
+    <string name="edge_popup_freeform">Свободная форма</string>
     <string name="edge_popup_bubble">Подсказка</string>
+    <string name="edge_settings_title">Боковой лаунчер</string>
+    <string name="edge_settings_subtitle">Настройка боковой панели</string>
+    <string name="edge_settings_group_general">Общие</string>
+    <string name="edge_settings_group_gaming">Игры</string>
+    <string name="edge_settings_sidebar_title">Edge bar</string>
+    <string name="edge_settings_sidebar_summary">Боковая панель быстрого доступа</string>
+    <string name="edge_settings_pinned_title">Pinned apps</string>
+    <string name="edge_settings_pinned_summary">Выберите любимые</string>
+    <string name="edge_settings_hide_in_gamespace_title">Hide during GameSpace</string>
+    <string name="edge_settings_hide_in_gamespace_summary">Hide the sidebar when GameSpace is active</string>
+    <string name="edge_pinned_apps_title">Pinned apps</string>
+    <string name="edge_pinned_apps_count">%1$d/%2$d selected</string>
+    <string name="edge_pinned_apps_loading">Loading apps\u2026</string>
+    <string name="edge_pinned_apps_hint_title">Quick access</string>
+    <string name="edge_pinned_apps_hint_summary">Нажмите на приложения, чтобы закрепить их на боковой панели</string>
+    <string name="edge_pinned_apps_save">Сохранить</string>
 </resources>

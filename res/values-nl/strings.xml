@@ -5,4 +5,20 @@
     <string name="edge_popup_full_screen">Full screen</string>
     <string name="edge_popup_freeform">Freeform</string>
     <string name="edge_popup_bubble">Bubbel</string>
+    <string name="edge_settings_title">Edge Launcher</string>
+    <string name="edge_settings_subtitle">Customize your sidebar experience</string>
+    <string name="edge_settings_group_general">Algemeen</string>
+    <string name="edge_settings_group_gaming">Gamen</string>
+    <string name="edge_settings_sidebar_title">Edge bar</string>
+    <string name="edge_settings_sidebar_summary">Quick access sidebar</string>
+    <string name="edge_settings_pinned_title">Pinned apps</string>
+    <string name="edge_settings_pinned_summary">Choose your favorites</string>
+    <string name="edge_settings_hide_in_gamespace_title">Hide during GameSpace</string>
+    <string name="edge_settings_hide_in_gamespace_summary">Hide the sidebar when GameSpace is active</string>
+    <string name="edge_pinned_apps_title">Pinned apps</string>
+    <string name="edge_pinned_apps_count">%1$d/%2$d selected</string>
+    <string name="edge_pinned_apps_loading">Loading apps\u2026</string>
+    <string name="edge_pinned_apps_hint_title">Quick access</string>
+    <string name="edge_pinned_apps_hint_summary">Tap apps to pin them to your sidebar</string>
+    <string name="edge_pinned_apps_save">Save</string>
 </resources>
