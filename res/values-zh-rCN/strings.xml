@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_locked_message">此应用已锁定，请先解锁。</string>
+    <string name="edge_all_apps">所有应用</string>
+    <string name="edge_popup_full_screen">全屏</string>
+    <string name="edge_popup_freeform">自由窗口</string>
+    <string name="edge_popup_bubble">气泡</string>
+
+    <string name="edge_settings_title">边缘启动器</string>
+    <string name="edge_settings_subtitle">自定义你的侧边栏体验</string>
+
+    <string name="edge_settings_group_general">通用</string>
+    <string name="edge_settings_group_gaming">游戏</string>
+
+    <string name="edge_settings_sidebar_title">边缘栏</string>
+    <string name="edge_settings_sidebar_summary">快速访问侧边栏</string>
+
+    <string name="edge_settings_pinned_title">固定应用</string>
+    <string name="edge_settings_pinned_summary">选择你常用的应用</string>
+
+    <string name="edge_settings_hide_in_gamespace_title">在游戏空间中隐藏</string>
+    <string name="edge_settings_hide_in_gamespace_summary">当游戏空间激活时隐藏侧边栏</string>
+
+    <string name="edge_pinned_apps_title">固定应用</string>
+    <string name="edge_pinned_apps_count">已选 %1$d/%2$d</string>
+    <string name="edge_pinned_apps_loading">正在加载应用…</string>
+    <string name="edge_pinned_apps_hint_title">快速访问</string>
+    <string name="edge_pinned_apps_hint_summary">点击应用即可将其固定到侧边栏</string>
+    <string name="edge_pinned_apps_save">保存</string>
+</resources>
