@@ -21,4 +21,9 @@
     <string name="edge_pinned_apps_hint_title">Quick access</string>
     <string name="edge_pinned_apps_hint_summary">Нажмите на приложения, чтобы закрепить их на боковой панели</string>
     <string name="edge_pinned_apps_save">Сохранить</string>
+    <string name="edge_settings_launch_mode_title">Default launch mode</string>
+    <string name="edge_settings_launch_mode_summary">Choose how apps open from the sidebar by default</string>
+    <string name="edge_settings_launch_mode_full">На весь экран</string>
+    <string name="edge_settings_launch_mode_freeform">Свободная форма</string>
+    <string name="edge_settings_launch_mode_bubble">Подсказка</string>
 </resources>
