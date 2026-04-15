@@ -110,7 +110,7 @@ private val EdgeTransitions = transitions {
 
 @Composable
 fun EdgeContentView(
-    onPinnedAppClick: (context: Context, packageName: String) -> Unit,
+    onPinnedAppClick: (context: Context, packageName: String, activityName: String) -> Unit,
     onSettingsClick: () -> Unit,
     onDrag: (deltaX: Float, deltaY: Float) -> Unit,
     onDragEnd: () -> Unit,
@@ -156,7 +156,7 @@ fun EdgeContentView(
                 pinnedApps = pinnedApps,
                 panelOnRight = panelOnRight,
                 panelHeight = panelHeight,
-                onPinnedAppClick = { pkg -> onPinnedAppClick(context, pkg) },
+                onPinnedAppClick = { pkg, activity -> onPinnedAppClick(context, pkg, activity) },
                 onLongClick = { pkg, activityName, bounds ->
                     activePopup = PopupState(pkg, activityName, bounds)
                 },
@@ -173,7 +173,7 @@ fun EdgeContentView(
                 allApps = allApps,
                 allAppsWidth = allAppsWidth,
                 allAppsHeight = allAppsHeight,
-                onAppClick = { pkg -> onPinnedAppClick(context, pkg) },
+                onAppClick = { pkg, activity -> onPinnedAppClick(context, pkg, activity) },
                 onBack = { stlState.setTargetScene(EdgeScenes.Panel, coroutineScope) }
             )
         }
@@ -206,7 +206,7 @@ private fun ContentScope.EdgePanelCard(
     pinnedApps: List<AppInfo>,
     panelOnRight: Boolean,
     panelHeight: Dp,
-    onPinnedAppClick: (packageName: String) -> Unit,
+    onPinnedAppClick: (packageName: String, activityName: String) -> Unit,
     onLongClick: (packageName: String, activityName: String, bounds: Rect) -> Unit,
     onSettingsClick: () -> Unit,
     onAllAppsClick: () -> Unit,
@@ -271,7 +271,12 @@ private fun ContentScope.EdgePanelCard(
                                 index < pinnedApps.size -> {
                                     AppIconButton(
                                         appInfo = pinnedApps[index],
-                                        onClick = { onPinnedAppClick(pinnedApps[index].packageName) },
+                                        onClick = { 
+                                            onPinnedAppClick(
+                                                pinnedApps[index].packageName,
+                                                pinnedApps[index].activityName
+                                            )
+                                        },
                                         onLongClick = { bounds ->
                                             onLongClick(
                                                 pinnedApps[index].packageName,
@@ -316,7 +321,7 @@ private fun ContentScope.AllAppsCard(
     allApps: List<AppInfo>,
     allAppsWidth: Dp,
     allAppsHeight: Dp,
-    onAppClick: (packageName: String) -> Unit,
+    onAppClick: (packageName: String, activityName: String) -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -373,7 +378,7 @@ private fun ContentScope.AllAppsCard(
                 items(allApps, key = { it.packageName }) { app ->
                     AllAppsGridItem(
                         app = app,
-                        onClick = { onAppClick(app.packageName) }
+                        onClick = { onAppClick(app.packageName, app.activityName) }
                     )
                 }
             }

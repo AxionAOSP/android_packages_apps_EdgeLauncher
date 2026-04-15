@@ -106,9 +106,22 @@ class EdgeSideBar(
             fromRight.value = sidebarPositionX > 0
             panelView = createComposeView {
                 EdgeContentView(
-                    onPinnedAppClick = { _, pkg ->
+                    onPinnedAppClick = { _, pkg, activityName ->
                         removePanelView()
-                        AppHelper.launchApp(pkg)
+                        val launchMode = Settings.Secure.getInt(
+                            context.contentResolver,
+                            EdgeService.LAUNCH_MODE,
+                            0
+                        )
+                        when (launchMode) {
+                            1 -> AppHelper.launchApp(pkg)
+                            2 -> if (AppHelper.isBubbleSupported()) {
+                                AppHelper.launchAsBubble(context, pkg, activityName)
+                            } else {
+                                AppHelper.launchApp(pkg)
+                            }
+                            else -> AppHelper.launchAppFull(context, pkg)
+                        }
                     },
                     onSettingsClick = {
                         removePanelView()

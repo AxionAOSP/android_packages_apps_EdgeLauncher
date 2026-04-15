@@ -142,6 +142,7 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
         private const val GAMING_MODE_ACTIVE = "ax_gaming_mode_active"
         const val SIDELINE = "sidebar_feature_enabled"
         const val HIDE_IN_GAMING_MODE = "sidebar_hide_in_gaming_mode"
+        const val LAUNCH_MODE = "sidebar_launch_mode"
         const val SIDELINE_POSITION_X = "sideline_position_x"
         const val SIDELINE_POSITION_Y_PORTRAIT = "sideline_position_y_portrait"
         const val SIDELINE_POSITION_Y_LANDSCAPE = "sideline_position_y_landscape"
