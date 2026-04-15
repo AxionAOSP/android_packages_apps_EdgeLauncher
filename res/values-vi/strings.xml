@@ -21,4 +21,9 @@
     <string name="edge_pinned_apps_hint_title">Quick access</string>
     <string name="edge_pinned_apps_hint_summary">Tap apps to pin them to your sidebar</string>
     <string name="edge_pinned_apps_save">Save</string>
+    <string name="edge_settings_launch_mode_title">Default launch mode</string>
+    <string name="edge_settings_launch_mode_summary">Choose how apps open from the sidebar by default</string>
+    <string name="edge_settings_launch_mode_full">Full screen</string>
+    <string name="edge_settings_launch_mode_freeform">Freeform</string>
+    <string name="edge_settings_launch_mode_bubble">Bong bóng</string>
 </resources>
