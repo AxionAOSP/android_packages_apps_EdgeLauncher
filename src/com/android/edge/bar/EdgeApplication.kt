@@ -16,6 +16,8 @@
 package com.android.edge.bar
 
 import android.app.Application
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Process
@@ -27,6 +29,12 @@ class EdgeApplication : Application() {
 
     private lateinit var sidebarReceiver: SidebarReceiver
 
+    private val packageChangeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            AppHelper.invalidateCache()
+        }
+    }
+
     companion object {
         private const val TAG = "EdgeApplication"
         private const val SIDELINE = "sidebar_feature_enabled"
@@ -36,7 +44,7 @@ class EdgeApplication : Application() {
         super.onCreate()
         Process.setThreadAffinity(Process.myPid(), 1)
         Log.d(TAG, "Application onCreate - userId: ${UserHandle.myUserId()}")
-        
+
         if (UserHandle.myUserId() != 0) {
             return
         }
@@ -47,6 +55,22 @@ class EdgeApplication : Application() {
             addAction(SidebarReceiver.ACTION_STOP_SIDEBAR)
         }
         registerReceiver(sidebarReceiver, filter)
+
+        val packageFilter = IntentFilter().apply {
+            addAction(Intent.ACTION_PACKAGE_ADDED)
+            addAction(Intent.ACTION_PACKAGE_REMOVED)
+            addAction(Intent.ACTION_PACKAGE_CHANGED)
+            addAction(Intent.ACTION_PACKAGE_REPLACED)
+            addAction(Intent.ACTION_PACKAGE_DATA_CLEARED)
+            addDataScheme("package")
+        }
+        registerReceiver(packageChangeReceiver, packageFilter)
+
+        val suspendFilter = IntentFilter().apply {
+            addAction(Intent.ACTION_PACKAGES_SUSPENDED)
+            addAction(Intent.ACTION_PACKAGES_UNSUSPENDED)
+        }
+        registerReceiver(packageChangeReceiver, suspendFilter)
 
         AppHelper.bindBubbleService(this)
 
@@ -61,6 +85,7 @@ class EdgeApplication : Application() {
         if (UserHandle.myUserId() == 0) {
             try {
                 unregisterReceiver(sidebarReceiver)
+                unregisterReceiver(packageChangeReceiver)
             } catch (e: Exception) {
                 Log.e(TAG, "Error unregistering receiver", e)
             }

@@ -124,14 +124,19 @@ fun EdgeContentView(
     val screenHeightDp = config.screenHeightDp.dp
     val screenWidthDp = config.screenWidthDp.dp
     val panelHeight = (screenHeightDp * 0.42f).coerceIn(260.dp, 380.dp)
+        .coerceAtMost(screenHeightDp - 32.dp)
     val allAppsWidth = (screenWidthDp * 0.72f).coerceIn(300.dp, 400.dp)
-    val allAppsHeight = (screenHeightDp * 0.65f).coerceIn(400.dp, 580.dp)
+        .coerceAtMost(screenWidthDp - 24.dp)
+    val allAppsHeight = (screenHeightDp * 0.65f).coerceIn(300.dp, 580.dp)
+        .coerceAtMost(screenHeightDp - 32.dp)
 
-    val allApps by produceState(initialValue = AppHelper.getCachedAppsOrEmpty()) {
-        if (value.isEmpty()) {
-            value = withContext(Dispatchers.Default) {
-                AppHelper.loadAppsCached(context)
-            }
+    val version by AppHelper.version.collectAsState()
+    val allApps by produceState(
+        initialValue = AppHelper.getCachedAppsOrEmpty(),
+        key1 = version,
+    ) {
+        value = withContext(Dispatchers.Default) {
+            AppHelper.loadAppsCached(context)
         }
     }
 

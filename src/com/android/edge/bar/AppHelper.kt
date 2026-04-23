@@ -34,6 +34,9 @@ import androidx.compose.ui.graphics.painter.Painter
 import com.android.wm.shell.bubbles.IBubbles
 import com.android.wm.shell.shared.bubbles.BubbleAnythingFlagHelper
 import com.android.wm.shell.shared.bubbles.logging.EntryPoint
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 object AppHelper {
 
@@ -43,6 +46,9 @@ object AppHelper {
     @Volatile
     private var cachedApps: List<AppInfo>? = null
 
+    private val _version = MutableStateFlow(0)
+    val version: StateFlow<Int> = _version.asStateFlow()
+
     fun getCachedAppsOrEmpty(): List<AppInfo> = cachedApps ?: emptyList()
 
     fun loadAppsCached(context: Context): List<AppInfo> {
@@ -51,6 +57,12 @@ object AppHelper {
         loaded.forEach { getAppPainter(context, it.packageName, it.icon) }
         cachedApps = loaded
         return loaded
+    }
+
+    fun invalidateCache() {
+        cachedApps = null
+        iconCache.clear()
+        _version.value = _version.value + 1
     }
 
     fun bindBubbleService(context: Context) {
