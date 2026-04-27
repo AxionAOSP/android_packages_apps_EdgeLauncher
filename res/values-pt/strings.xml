@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_locked_message">This app is locked. Please unlock it first.</string>
-    <string name="edge_all_apps">Todos os apps</string>
-    <string name="edge_popup_full_screen">Tela cheia</string>
+    <string name="edge_all_apps">All apps</string>
+    <string name="edge_popup_full_screen">Full screen</string>
     <string name="edge_popup_freeform">Freeform</string>
-    <string name="edge_popup_bubble">Balão</string>
-    <string name="edge_settings_title">Lançador da borda</string>
-    <string name="edge_settings_subtitle">Personalizar a experiência da barra lateral</string>
-    <string name="edge_settings_group_general">Geral</string>
-    <string name="edge_settings_group_gaming">Jogos</string>
+    <string name="edge_popup_bubble">Bubble</string>
+    <string name="edge_settings_title">Edge Launcher</string>
+    <string name="edge_settings_subtitle">Customize your sidebar experience</string>
+    <string name="edge_settings_group_general">General</string>
+    <string name="edge_settings_group_gaming">Gaming</string>
     <string name="edge_settings_sidebar_title">Edge bar</string>
-    <string name="edge_settings_sidebar_summary">Barra lateral de acesso rápido</string>
+    <string name="edge_settings_sidebar_summary">Quick access sidebar</string>
     <string name="edge_settings_pinned_title">Pinned apps</string>
-    <string name="edge_settings_pinned_summary">Escolha os seus favoritos</string>
+    <string name="edge_settings_pinned_summary">Choose your favorites</string>
     <string name="edge_settings_hide_in_gamespace_title">Hide during GameSpace</string>
     <string name="edge_settings_hide_in_gamespace_summary">Hide the sidebar when GameSpace is active</string>
     <string name="edge_pinned_apps_title">Pinned apps</string>
     <string name="edge_pinned_apps_count">%1$d/%2$d selected</string>
     <string name="edge_pinned_apps_loading">Loading apps\u2026</string>
     <string name="edge_pinned_apps_hint_title">Quick access</string>
-    <string name="edge_pinned_apps_hint_summary">Toque em apps para fixá-los na barra lateral</string>
-    <string name="edge_pinned_apps_save">Salvar</string>
+    <string name="edge_pinned_apps_hint_summary">Tap apps to pin them to your sidebar</string>
+    <string name="edge_pinned_apps_save">Save</string>
     <string name="edge_settings_launch_mode_title">Default launch mode</string>
     <string name="edge_settings_launch_mode_summary">Choose how apps open from the sidebar by default</string>
-    <string name="edge_settings_launch_mode_full">Tela cheia</string>
+    <string name="edge_settings_launch_mode_full">Full screen</string>
     <string name="edge_settings_launch_mode_freeform">Freeform</string>
-    <string name="edge_settings_launch_mode_bubble">Balão</string>
+    <string name="edge_settings_launch_mode_bubble">Bubble</string>
 </resources>
