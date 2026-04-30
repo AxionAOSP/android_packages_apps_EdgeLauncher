@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_locked_message">This app is locked. Please unlock it first.</string>
-    <string name="edge_all_apps">All apps</string>
+    <string name="edge_all_apps">כל האפליקציות</string>
     <string name="edge_popup_full_screen">Full screen</string>
     <string name="edge_popup_freeform">Freeform</string>
-    <string name="edge_popup_bubble">Bubble</string>
+    <string name="edge_popup_bubble">בועה</string>
     <string name="edge_settings_title">Edge Launcher</string>
     <string name="edge_settings_subtitle">Customize your sidebar experience</string>
     <string name="edge_settings_group_general">General</string>
@@ -20,10 +20,10 @@
     <string name="edge_pinned_apps_loading">Loading apps\u2026</string>
     <string name="edge_pinned_apps_hint_title">Quick access</string>
     <string name="edge_pinned_apps_hint_summary">Tap apps to pin them to your sidebar</string>
-    <string name="edge_pinned_apps_save">Save</string>
+    <string name="edge_pinned_apps_save">שמירה</string>
     <string name="edge_settings_launch_mode_title">Default launch mode</string>
     <string name="edge_settings_launch_mode_summary">Choose how apps open from the sidebar by default</string>
     <string name="edge_settings_launch_mode_full">Full screen</string>
     <string name="edge_settings_launch_mode_freeform">Freeform</string>
-    <string name="edge_settings_launch_mode_bubble">Bubble</string>
+    <string name="edge_settings_launch_mode_bubble">בועה</string>
 </resources>
