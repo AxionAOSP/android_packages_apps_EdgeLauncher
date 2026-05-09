@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_locked_message">This app is locked. Please unlock it first.</string>
+    <string name="app_locked_message">Este app está bloqueado. Por favor, desbloqueie-o primeiro.</string>
     <string name="edge_all_apps">Todos os apps</string>
     <string name="edge_popup_full_screen">Tela cheia</string>
     <string name="edge_popup_freeform">Janelas flutuantes</string>
