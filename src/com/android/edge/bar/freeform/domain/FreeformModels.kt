@@ -52,6 +52,7 @@ object FreeformConstants {
     const val DELAY_RESIZE_SETTLE_MS = 200L
     const val DELAY_APP_LAUNCH_VEIL_MS = 200L
     const val DELAY_VEIL_HIDE_MS = 200L
+    const val DELAY_ATTACH_TIMEOUT_MS = 5000L
     
     const val CORNER_RADIUS_DP = 12
     const val TITLE_BAR_HEIGHT_DP = 28

@@ -58,6 +58,7 @@ class EdgeSideBar(
 ) {
     interface Callback {
         fun onRemove()
+        fun onPositionChanged()
     }
 
     private val noOpBackDispatcherOwner = object : OnBackPressedDispatcherOwner {
@@ -263,6 +264,7 @@ class EdgeSideBar(
             else EdgeService.SIDELINE_POSITION_Y_LANDSCAPE,
             sidebarPositionY
         )
+        callback.onPositionChanged()
 
         mainScope.launch(Dispatchers.Main) {
             try {

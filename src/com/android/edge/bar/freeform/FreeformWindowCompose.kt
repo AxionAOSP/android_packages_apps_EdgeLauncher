@@ -49,6 +49,8 @@ class FreeformWindowCompose(
 
     private lateinit var textureView: TextureView
 
+    private var destroyed = false
+
     private val windowController = WindowController(context, packageName, targetDisplayId)
 
     private val viewModel = FreeformWindowViewModel(
@@ -161,6 +163,8 @@ class FreeformWindowCompose(
     }
 
     fun destroy(reason: String) {
+        if (destroyed) return
+        destroyed = true
         Log.i(TAG, "destroy called: $reason")
 
         if (::textureView.isInitialized) {

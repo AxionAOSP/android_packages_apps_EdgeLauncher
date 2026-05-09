@@ -19,6 +19,7 @@ import com.android.edge.bar.freeform.FreeformWindowCompose
 import com.android.edge.bar.freeform.FreeformWindowManager
 import com.android.edge.bar.freeform.FreeformTaskStackListener
 
+import android.app.ActivityTaskManager
 import android.app.IActivityManager
 import android.app.Service
 import android.app.UserSwitchObserver
@@ -61,6 +62,7 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
 
     private lateinit var windowManager: WindowManager
     private lateinit var activityManager: IActivityManager
+    private lateinit var activityTaskManager: ActivityTaskManager
     private lateinit var contentResolverRef: ContentResolver
     private lateinit var edgeSideBar: EdgeSideBar
 
@@ -133,6 +135,8 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
         private const val SIDELINE_HEIGHT = 200
         private const val OFFSET_PORTRAIT = 20
         private const val OFFSET_LANDSCAPE = 0
+        private const val MAX_TASKS = 100
+        private const val INVALID_TASK_ID = -1
 
         private const val IDLE_TIMEOUT = 3000L
         private const val ACTIVE_ALPHA = 1.0f
@@ -191,6 +195,7 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
 
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         activityManager = IActivityManager.Stub.asInterface(ServiceManager.getService(Context.ACTIVITY_SERVICE))
+        activityTaskManager = getSystemService(Context.ACTIVITY_TASK_SERVICE) as ActivityTaskManager
         contentResolverRef = applicationContext.contentResolver
         
         freeformWM = FreeformWindowManager.getInstance(this)
@@ -212,6 +217,13 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
                     animateShowSideline()
                 }
                 isSidebarVisible = false
+            }
+
+            override fun onPositionChanged() {
+                if (showSideline && isSidelineVisible) {
+                    updateSidelinePosition()
+                    if (isSidebarVisible) setHiddenSidelineTranslation()
+                }
             }
         })
 
@@ -382,6 +394,13 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
         isSidelineVisible = false
     }
 
+    private fun setHiddenSidelineTranslation() {
+        mainScope.launch {
+            sideLineView.animate().cancel()
+            sideLineView.translationX = sidelinePosX * SIDELINE_WIDTH.toFloat()
+        }
+    }
+
     private fun animateHideSideline() {
         mainScope.launch {
             sideLineView.animate()
@@ -435,7 +454,22 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
              launchIntent?.component?.className
         } ?: return
 
-        val window = FreeformWindowCompose(this, packageName, targetActivity, userId)
+        val taskId = findRunningTaskId(packageName)
+        val window = FreeformWindowCompose(this, packageName, targetActivity, userId, taskId)
+    }
+
+    private fun findRunningTaskId(packageName: String): Int {
+        return try {
+            activityTaskManager.getTasks(MAX_TASKS)
+                .firstOrNull { task ->
+                    task.topActivity?.packageName == packageName ||
+                            task.baseActivity?.packageName == packageName ||
+                            task.baseIntent?.component?.packageName == packageName
+                }
+                ?.taskId ?: INVALID_TASK_ID
+        } catch (e: Exception) {
+            INVALID_TASK_ID
+        }
     }
 
     private fun launchDesktopFreeform(packageName: String, activityName: String? = null,
@@ -455,7 +489,8 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
              launchIntent?.component?.className
         } ?: return
 
-        val window = FreeformWindowCompose(this, packageName, targetActivity, userId,
+        val taskId = findRunningTaskId(packageName)
+        val window = FreeformWindowCompose(this, packageName, targetActivity, userId, taskId,
                 desktopMode = true, targetDisplayId = targetDisplayId)
     }
 }

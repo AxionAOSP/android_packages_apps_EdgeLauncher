@@ -15,7 +15,6 @@
  */
 package com.android.edge.bar.freeform.data
 
-import android.graphics.SurfaceTexture
 import android.view.Surface
 
 interface FreeformRepository {
@@ -35,6 +34,10 @@ interface FreeformRepository {
     suspend fun launchApp(packageName: String, activityName: String, displayId: Int, userId: Int): Result<Unit>
 
     suspend fun moveRootTaskToDisplay(taskId: Int, displayId: Int): Result<Unit>
+
+    suspend fun findRunningTaskId(packageName: String, activityName: String): Int
+
+    suspend fun isTaskOnDisplay(taskId: Int, displayId: Int): Boolean
 
     suspend fun injectBackKey(displayId: Int): Result<Unit>
 

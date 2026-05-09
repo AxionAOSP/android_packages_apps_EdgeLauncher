@@ -299,6 +299,32 @@ class FreeformWindowViewModel(
         this.displaySurface = displaySurface
 
         scope.launch {
+            var attachFinished = false
+            var attachTimeoutJob: Job? = null
+
+            suspend fun finishAttach(displayId: Int, onDisplayReady: (Int) -> Unit) {
+                if (attachFinished) return
+                attachFinished = true
+                attachTimeoutJob?.cancel()
+                stateManager.markSurfaceReady()
+                onDisplayReady(displayId)
+                delay(FreeformConstants.DELAY_APP_LAUNCH_VEIL_MS)
+                stateManager.dispatch(WindowEvent.AppLaunchComplete)
+            }
+
+            fun failAttach(message: String, throwable: Throwable? = null) {
+                if (attachFinished) return
+                attachFinished = true
+                attachTimeoutJob?.cancel()
+                if (throwable != null) {
+                    Log.e(TAG, message, throwable)
+                } else {
+                    Log.e(TAG, message)
+                }
+                stateManager.dispatch(WindowEvent.AppLaunchComplete)
+                handler.post { onWindowDead?.invoke() }
+            }
+
             suspend fun launchAppOnDisplay(displayId: Int, onDisplayReady: (Int) -> Unit) {
                 repository.launchApp(
                     packageName = packageName,
@@ -308,14 +334,20 @@ class FreeformWindowViewModel(
                 ).onSuccess {
                     Log.i(TAG, "App launched: $packageName/$activityName on display $displayId")
                     delay(FreeformConstants.DELAY_SURFACE_SETTLE_MS)
-                    stateManager.markSurfaceReady()
-                    onDisplayReady(displayId)
-                    delay(FreeformConstants.DELAY_APP_LAUNCH_VEIL_MS)
-                    stateManager.dispatch(WindowEvent.AppLaunchComplete)
+                    val launchedTaskId = repository.findRunningTaskId(packageName, activityName)
+                    if (launchedTaskId == -1 || !repository.isTaskOnDisplay(launchedTaskId, displayId)) {
+                        failAttach("App launch did not attach $packageName to display $displayId")
+                        return
+                    }
+                    finishAttach(displayId, onDisplayReady)
                 }.onFailure {
-                    Log.e(TAG, "Failed to launch app", it)
-                    stateManager.dispatch(WindowEvent.AppLaunchComplete)
+                    failAttach("Failed to launch app", it)
                 }
+            }
+
+            attachTimeoutJob = launch {
+                delay(FreeformConstants.DELAY_ATTACH_TIMEOUT_MS)
+                failAttach("Timed out waiting for $packageName to attach to freeform display")
             }
 
             val callback = object : FreeformRepository.FreeformCallback {
@@ -330,10 +362,11 @@ class FreeformWindowViewModel(
                                 .onSuccess {
                                     Log.i(TAG, "Moved task $taskId to display $displayId")
                                     delay(FreeformConstants.DELAY_SURFACE_SETTLE_MS)
-                                    stateManager.markSurfaceReady()
-                                    onDisplayReady(displayId)
-                                    delay(FreeformConstants.DELAY_APP_LAUNCH_VEIL_MS)
-                                    stateManager.dispatch(WindowEvent.AppLaunchComplete)
+                                    if (repository.isTaskOnDisplay(taskId, displayId)) {
+                                        finishAttach(displayId, onDisplayReady)
+                                    } else {
+                                        failAttach("Moved task $taskId did not attach to display $displayId")
+                                    }
                                 }
                                 .onFailure { e ->
                                     Log.e(TAG, "Failed to move task $taskId, falling back to launch", e)
@@ -364,7 +397,7 @@ class FreeformWindowViewModel(
 
             val result = repository.createDisplay(displaySurface, displayWidth, displayHeight, config.densityDpi, callback)
             if (result < 0) {
-                Log.e(TAG, "Failed to create display")
+                failAttach("Failed to create display")
             } else {
                 Log.d(TAG, "Display creation initiated...")
             }

@@ -15,15 +15,12 @@
  */
 package com.android.edge.bar.freeform.data
 
-import android.app.ActivityManager
-import android.app.ActivityOptions
 import android.app.ActivityTaskManager
 import android.app.IFreeformDisplayCallback
 import android.app.IFreeformOverlayManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.SurfaceTexture
 import android.hardware.display.DisplayManager
 import android.hardware.input.IInputManager
 import android.os.IBinder
@@ -43,10 +40,12 @@ class FreeformRepositoryImpl(
     
     companion object {
         private const val TAG = "FreeformRepository"
+        private const val MAX_TASKS = 100
+        private const val INVALID_TASK_ID = -1
     }
     
-    private val activityManager: ActivityManager by lazy {
-        context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    private val activityTaskManager: ActivityTaskManager by lazy {
+        context.getSystemService(Context.ACTIVITY_TASK_SERVICE) as ActivityTaskManager
     }
     
     private val displayManager: DisplayManager by lazy {
@@ -156,11 +155,40 @@ class FreeformRepositoryImpl(
     override suspend fun moveRootTaskToDisplay(taskId: Int, displayId: Int): Result<Unit> = withContext(Dispatchers.IO) {
         return@withContext try {
             ActivityTaskManager.getService().moveRootTaskToDisplay(taskId, displayId)
-            Log.i(TAG, "Moved task $taskId to display $displayId")
+            Log.i(TAG, "Move requested for task $taskId to display $displayId")
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to move task $taskId to display $displayId", e)
             Result.failure(e)
+        }
+    }
+
+    override suspend fun findRunningTaskId(
+        packageName: String,
+        activityName: String
+    ): Int = withContext(Dispatchers.IO) {
+        try {
+            activityTaskManager.getTasks(MAX_TASKS)
+                .firstOrNull { task ->
+                    task.topActivity?.packageName == packageName ||
+                            task.baseActivity?.packageName == packageName ||
+                            task.baseIntent?.component?.packageName == packageName
+                }
+                ?.taskId ?: INVALID_TASK_ID
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to find running task for $packageName/$activityName", e)
+            INVALID_TASK_ID
+        }
+    }
+
+    override suspend fun isTaskOnDisplay(taskId: Int, displayId: Int): Boolean = withContext(Dispatchers.IO) {
+        try {
+            activityTaskManager.getTasks(MAX_TASKS).any { task ->
+                task.taskId == taskId && task.displayId == displayId
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to verify task $taskId display", e)
+            false
         }
     }
     
