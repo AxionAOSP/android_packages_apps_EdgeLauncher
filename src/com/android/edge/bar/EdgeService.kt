@@ -33,7 +33,6 @@ import android.graphics.Rect
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import android.os.Process
 import android.os.ServiceManager
 import android.os.UserHandle
 import android.provider.Settings
@@ -161,8 +160,6 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
-
         userId = UserHandle.myUserId()
 
         if (intent?.action == ACTION_LAUNCH_FREEFORM) {
@@ -192,6 +189,8 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
             stopSelf()
             return START_STICKY
         }
+
+        AppHelper.preloadApps(applicationContext, this)
 
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         activityManager = IActivityManager.Stub.asInterface(ServiceManager.getService(Context.ACTIVITY_SERVICE))
@@ -226,8 +225,6 @@ class EdgeService : Service(), GestureListener.Callback, CoroutineScope {
                 }
             }
         })
-
-        launch { AppHelper.loadAppsCached(this@EdgeService) }
 
         showSideline = getSecureBoolean(SIDELINE, false)
         if (showSideline) showSidelineView()

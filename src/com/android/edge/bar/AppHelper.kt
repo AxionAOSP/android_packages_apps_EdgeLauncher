@@ -34,12 +34,17 @@ import androidx.compose.ui.graphics.painter.Painter
 import com.android.wm.shell.bubbles.IBubbles
 import com.android.wm.shell.shared.bubbles.BubbleAnythingFlagHelper
 import com.android.wm.shell.shared.bubbles.logging.EntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 object AppHelper {
 
+    private val loadLock = Any()
     private val iconCache = ConcurrentHashMap<String, Painter>()
     private var sBubbles: IBubbles? = null
 
@@ -51,17 +56,35 @@ object AppHelper {
 
     fun getCachedAppsOrEmpty(): List<AppInfo> = cachedApps ?: emptyList()
 
+    fun preloadApps(context: Context, scope: CoroutineScope): Job {
+        val appContext = context.applicationContext
+        return scope.launch(Dispatchers.Default) { loadAppsCached(appContext) }
+    }
+
     fun loadAppsCached(context: Context): List<AppInfo> {
-        cachedApps?.let { return it }
-        val loaded = getInstalledApps(context)
-        loaded.forEach { getAppPainter(context, it.packageName, it.icon) }
-        cachedApps = loaded
-        return loaded
+        cachedApps?.takeIf { it.isNotEmpty() }?.let { return it }
+        val appContext = context.applicationContext
+        return synchronized(loadLock) {
+            cachedApps?.takeIf { it.isNotEmpty() }
+                ?: getInstalledApps(appContext).also { loaded ->
+                    if (loaded.isNotEmpty()) {
+                        loaded.forEach { getAppPainter(appContext, it.packageName, it.icon) }
+                        cachedApps = loaded
+                        notifyAppsChanged()
+                    }
+                }
+        }
     }
 
     fun invalidateCache() {
-        cachedApps = null
-        iconCache.clear()
+        synchronized(loadLock) {
+            cachedApps = null
+            iconCache.clear()
+            notifyAppsChanged()
+        }
+    }
+
+    private fun notifyAppsChanged() {
         _version.value = _version.value + 1
     }
 

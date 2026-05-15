@@ -78,6 +78,8 @@ import com.android.edge.bar.AppInfo
 import com.android.edge.bar.MAX_PINNED_APPS
 import com.android.edge.bar.PinnedApps
 import com.android.edge.bar.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun PinnedAppsScreen(
@@ -86,7 +88,9 @@ fun PinnedAppsScreen(
     val context = LocalContext.current
 
     val allApps by produceState(initialValue = emptyList<AppInfo>()) {
-        value = AppHelper.getInstalledApps(context)
+        value = withContext(Dispatchers.Default) {
+            AppHelper.loadAppsCached(context)
+        }
     }
 
     var selectedPackages by remember {
