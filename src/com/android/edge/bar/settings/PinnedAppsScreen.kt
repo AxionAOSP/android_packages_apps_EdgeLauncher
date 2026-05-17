@@ -20,7 +20,6 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -74,6 +73,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.android.axion.compose.scaffold.AxionScaffold
 import com.android.edge.bar.AppHelper
+import com.android.edge.bar.AppIconImage
 import com.android.edge.bar.AppInfo
 import com.android.edge.bar.MAX_PINNED_APPS
 import com.android.edge.bar.PinnedApps
@@ -86,21 +86,21 @@ fun PinnedAppsScreen(
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
+    val appContext = context.applicationContext
 
     val allApps by produceState(initialValue = emptyList<AppInfo>()) {
         value = withContext(Dispatchers.Default) {
-            AppHelper.loadAppsCached(context)
+            AppHelper.loadAppsCached(appContext)
         }
     }
 
-    var selectedPackages by remember {
-        mutableStateOf(PinnedApps.getPinned(context).toSet())
+    val initialSelectedPackages = remember {
+        PinnedApps.getPinned(appContext).toSet()
     }
+    var selectedPackages by remember { mutableStateOf(initialSelectedPackages) }
 
-    val hasChanges by remember(selectedPackages) {
-        derivedStateOf {
-            selectedPackages != PinnedApps.getPinned(context).toSet()
-        }
+    val hasChanges by remember(selectedPackages, initialSelectedPackages) {
+        derivedStateOf { selectedPackages != initialSelectedPackages }
     }
 
     AxionScaffold(
@@ -110,7 +110,7 @@ fun PinnedAppsScreen(
             if (hasChanges) {
                 FilledTonalButton(
                     onClick = {
-                        PinnedApps.savePinned(context, selectedPackages.toList())
+                        PinnedApps.savePinned(appContext, selectedPackages.toList())
                         onBack()
                     },
                     modifier = Modifier.padding(end = 16.dp),
@@ -170,7 +170,11 @@ fun PinnedAppsScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    items(allApps, key = { it.packageName + "/" + it.activityName }) { appInfo ->
+                    items(
+                        items = allApps,
+                        key = { it.iconKey },
+                        contentType = { "app" },
+                    ) { appInfo ->
                         val isSelected = appInfo.packageName in selectedPackages
 
                         ExpressiveAppItem(
@@ -257,7 +261,6 @@ private fun ExpressiveAppItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
@@ -324,10 +327,11 @@ private fun ExpressiveAppItem(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    Image(
-                        painter = AppHelper.getAppPainter(context, appInfo.packageName, appInfo.icon),
+                    AppIconImage(
+                        appInfo = appInfo,
                         contentDescription = appInfo.label,
                         modifier = Modifier.size(40.dp),
+                        cornerRadius = 12.dp,
                     )
                 }
             }

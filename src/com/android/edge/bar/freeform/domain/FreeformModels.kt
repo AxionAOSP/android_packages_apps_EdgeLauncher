@@ -16,6 +16,8 @@
 package com.android.edge.bar.freeform.domain
 
 import com.android.edge.bar.freeform.presentation.WindowState
+import kotlin.math.ceil
+import kotlin.math.roundToInt
 
 object FreeformConstants {
     const val BUBBLE_SIZE_DP = 48
@@ -28,7 +30,7 @@ object FreeformConstants {
     const val DESKTOP_DEFAULT_HEIGHT_DP = 450
     const val DESKTOP_MIN_WIDTH_DP = 300 
     const val DESKTOP_MIN_HEIGHT_DP = 250
-    const val DESKTOP_TITLE_BAR_HEIGHT_DP = 32
+    const val DESKTOP_TITLE_BAR_HEIGHT_DP = 40
     const val DESKTOP_CORNER_RADIUS_DP = 8
     const val DESKTOP_TASKBAR_HEIGHT_DP = 56
     const val DESKTOP_STATUS_BAR_HEIGHT_DP = 32
@@ -42,6 +44,9 @@ object FreeformConstants {
     const val DEFAULT_WIDTH_DP = 220
     const val DEFAULT_HEIGHT_DP = 340
     const val DEFAULT_ASPECT_RATIO = DEFAULT_WIDTH_DP.toFloat() / DEFAULT_HEIGHT_DP.toFloat()
+    const val MIN_WINDOW_ASPECT_RATIO = 0.5f
+    const val MAX_WINDOW_ASPECT_RATIO = 2.0f
+    const val WINDOW_SCREEN_MARGIN_DP = 16
 
     const val REMOVE_PILL_WIDTH_DP = 140
     const val REMOVE_PILL_HEIGHT_DP = 40
@@ -69,39 +74,16 @@ object FreeformConstants {
     const val TITLE_BAR_BUTTON_WIDTH_MIN_DP = 22
     const val TITLE_BAR_BUTTON_WIDTH_MAX_DP = 28
 
-    const val RESIZE_HANDLE_SIZE_DP = 48
-    const val RESIZE_HANDLE_SIZE_MIN_DP = 40
-    const val RESIZE_HANDLE_SIZE_MAX_DP = 56
-    const val RESIZE_HANDLE_CANVAS_SIZE_DP = 32
-    const val RESIZE_HANDLE_CANVAS_MIN_DP = 26
-    const val RESIZE_HANDLE_CANVAS_MAX_DP = 40
-    const val RESIZE_HANDLE_ARM_LENGTH_DP = 28
-    const val RESIZE_HANDLE_ARM_MIN_DP = 22
-    const val RESIZE_HANDLE_ARM_MAX_DP = 34
-    const val RESIZE_HANDLE_STROKE_DP = 3
-    const val RESIZE_HANDLE_STROKE_MIN_DP = 2.5f
-    const val RESIZE_HANDLE_STROKE_MAX_DP = 3.5f
-    const val RESIZE_HANDLE_CORNER_RADIUS_DP = 40
-    const val RESIZE_HANDLE_INSET_DP = 0
-    const val RESIZE_HANDLE_THICKNESS_DP = 24
-    const val RESIZE_HANDLE_LENGTH_DP = 80
-
-    const val RESIZE_HANDLE_BOTTOM_WIDTH_DP = 100
-    const val RESIZE_HANDLE_BOTTOM_WIDTH_MIN_DP = 80
-    const val RESIZE_HANDLE_BOTTOM_WIDTH_MAX_DP = 120
-    const val RESIZE_HANDLE_BOTTOM_HEIGHT_DP = 36
-    const val RESIZE_HANDLE_BOTTOM_INDICATOR_DP = 56
-    const val RESIZE_HANDLE_BOTTOM_INDICATOR_MIN_DP = 48
-    const val RESIZE_HANDLE_BOTTOM_INDICATOR_MAX_DP = 64
-    const val RESIZE_HANDLE_BOTTOM_INDICATOR_HEIGHT_DP = 3
+    const val RESIZE_HANDLE_BOTTOM_WIDTH_DP = 188
+    const val RESIZE_HANDLE_BOTTOM_WIDTH_MIN_DP = 168
+    const val RESIZE_HANDLE_BOTTOM_WIDTH_MAX_DP = 220
+    const val RESIZE_HANDLE_BOTTOM_HEIGHT_DP = 40
 
     const val OVERLAY_TITLE_BAR_HEIGHT_DP = 56
     const val OVERLAY_MENU_BUTTON_SIZE_DP = 36
     const val OVERLAY_PILL_PADDING_DP = 6
     const val OVERLAY_PILL_ICON_SIZE_DP = 32
 
-    const val RESIZE_HANDLE_BOTTOM_INSET_DP = -16
-    
     fun createDefaultWindowState(width: Int, height: Int, x: Float = 0f, y: Float = 0f): WindowState {
         return WindowState(
             x = x,
@@ -112,4 +94,37 @@ object FreeformConstants {
             savedHeight = height
         )
     }
+}
+
+fun coerceFreeformWindowSize(
+    width: Int,
+    height: Int,
+    minWidth: Int,
+    minHeight: Int,
+    maxWidth: Int,
+    maxHeight: Int,
+    minAspectRatio: Float = FreeformConstants.MIN_WINDOW_ASPECT_RATIO,
+    maxAspectRatio: Float = FreeformConstants.MAX_WINDOW_ASPECT_RATIO
+): Pair<Int, Int> {
+    var coercedWidth = width.coerceIn(minWidth, maxWidth)
+    var coercedHeight = height.coerceIn(minHeight, maxHeight)
+
+    val aspectRatio = coercedWidth.toFloat() / coercedHeight.toFloat()
+    if (aspectRatio < minAspectRatio) {
+        val expandedWidth = ceil(coercedHeight * minAspectRatio).toInt()
+        if (expandedWidth <= maxWidth) {
+            coercedWidth = expandedWidth
+        } else {
+            coercedHeight = (coercedWidth / minAspectRatio).roundToInt()
+        }
+    } else if (aspectRatio > maxAspectRatio) {
+        val expandedHeight = ceil(coercedWidth / maxAspectRatio).toInt()
+        if (expandedHeight <= maxHeight) {
+            coercedHeight = expandedHeight
+        } else {
+            coercedWidth = (coercedHeight * maxAspectRatio).roundToInt()
+        }
+    }
+
+    return coercedWidth.coerceIn(minWidth, maxWidth) to coercedHeight.coerceIn(minHeight, maxHeight)
 }

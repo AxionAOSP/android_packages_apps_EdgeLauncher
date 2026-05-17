@@ -250,6 +250,14 @@ class FreeformRepositoryImpl(
             context.packageManager.getApplicationIcon(packageName).toBitmap()
         }
     }
+
+    override suspend fun getAppLabel(packageName: String): Result<String> = withContext(Dispatchers.IO) {
+        runCatching {
+            val packageManager = context.packageManager
+            val appInfo = packageManager.getApplicationInfo(packageName, 0)
+            packageManager.getApplicationLabel(appInfo).toString()
+        }
+    }
     
 
     private fun getRefreshRate(id: Int): Float {

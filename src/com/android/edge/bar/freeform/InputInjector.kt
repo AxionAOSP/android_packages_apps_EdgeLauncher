@@ -69,8 +69,8 @@ class InputInjector(private val context: Context) {
     }
     
     fun setScale(viewWidth: Int, viewHeight: Int, displayWidth: Int, displayHeight: Int) {
-        this.scaleX = displayWidth.toFloat() / viewWidth
-        this.scaleY = displayHeight.toFloat() / viewHeight
+        this.scaleX = displayWidth.toFloat() / viewWidth.coerceAtLeast(1)
+        this.scaleY = displayHeight.toFloat() / viewHeight.coerceAtLeast(1)
     }
 
     fun injectTouchEvent(event: MotionEvent): Boolean {

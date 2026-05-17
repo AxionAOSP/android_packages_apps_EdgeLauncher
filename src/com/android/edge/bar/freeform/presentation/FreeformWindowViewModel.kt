@@ -24,7 +24,6 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.*
-import com.android.axion.kotlin.math.dpToPx
 import com.android.edge.bar.freeform.*
 import com.android.edge.bar.freeform.data.*
 import com.android.edge.bar.freeform.domain.FreeformConstants
@@ -122,7 +121,12 @@ class FreeformWindowViewModel(
             val displayId = currentState.displayId
             if (displayId != Display.INVALID_DISPLAY && displayId > 0) {
                 if (event.actionMasked == MotionEvent.ACTION_DOWN) {
-                    inputInjector.setScale(v.width, v.height, currentState.width, currentState.height)
+                    val (displayWidth, displayHeight) = stateManager.getAppSurfaceDimensions(
+                        windowWidth = currentState.width,
+                        windowHeight = currentState.height,
+                        mode = currentState.mode
+                    )
+                    inputInjector.setScale(v.width, v.height, displayWidth, displayHeight)
                 }
 
                 val result = inputInjector.injectTouchEvent(event)
@@ -165,11 +169,15 @@ class FreeformWindowViewModel(
         val targetDensity = config.densityDpi
 
         scope.launch {
-            textureViewRef?.surfaceTexture?.setDefaultBufferSize(width, height)
+            textureViewRef?.let { view ->
+                view.surfaceTexture?.setDefaultBufferSize(width, height)
+                inputInjector.setScale(view.width, view.height, width, height)
+            }
             val result = repository.resizeDisplay(token, width, height, targetDensity)
             result.onSuccess { 
+                val latestState = stateManager.state.value
                 Log.i(TAG, "Virtual display resized to ${width}x${height} at ${targetDensity}dpi")
-                saveWindowState(width, height, currentState.isLandscape)
+                saveWindowState(latestState.width, latestState.height, latestState.isLandscape)
             }.onFailure { Log.e(TAG, "Failed to resize virtual display", it) }
         }
     }
@@ -259,31 +267,36 @@ class FreeformWindowViewModel(
         var isLandscape = isLandscapeOrientation(orientation)
         var isPortrait = isPortraitOrientation(orientation)
         
-        var displayWidth = config.width
-        var displayHeight = config.height
+        var windowWidth = config.width
+        var windowHeight = config.height
         
         val persisted = restoreWindowState()
         if (persisted != null) {
-            displayWidth = persisted.width
-            displayHeight = persisted.height
+            windowWidth = persisted.width
+            windowHeight = persisted.height
             isLandscape = persisted.isLandscape
-            Log.i(TAG, "Restored persisted state: ${displayWidth}x${displayHeight}, isLandscape=$isLandscape")
+            Log.i(TAG, "Restored persisted state: ${windowWidth}x${windowHeight}, isLandscape=$isLandscape")
         } else {
             Log.i(TAG, "Resolved orientation: $orientation (landscape=$isLandscape, portrait=$isPortrait) for $packageName/$activityName")
-            if (isLandscape && displayWidth < displayHeight) {
-                val temp = displayHeight
-                displayWidth = (displayHeight * 1.3f).toInt() 
-                displayHeight = temp.coerceAtMost(config.width)
-                Log.i(TAG, "Landscape app detected, adjusted dimensions to ${displayWidth}x${displayHeight}")
-            } else if (!isLandscape && displayWidth > displayHeight) {
-                val temp = displayWidth
-                displayWidth = displayHeight
-                displayHeight = temp
-                Log.i(TAG, "Portrait adjustment, swapped to ${displayWidth}x${displayHeight}")
+            if (isLandscape && windowWidth < windowHeight) {
+                val temp = windowHeight
+                windowWidth = (windowHeight * 1.3f).toInt()
+                windowHeight = temp.coerceAtMost(config.width)
+                Log.i(TAG, "Landscape app detected, adjusted dimensions to ${windowWidth}x${windowHeight}")
+            } else if (!isLandscape && windowWidth > windowHeight) {
+                val temp = windowWidth
+                windowWidth = windowHeight
+                windowHeight = temp
+                Log.i(TAG, "Portrait adjustment, swapped to ${windowWidth}x${windowHeight}")
             }
         }
         
-        saveWindowState(displayWidth, displayHeight, isLandscape)
+        stateManager.restoreWindowSize(windowWidth, windowHeight, isLandscape)
+        val restoredState = stateManager.state.value
+        windowWidth = restoredState.width
+        windowHeight = restoredState.height
+
+        saveWindowState(windowWidth, windowHeight, isLandscape)
         
         if (isLandscape) {
             stateManager.onOrientationChanged(true)
@@ -291,9 +304,20 @@ class FreeformWindowViewModel(
              stateManager.onOrientationChanged(false)
         }
         
-        Log.i(TAG, "onSurfaceTextureAvailable: final dimensions ${displayWidth}x${displayHeight}, isLandscape=$isLandscape")
+        val (displayWidth, displayHeight) = stateManager.getAppSurfaceDimensions(
+            windowWidth = windowWidth,
+            windowHeight = windowHeight,
+            mode = restoredState.mode
+        )
+
+        Log.i(
+            TAG,
+            "onSurfaceTextureAvailable: window=${windowWidth}x${windowHeight}, " +
+                "display=${displayWidth}x${displayHeight}, isLandscape=$isLandscape"
+        )
 
         surface.setDefaultBufferSize(displayWidth, displayHeight)
+        inputInjector.setScale(width, height, displayWidth, displayHeight)
 
         val displaySurface = Surface(surface)
         this.displaySurface = displaySurface

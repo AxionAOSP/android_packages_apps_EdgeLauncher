@@ -15,7 +15,6 @@
  */
 package com.android.edge.bar
 
-import java.util.concurrent.ConcurrentHashMap
 import android.app.ActivityManager
 import android.app.FreeformLauncher
 import android.content.ComponentName
@@ -38,18 +37,24 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.concurrent.ConcurrentHashMap
 
 object AppHelper {
 
     private val loadLock = Any()
+    private val iconLoadLocks = ConcurrentHashMap<String, Any>()
     private val iconCache = ConcurrentHashMap<String, Painter>()
     private var sBubbles: IBubbles? = null
 
     @Volatile
     private var cachedApps: List<AppInfo>? = null
+
+    @Volatile
+    private var preloadJob: Job? = null
 
     private val _version = MutableStateFlow(0)
     val version: StateFlow<Int> = _version.asStateFlow()
@@ -58,28 +63,31 @@ object AppHelper {
 
     fun preloadApps(context: Context, scope: CoroutineScope): Job {
         val appContext = context.applicationContext
-        return scope.launch(Dispatchers.Default) { loadAppsCached(appContext) }
+        preloadJob?.takeIf { it.isActive }?.let { return it }
+        return scope.launch(Dispatchers.Default) {
+            preloadAppIcons(appContext, loadAppsCached(appContext))
+        }.also { preloadJob = it }
     }
 
     fun loadAppsCached(context: Context): List<AppInfo> {
-        cachedApps?.takeIf { it.isNotEmpty() }?.let { return it }
+        cachedApps?.let { return it }
         val appContext = context.applicationContext
         return synchronized(loadLock) {
-            cachedApps?.takeIf { it.isNotEmpty() }
+            cachedApps
                 ?: getInstalledApps(appContext).also { loaded ->
-                    if (loaded.isNotEmpty()) {
-                        loaded.forEach { getAppPainter(appContext, it.packageName, it.icon) }
-                        cachedApps = loaded
-                        notifyAppsChanged()
-                    }
+                    cachedApps = loaded
+                    notifyAppsChanged()
                 }
         }
     }
 
     fun invalidateCache() {
         synchronized(loadLock) {
+            preloadJob?.cancel()
+            preloadJob = null
             cachedApps = null
             iconCache.clear()
+            iconLoadLocks.clear()
             notifyAppsChanged()
         }
     }
@@ -112,7 +120,6 @@ object AppHelper {
         return resolveInfos.map {
             AppInfo(
                 label = it.loadLabel(pm).toString(),
-                icon = it.activityInfo.loadIcon(pm),
                 packageName = it.activityInfo.packageName,
                 activityName = it.activityInfo.name
             )
@@ -166,27 +173,89 @@ object AppHelper {
         }
     }
 
-    fun getAppPainter(context: Context, packageName: String, icon: Drawable?): Painter {
-        return iconCache.getOrPut(packageName) {
-            val drawable = icon ?: context.packageManager.getDefaultActivityIcon()
-            try {
-                val size = 96
-                val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-                val canvas = Canvas(bitmap)
-                drawable.setBounds(0, 0, size, size)
-                drawable.draw(canvas)
-                BitmapPainter(bitmap.asImageBitmap())
-            } catch (e: Exception) {
-                val fallbackBitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-                BitmapPainter(fallbackBitmap.asImageBitmap())
+    fun getCachedAppPainter(appInfo: AppInfo): Painter? = iconCache[appInfo.iconKey]
+
+    fun getAppPainter(context: Context, appInfo: AppInfo): Painter {
+        return getOrCreateAppPainter(
+            context = context,
+            cacheKey = appInfo.iconKey,
+            icon = loadActivityIcon(context, appInfo)
+        )
+    }
+
+    private suspend fun preloadAppIcons(context: Context, apps: List<AppInfo>) {
+        var loadedAny = false
+        apps.forEachIndexed { index, app ->
+            if (getCachedAppPainter(app) == null) {
+                getAppPainter(context, app)
+                loadedAny = true
+            }
+            if (index % ICON_PRELOAD_YIELD_INTERVAL == 0) {
+                yield()
+            }
+        }
+        if (loadedAny) notifyAppsChanged()
+    }
+
+    private fun getOrCreateAppPainter(
+        context: Context,
+        cacheKey: String,
+        icon: Drawable?
+    ): Painter {
+        iconCache[cacheKey]?.let { return it }
+
+        val lock = iconLoadLocks.getOrPut(cacheKey) { Any() }
+        return synchronized(lock) {
+            iconCache[cacheKey] ?: createIconPainter(context, icon).also {
+                iconCache[cacheKey] = it
+                iconLoadLocks.remove(cacheKey)
             }
         }
     }
+
+    private fun loadActivityIcon(context: Context, appInfo: AppInfo): Drawable? {
+        return try {
+            context.packageManager.getActivityIcon(
+                ComponentName(appInfo.packageName, appInfo.activityName)
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun createIconPainter(context: Context, icon: Drawable?): Painter {
+        val drawable = icon?.constantState?.newDrawable(context.resources)?.mutate()
+            ?: icon?.mutate()
+            ?: context.packageManager.getDefaultActivityIcon()
+        return try {
+            val bitmap = Bitmap.createBitmap(
+                ICON_BITMAP_SIZE_PX,
+                ICON_BITMAP_SIZE_PX,
+                Bitmap.Config.ARGB_8888
+            )
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, ICON_BITMAP_SIZE_PX, ICON_BITMAP_SIZE_PX)
+            drawable.draw(canvas)
+            BitmapPainter(bitmap.asImageBitmap())
+        } catch (e: Exception) {
+            val fallbackBitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+            BitmapPainter(fallbackBitmap.asImageBitmap())
+        }
+    }
+
+    private const val ICON_BITMAP_SIZE_PX = 96
+    private const val ICON_PRELOAD_YIELD_INTERVAL = 8
 }
 
 data class AppInfo(
     val label: String,
-    val icon: Drawable,
     val packageName: String,
     val activityName: String = ""
-)
+) {
+    val iconKey: String
+        get() = if (activityName.isNotBlank()) {
+            "$packageName/$activityName"
+        } else {
+            packageName
+        }
+}

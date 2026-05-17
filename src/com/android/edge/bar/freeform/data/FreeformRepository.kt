@@ -47,6 +47,8 @@ interface FreeformRepository {
 
     suspend fun getAppIcon(packageName: String): Result<android.graphics.Bitmap>
 
+    suspend fun getAppLabel(packageName: String): Result<String>
+
     data class DisplayInfo(
         val appToken: android.os.IBinder,
         val displayId: Int

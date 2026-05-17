@@ -20,12 +20,11 @@ import android.graphics.Bitmap
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.Log
-import android.view.WindowManager
 import com.android.edge.bar.freeform.FreeformWindowManager
 import com.android.edge.bar.freeform.WindowSnapping
 import com.android.edge.bar.freeform.data.FreeformRepository
-import com.android.edge.bar.freeform.data.FreeformRepositoryImpl
 import com.android.edge.bar.freeform.domain.FreeformConstants
+import com.android.edge.bar.freeform.domain.coerceFreeformWindowSize
 import com.android.axion.kotlin.math.dpToPx
 import com.android.internal.R as InternalR
 import kotlinx.coroutines.*
@@ -43,7 +42,7 @@ sealed class WindowEvent {
     data class Drag(val deltaX: Float, val deltaY: Float) : WindowEvent()
     object DragEnd : WindowEvent()
 
-    object Minimize : WindowEvent()
+    data class Minimize(val preferCurrentPosition: Boolean = false) : WindowEvent()
     object BubbleTap : WindowEvent()
 
     object ResizeStart : WindowEvent()
@@ -57,6 +56,7 @@ sealed class WindowEvent {
     object ResizeToHalfRight : WindowEvent()
 
     data class IconLoaded(val icon: Bitmap) : WindowEvent()
+    data class AppNameLoaded(val name: String) : WindowEvent()
 
     data class OrientationChanged(val isLandscape: Boolean) : WindowEvent()
 }
@@ -94,6 +94,7 @@ data class WindowState(
     val savedBubbleY: Float = -1f,
     
     val appIcon: Bitmap? = null,
+    val appName: String = "",
     val isResizing: Boolean = false,
     
     val snapPosition: WindowSnapping.SnapPosition? = null,
@@ -131,6 +132,7 @@ class FreeformStateManager(
     private val surfaceEventsManager = SurfaceEventsManager(scope)
 
     private val eventFlow = MutableSharedFlow<WindowEvent>(extraBufferCapacity = 64)
+    private var acceptsDisplayPauseCallback = false
 
     private val _state = MutableStateFlow(WindowState(
         x = initialX,
@@ -139,7 +141,8 @@ class FreeformStateManager(
         height = initialHeight,
         mode = initialMode,
         savedWidth = initialWidth,
-        savedHeight = initialHeight
+        savedHeight = initialHeight,
+        appName = windowPackageName
     ))
     val state: StateFlow<WindowState> = _state.asStateFlow()
     
@@ -147,11 +150,28 @@ class FreeformStateManager(
     
     val packageName: String get() = windowPackageName
     
-    private fun getDisplayDimensions(): Pair<Int, Int> {
-        val displayWidth = currentState.width
-        val displayHeight = currentState.height
-        return displayWidth to displayHeight
+    private val appSurfaceVerticalInset: Int
+        get() = context.dpToPx(
+            FreeformConstants.DESKTOP_TITLE_BAR_HEIGHT_DP +
+                FreeformConstants.RESIZE_HANDLE_BOTTOM_HEIGHT_DP
+        )
+
+    fun getAppSurfaceDimensions(
+        windowWidth: Int = currentState.width,
+        windowHeight: Int = currentState.height,
+        mode: WindowMode = currentState.mode
+    ): Pair<Int, Int> {
+        val surfaceWidth = windowWidth.coerceAtLeast(1)
+        val surfaceHeight = if (mode == WindowMode.BUBBLE) {
+            windowHeight
+        } else {
+            windowHeight - appSurfaceVerticalInset
+        }.coerceAtLeast(1)
+
+        return surfaceWidth to surfaceHeight
     }
+
+    private fun getDisplayDimensions(): Pair<Int, Int> = getAppSurfaceDimensions()
     
     init {
         scope.launch {
@@ -195,7 +215,7 @@ class FreeformStateManager(
             is WindowEvent.Drag -> handleDrag(event.deltaX, event.deltaY)
             is WindowEvent.DragEnd -> handleDragEnd()
             
-            is WindowEvent.Minimize -> handleMinimize()
+            is WindowEvent.Minimize -> handleMinimize(event.preferCurrentPosition)
             is WindowEvent.BubbleTap -> handleBubbleExpand()
             
             is WindowEvent.ResizeStart -> handleResizeStart()
@@ -208,6 +228,7 @@ class FreeformStateManager(
             is WindowEvent.ResizeToHalfRight -> handleResizeToHalf(isLeft = false)
 
             is WindowEvent.IconLoaded -> updateState { copy(appIcon = event.icon) }
+            is WindowEvent.AppNameLoaded -> updateState { copy(appName = event.name) }
             
             is WindowEvent.OrientationChanged -> handleOrientationChanged(event.isLandscape)
         }
@@ -241,11 +262,15 @@ class FreeformStateManager(
         
         val displayId = currentState.displayId
         if (displayId >= 0) {
+            acceptsDisplayPauseCallback = true
             repository.pauseDisplay(displayId)
         }
         
-        val newWidth = currentState.height
-        val newHeight = currentState.width
+        val (newWidth, newHeight) = coerceWindowSizeForMode(
+            currentState.height,
+            currentState.width,
+            isLandscape
+        )
         
         updateState {
             copy(
@@ -257,6 +282,7 @@ class FreeformStateManager(
         }
         
         if (displayId >= 0) {
+            acceptsDisplayPauseCallback = false
             repository.resumeDisplay(displayId)
         }
         
@@ -269,12 +295,18 @@ class FreeformStateManager(
     }
     
     private fun handleDisplayPaused() {
+        if (!acceptsDisplayPauseCallback) {
+            Log.d(TAG, "Ignoring stale display pause callback in mode=${currentState.mode}")
+            return
+        }
+        acceptsDisplayPauseCallback = false
         surfaceEventsManager.dispatch(SurfaceEvent.ShowVeilRequested(VeilReason.DISPLAY_PAUSED))
         surfaceEventsManager.dispatch(SurfaceEvent.OperationStarted("display_paused"))
         updateState { copy(isPaused = true) }
     }
     
     private fun handleDisplayResumed() {
+        acceptsDisplayPauseCallback = false
         updateState { copy(isPaused = false) }
     }
     
@@ -302,15 +334,17 @@ class FreeformStateManager(
     private fun handleDrag(deltaX: Float, deltaY: Float) {
         val minY = statusBarHeight.toFloat()
         updateState {
+            val maxY = maxOf(minY, (screenHeight - height).toFloat())
+            val maxBubbleX = maxOf(0f, (screenWidth - width).toFloat())
             when (mode) {
                 WindowMode.BUBBLE -> copy(
-                    x = (x + deltaX).coerceIn(0f, (screenWidth - width).toFloat()),
-                    y = (y + deltaY).coerceIn(minY, (screenHeight - height).toFloat()),
+                    x = (x + deltaX).coerceIn(0f, maxBubbleX),
+                    y = (y + deltaY).coerceIn(minY, maxY),
                     snapPosition = null
                 )
                 WindowMode.NORMAL, WindowMode.DESKTOP -> copy(
                     x = x + deltaX,
-                    y = (y + deltaY).coerceIn(minY, (screenHeight - height).toFloat()),
+                    y = (y + deltaY).coerceIn(minY, maxY),
                     snapPosition = null
                 )
             }
@@ -323,7 +357,7 @@ class FreeformStateManager(
             val isOffLeftEdge = currentState.x < -threshold
 
             if ((isOffRightEdge || isOffLeftEdge) && !currentState.isResizing) {
-                scope.launch { handleMinimize() }
+                dispatch(WindowEvent.Minimize(preferCurrentPosition = true))
             }
         }
     }
@@ -335,9 +369,9 @@ class FreeformStateManager(
         }
     }
     
-    private suspend fun handleMinimize() {
-        if (currentState.mode == WindowMode.DESKTOP) {
-            Log.d(TAG, "Desktop mode window - minimize ignored (no bubble mode)")
+    private suspend fun handleMinimize(preferCurrentPosition: Boolean) {
+        if (currentState.mode != WindowMode.NORMAL) {
+            Log.d(TAG, "Minimize ignored for mode=${currentState.mode}")
             return
         }
 
@@ -345,12 +379,28 @@ class FreeformStateManager(
         val bubbleSizePx = context.dpToPx(FreeformConstants.BUBBLE_SIZE_DP)
         val topOffset = statusBarHeight
         val slotSpacing = context.dpToPx(8)
-        val edgeMargin = context.dpToPx(16)
+        val edgeMargin = context.dpToPx(FreeformConstants.WINDOW_SCREEN_MARGIN_DP)
+        val safeBottom = context.dpToPx(FreeformConstants.SAFE_ZONE_BOTTOM_DP)
+        val maxBubbleY = maxOf(
+            topOffset.toFloat(),
+            (screenHeight - safeBottom - bubbleSizePx).toFloat()
+        )
 
         val bubbleX: Float
         val bubbleY: Float
 
-        if (currentState.savedBubbleX >= 0f && currentState.savedBubbleY >= statusBarHeight.toFloat()) {
+        if (preferCurrentPosition) {
+            val windowCenterX = currentState.x + currentState.width / 2f
+            val windowCenterY = currentState.y + currentState.height / 2f
+
+            bubbleX = if (windowCenterX < screenWidth / 2f) {
+                edgeMargin.toFloat()
+            } else {
+                (screenWidth - bubbleSizePx - edgeMargin).toFloat()
+            }
+            bubbleY = (windowCenterY - bubbleSizePx / 2f)
+                .coerceIn(topOffset.toFloat(), maxBubbleY)
+        } else if (currentState.savedBubbleX >= 0f && currentState.savedBubbleY >= statusBarHeight.toFloat()) {
             bubbleX = currentState.savedBubbleX
             bubbleY = currentState.savedBubbleY
         } else {
@@ -374,21 +424,25 @@ class FreeformStateManager(
 
         val displayId = currentState.displayId
         if (displayId >= 0) {
+            acceptsDisplayPauseCallback = true
             repository.pauseDisplay(displayId)
         }
     }
     
     private suspend fun handleBubbleExpand() {
+        acceptsDisplayPauseCallback = false
         freeformWindowManager.releaseBubbleSlot(windowPackageName)
 
-        val targetWidth = currentState.savedWidth
-        val targetHeight = currentState.savedHeight
+        val (targetWidth, targetHeight) = coerceWindowSizeForMode(
+            currentState.savedWidth,
+            currentState.savedHeight
+        )
         val targetX = currentState.savedX
         val targetY = currentState.savedY
 
         val safeBottom = context.dpToPx(FreeformConstants.SAFE_ZONE_BOTTOM_DP)
         val minY = statusBarHeight.toFloat()
-        val maxY = (screenHeight - safeBottom - 48).toFloat()
+        val maxY = maxOf(minY, (screenHeight - safeBottom - 48).toFloat())
 
         val clampedY = targetY.coerceIn(minY, maxY)
         val halfWidth = targetWidth / 2f
@@ -436,33 +490,49 @@ class FreeformStateManager(
         
         val displayId = currentState.displayId
         if (displayId >= 0) {
+            acceptsDisplayPauseCallback = true
             repository.pauseDisplay(displayId)
         }
 
         updateState { copy(isPaused = true) }
     }
     
-    private fun handleResize(newWidth: Int, newHeight: Int, newX: Float) {
-        var width: Int
-        var height: Int
-
+    private fun coerceWindowSizeForMode(
+        newWidth: Int,
+        newHeight: Int,
+        isLandscape: Boolean = currentState.isLandscape
+    ): Pair<Int, Int> {
         if (currentState.mode == WindowMode.DESKTOP) {
             val minWidth = context.dpToPx(FreeformConstants.DESKTOP_MIN_WIDTH_DP)
             val minHeight = context.dpToPx(FreeformConstants.DESKTOP_MIN_HEIGHT_DP)
             val taskbarHeight = context.dpToPx(FreeformConstants.DESKTOP_TASKBAR_HEIGHT_DP)
 
-            val maxWidth = screenWidth
-            val maxHeight = screenHeight - taskbarHeight
+            val maxWidth = screenWidth.coerceAtLeast(minWidth)
+            val maxHeight = (screenHeight - taskbarHeight).coerceAtLeast(minHeight)
 
-            width = newWidth.coerceIn(minWidth, maxWidth)
-            height = newHeight.coerceIn(minHeight, maxHeight)
-        } else {
-            val baseMinWidth = context.dpToPx(FreeformConstants.MIN_WINDOW_WIDTH_DP)
-            val baseMinHeight = context.dpToPx(FreeformConstants.MIN_WINDOW_HEIGHT_DP.toInt())
-            val minDimension = Math.min(baseMinWidth, baseMinHeight)
-            width = newWidth.coerceAtLeast(minDimension)
-            height = newHeight.coerceAtLeast(minDimension)
+            return newWidth.coerceIn(minWidth, maxWidth) to newHeight.coerceIn(minHeight, maxHeight)
         }
+
+        val baseMinWidth = context.dpToPx(FreeformConstants.MIN_WINDOW_WIDTH_DP)
+        val baseMinHeight = context.dpToPx(FreeformConstants.MIN_WINDOW_HEIGHT_DP.toInt())
+        val minWidth = if (isLandscape) baseMinHeight else baseMinWidth
+        val minHeight = if (isLandscape) baseMinWidth else baseMinHeight
+        val margin = context.dpToPx(FreeformConstants.WINDOW_SCREEN_MARGIN_DP)
+        val maxWidth = (screenWidth - margin * 2).coerceAtLeast(minWidth)
+        val maxHeight = (screenHeight - statusBarHeight - margin).coerceAtLeast(minHeight)
+
+        return coerceFreeformWindowSize(
+            newWidth,
+            newHeight,
+            minWidth,
+            minHeight,
+            maxWidth,
+            maxHeight
+        )
+    }
+
+    private fun handleResize(newWidth: Int, newHeight: Int, newX: Float) {
+        val (width, height) = coerceWindowSizeForMode(newWidth, newHeight)
 
         if (newX.isNaN()) {
             updateState { copy(width = width, height = height) }
@@ -483,6 +553,7 @@ class FreeformStateManager(
         val displayId = currentState.displayId
 
         if (displayId >= 0) {
+            acceptsDisplayPauseCallback = false
             repository.resumeDisplay(displayId)
         }
 
@@ -502,6 +573,7 @@ class FreeformStateManager(
         
         val displayId = currentState.displayId
         if (displayId >= 0) {
+            acceptsDisplayPauseCallback = true
             repository.pauseDisplay(displayId)
         }
         
@@ -535,6 +607,7 @@ class FreeformStateManager(
         }
         
         if (displayId >= 0) {
+            acceptsDisplayPauseCallback = false
             repository.resumeDisplay(displayId)
         }
         
@@ -554,6 +627,7 @@ class FreeformStateManager(
 
         val displayId = currentState.displayId
         if (displayId >= 0) {
+            acceptsDisplayPauseCallback = true
             repository.pauseDisplay(displayId)
         }
 
@@ -575,6 +649,7 @@ class FreeformStateManager(
         }
 
         if (displayId >= 0) {
+            acceptsDisplayPauseCallback = false
             repository.resumeDisplay(displayId)
         }
 
@@ -594,6 +669,7 @@ class FreeformStateManager(
 
         val displayId = currentState.displayId
         if (displayId >= 0) {
+            acceptsDisplayPauseCallback = true
             repository.pauseDisplay(displayId)
         }
 
@@ -615,6 +691,7 @@ class FreeformStateManager(
         }
 
         if (displayId >= 0) {
+            acceptsDisplayPauseCallback = false
             repository.resumeDisplay(displayId)
         }
 
@@ -645,7 +722,7 @@ class FreeformStateManager(
         val safeEdge = context.dpToPx(FreeformConstants.SAFE_ZONE_EDGE_DP)
         
         val minY = safeTop.toFloat()
-        val maxY = (screenHeight - safeBottom - bubbleSize).toFloat()
+        val maxY = maxOf(minY, (screenHeight - safeBottom - bubbleSize).toFloat())
         val clampedY = currentState.y.coerceIn(minY, maxY)
         
         val centerX = currentState.x + bubbleSize / 2f
@@ -664,7 +741,7 @@ class FreeformStateManager(
         val safeBottom = context.dpToPx(FreeformConstants.SAFE_ZONE_BOTTOM_DP)
         
         val minY = safeTop.toFloat()
-        val maxY = (screenHeight - safeBottom - 48).toFloat()
+        val maxY = maxOf(minY, (screenHeight - safeBottom - 48).toFloat())
         val clampedY = currentState.y.coerceIn(minY, maxY)
         
         val halfWidth = currentState.width / 2f
@@ -681,6 +758,8 @@ class FreeformStateManager(
         scope.launch {
             repository.getAppIcon(windowPackageName)
                 .onSuccess { dispatch(WindowEvent.IconLoaded(it)) }
+            repository.getAppLabel(windowPackageName)
+                .onSuccess { dispatch(WindowEvent.AppNameLoaded(it)) }
         }
     }
     
@@ -699,7 +778,7 @@ class FreeformStateManager(
     }
     
     fun onMinimize() {
-        dispatch(WindowEvent.Minimize)
+        dispatch(WindowEvent.Minimize())
     }
     
     fun onBubbleTap() {
@@ -716,6 +795,19 @@ class FreeformStateManager(
 
     fun onResizeWithPosition(width: Int, height: Int, x: Float) {
         dispatch(WindowEvent.Resize(width, height, x))
+    }
+
+    fun restoreWindowSize(width: Int, height: Int, isLandscape: Boolean) {
+        val (coercedWidth, coercedHeight) = coerceWindowSizeForMode(width, height, isLandscape)
+        updateState {
+            copy(
+                width = coercedWidth,
+                height = coercedHeight,
+                savedWidth = coercedWidth,
+                savedHeight = coercedHeight,
+                isLandscape = isLandscape
+            )
+        }
     }
     
     fun onResizeEnd() {
@@ -757,7 +849,21 @@ class FreeformStateManager(
         scope.launch {
             when (currentState.mode) {
                 WindowMode.BUBBLE -> snapBubbleToSafeZone()
-                WindowMode.NORMAL, WindowMode.DESKTOP -> clampWindowToSafeZone()
+                WindowMode.NORMAL, WindowMode.DESKTOP -> {
+                    val (coercedWidth, coercedHeight) = coerceWindowSizeForMode(
+                        currentState.width,
+                        currentState.height
+                    )
+                    updateState {
+                        copy(
+                            width = coercedWidth,
+                            height = coercedHeight,
+                            savedWidth = coercedWidth,
+                            savedHeight = coercedHeight
+                        )
+                    }
+                    clampWindowToSafeZone()
+                }
             }
         }
     }

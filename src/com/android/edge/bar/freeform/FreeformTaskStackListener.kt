@@ -93,11 +93,20 @@ class FreeformTaskStackListener(
 
     override fun onTaskMovedToFront(taskInfo: ActivityManager.RunningTaskInfo?) {
         super.onTaskMovedToFront(taskInfo)
-        taskInfo?.baseActivity?.packageName?.let { packageName ->
-            if (windowManager.hasWindow(packageName)) {
-                Log.d(TAG, "Freeform window task moved to front: $packageName")
-                windowManager.bringToFront(packageName)
-            }
+        val task = taskInfo ?: return
+        val packageName = task.topActivity?.packageName ?: task.baseActivity?.packageName ?: return
+        val window = windowManager.getWindow(packageName) ?: return
+        val freeformDisplayId = window.stateManager.state.value.displayId
+
+        if (freeformDisplayId >= 0 && task.displayId != freeformDisplayId) {
+            Log.i(
+                TAG,
+                "Closing stale freeform window for $packageName: task moved to display ${task.displayId}, freeform display is $freeformDisplayId"
+            )
+            windowManager.closeWindow(packageName)
+        } else {
+            Log.d(TAG, "Freeform window task moved to front: $packageName")
+            windowManager.bringToFront(packageName)
         }
     }
 

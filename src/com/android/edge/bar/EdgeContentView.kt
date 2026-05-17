@@ -118,6 +118,7 @@ fun EdgeContentView(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val appContext = context.applicationContext
     val coroutineScope = rememberCoroutineScope()
     val config = LocalConfiguration.current
 
@@ -136,12 +137,14 @@ fun EdgeContentView(
         key1 = version,
     ) {
         value = withContext(Dispatchers.Default) {
-            AppHelper.loadAppsCached(context)
+            AppHelper.loadAppsCached(appContext)
         }
     }
 
     val pinnedApps by produceState(initialValue = emptyList<AppInfo>(), key1 = allApps) {
-        val pinnedPkgs = PinnedApps.getPinned(context)
+        val pinnedPkgs = withContext(Dispatchers.Default) {
+            PinnedApps.getPinned(appContext).toSet()
+        }
         value = allApps.filter { it.packageName in pinnedPkgs }.take(MAX_PINNED_APPS)
     }
 
@@ -329,7 +332,6 @@ private fun ContentScope.AllAppsCard(
     onAppClick: (packageName: String, activityName: String) -> Unit,
     onBack: () -> Unit
 ) {
-    val context = LocalContext.current
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
         shape = RoundedCornerShape(PANEL_CORNER_RADIUS),
@@ -380,7 +382,11 @@ private fun ContentScope.AllAppsCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                items(allApps, key = { it.packageName }) { app ->
+                items(
+                    items = allApps,
+                    key = { it.iconKey },
+                    contentType = { "app" }
+                ) { app ->
                     AllAppsGridItem(
                         app = app,
                         onClick = { onAppClick(app.packageName, app.activityName) }
@@ -396,7 +402,6 @@ private fun AllAppsGridItem(
     app: AppInfo,
     onClick: () -> Unit
 ) {
-    val context = LocalContext.current
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -404,12 +409,11 @@ private fun AllAppsGridItem(
             .clickable(onClick = onClick)
             .padding(vertical = 4.dp)
     ) {
-        Image(
-            painter = AppHelper.getAppPainter(context, app.packageName, app.icon),
+        AppIconImage(
+            appInfo = app,
             contentDescription = app.label,
-            modifier = Modifier
-                .size(ALL_APPS_ICON_SIZE)
-                .clip(RoundedCornerShape(ALL_APPS_ICON_CORNER))
+            modifier = Modifier.size(ALL_APPS_ICON_SIZE),
+            cornerRadius = ALL_APPS_ICON_CORNER
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
@@ -475,7 +479,6 @@ private fun AppIconButton(
     onLongClick: (Rect) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     var anchorBounds by remember { mutableStateOf<Rect?>(null) }
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -519,12 +522,12 @@ private fun AppIconButton(
                 onLongClick = { anchorBounds?.let { onLongClick(it) } }
             )
     ) {
-        Image(
-            painter = AppHelper.getAppPainter(context, appInfo.packageName, appInfo.icon),
+        AppIconImage(
+            appInfo = appInfo,
             contentDescription = appInfo.label,
             modifier = Modifier
-                .size(ICON_IMAGE_SIZE)
-                .clip(RoundedCornerShape(10.dp))
+                .size(ICON_IMAGE_SIZE),
+            cornerRadius = 10.dp
         )
     }
 }

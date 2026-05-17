@@ -20,18 +20,23 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Process
 import android.os.UserHandle
 import android.provider.Settings
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 
 class EdgeApplication : Application() {
 
     private lateinit var sidebarReceiver: SidebarReceiver
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     private val packageChangeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             AppHelper.invalidateCache()
+            AppHelper.preloadApps(context.applicationContext, appScope)
         }
     }
 
@@ -42,7 +47,6 @@ class EdgeApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        Process.setThreadAffinity(Process.myPid(), 1)
         Log.d(TAG, "Application onCreate - userId: ${UserHandle.myUserId()}")
 
         if (UserHandle.myUserId() != 0) {
@@ -73,6 +77,7 @@ class EdgeApplication : Application() {
         registerReceiver(packageChangeReceiver, suspendFilter)
 
         AppHelper.bindBubbleService(this)
+        AppHelper.preloadApps(this, appScope)
 
         if (isFeatureEnabled()) {
             Log.d(TAG, "Feature enabled, starting EdgeService")
@@ -89,6 +94,7 @@ class EdgeApplication : Application() {
             } catch (e: Exception) {
                 Log.e(TAG, "Error unregistering receiver", e)
             }
+            appScope.cancel()
         }
     }
 
