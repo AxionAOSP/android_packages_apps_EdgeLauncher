@@ -26,4 +26,13 @@
     <string name="edge_settings_launch_mode_full">全螢幕</string>
     <string name="edge_settings_launch_mode_freeform">自由視窗</string>
     <string name="edge_settings_launch_mode_bubble">氣泡</string>
+    <string name="freeform_window_back">返回</string>
+    <string name="freeform_window_menu">Window menu</string>
+    <string name="freeform_window_minimize">縮小</string>
+    <string name="freeform_window_fullscreen">全螢幕</string>
+    <string name="freeform_window_close">關閉</string>
+    <string name="freeform_window_fill_screen">Fill screen</string>
+    <string name="freeform_window_left_half">Left half</string>
+    <string name="freeform_window_right_half">Right half</string>
+    <string name="freeform_window_open_fullscreen">Open fullscreen</string>
 </resources>
