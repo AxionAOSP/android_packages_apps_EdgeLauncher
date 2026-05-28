@@ -30,7 +30,7 @@ object FreeformConstants {
     const val DESKTOP_DEFAULT_HEIGHT_DP = 450
     const val DESKTOP_MIN_WIDTH_DP = 300 
     const val DESKTOP_MIN_HEIGHT_DP = 250
-    const val DESKTOP_TITLE_BAR_HEIGHT_DP = 40
+    const val DESKTOP_TITLE_BAR_HEIGHT_DP = 32
     const val DESKTOP_CORNER_RADIUS_DP = 8
     const val DESKTOP_TASKBAR_HEIGHT_DP = 56
     const val DESKTOP_STATUS_BAR_HEIGHT_DP = 32
@@ -77,7 +77,7 @@ object FreeformConstants {
     const val RESIZE_HANDLE_BOTTOM_WIDTH_DP = 188
     const val RESIZE_HANDLE_BOTTOM_WIDTH_MIN_DP = 168
     const val RESIZE_HANDLE_BOTTOM_WIDTH_MAX_DP = 220
-    const val RESIZE_HANDLE_BOTTOM_HEIGHT_DP = 40
+    const val RESIZE_HANDLE_BOTTOM_HEIGHT_DP = 32
 
     const val OVERLAY_TITLE_BAR_HEIGHT_DP = 56
     const val OVERLAY_MENU_BUTTON_SIZE_DP = 36

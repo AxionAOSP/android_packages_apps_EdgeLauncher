@@ -67,8 +67,10 @@ class SurfaceEventsManager(
     }
     
     fun dispatch(event: SurfaceEvent) {
-        scope.launch {
-            eventFlow.emit(event)
+        if (!eventFlow.tryEmit(event)) {
+            scope.launch {
+                eventFlow.emit(event)
+            }
         }
     }
     

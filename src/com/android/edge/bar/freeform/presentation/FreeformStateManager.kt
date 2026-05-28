@@ -45,8 +45,6 @@ sealed class WindowEvent {
     data class Minimize(val preferCurrentPosition: Boolean = false) : WindowEvent()
     object BubbleTap : WindowEvent()
 
-    object ResizeStart : WindowEvent()
-    data class Resize(val newWidth: Int, val newHeight: Int, val newX: Float = Float.NaN) : WindowEvent()
     object ResizeEnd : WindowEvent()
 
     object Maximize : WindowEvent()
@@ -62,7 +60,11 @@ sealed class WindowEvent {
 }
 
 sealed class FreeformEffect {
-    data class ResizeDisplay(val width: Int, val height: Int) : FreeformEffect()
+    data class ResizeDisplay(
+        val width: Int,
+        val height: Int,
+        val completion: CompletableDeferred<Result<Unit>>
+    ) : FreeformEffect()
 }
 
 enum class WindowMode {
@@ -172,6 +174,14 @@ class FreeformStateManager(
     }
 
     private fun getDisplayDimensions(): Pair<Int, Int> = getAppSurfaceDimensions()
+
+    private suspend fun resizeDisplaySurface() {
+        val (displayWidth, displayHeight) = getDisplayDimensions()
+        val completion = CompletableDeferred<Result<Unit>>()
+        _effect.emit(FreeformEffect.ResizeDisplay(displayWidth, displayHeight, completion))
+        completion.await()
+            .onFailure { Log.e(TAG, "Failed to resize display surface", it) }
+    }
     
     init {
         scope.launch {
@@ -192,8 +202,10 @@ class FreeformStateManager(
     }
     
     fun dispatch(event: WindowEvent) {
-        scope.launch {
-            eventFlow.emit(event)
+        if (!eventFlow.tryEmit(event)) {
+            scope.launch {
+                eventFlow.emit(event)
+            }
         }
     }
     
@@ -218,8 +230,6 @@ class FreeformStateManager(
             is WindowEvent.Minimize -> handleMinimize(event.preferCurrentPosition)
             is WindowEvent.BubbleTap -> handleBubbleExpand()
             
-            is WindowEvent.ResizeStart -> handleResizeStart()
-            is WindowEvent.Resize -> handleResize(event.newWidth, event.newHeight, event.newX)
             is WindowEvent.ResizeEnd -> handleResizeEnd()
             is WindowEvent.Maximize -> handleMaximize()
 
@@ -260,12 +270,6 @@ class FreeformStateManager(
         surfaceEventsManager.dispatch(SurfaceEvent.ShowVeilRequested(VeilReason.RESIZE_STARTED))
         surfaceEventsManager.dispatch(SurfaceEvent.OperationStarted("orientation_change"))
         
-        val displayId = currentState.displayId
-        if (displayId >= 0) {
-            acceptsDisplayPauseCallback = true
-            repository.pauseDisplay(displayId)
-        }
-        
         val (newWidth, newHeight) = coerceWindowSizeForMode(
             currentState.height,
             currentState.width,
@@ -281,13 +285,7 @@ class FreeformStateManager(
             )
         }
         
-        if (displayId >= 0) {
-            acceptsDisplayPauseCallback = false
-            repository.resumeDisplay(displayId)
-        }
-        
-        val (displayWidth, displayHeight) = getDisplayDimensions()
-        _effect.emit(FreeformEffect.ResizeDisplay(displayWidth, displayHeight))
+        resizeDisplaySurface()
         
         delay(FreeformConstants.DELAY_SURFACE_SETTLE_MS)
         surfaceEventsManager.dispatch(SurfaceEvent.OperationCompleted("orientation_change"))
@@ -316,10 +314,8 @@ class FreeformStateManager(
     }
 
     private suspend fun handleSurfaceSettled() {
-        Log.d(TAG, "Surface settled - triggering resize to ensure proper rendering")
+        Log.d(TAG, "Surface settled")
         updateState { copy(isPaused = false) }
-        val (displayWidth, displayHeight) = getDisplayDimensions()
-        _effect.emit(FreeformEffect.ResizeDisplay(displayWidth, displayHeight))
         delay(FreeformConstants.DELAY_SURFACE_SETTLE_MS)
         surfaceEventsManager.dispatch(SurfaceEvent.SurfaceReady)
         surfaceEventsManager.dispatch(SurfaceEvent.OperationCompleted("*"))
@@ -437,22 +433,21 @@ class FreeformStateManager(
             currentState.savedWidth,
             currentState.savedHeight
         )
-        val targetX = currentState.savedX
-        val targetY = currentState.savedY
 
         val safeBottom = context.dpToPx(FreeformConstants.SAFE_ZONE_BOTTOM_DP)
         val minY = statusBarHeight.toFloat()
-        val maxY = maxOf(minY, (screenHeight - safeBottom - 48).toFloat())
+        val maxY = maxOf(minY, (screenHeight - safeBottom - targetHeight).toFloat())
 
-        val clampedY = targetY.coerceIn(minY, maxY)
-        val halfWidth = targetWidth / 2f
-        val clampedX = targetX.coerceIn(-halfWidth, (screenWidth - halfWidth).toFloat())
+        val centeredX = ((screenWidth - targetWidth) / 2f).coerceAtLeast(0f)
+        val centeredY = (
+            minY + (screenHeight - safeBottom - minY - targetHeight) / 2f
+        ).coerceIn(minY, maxY)
 
         updateState {
             copy(
                 mode = WindowMode.NORMAL,
-                x = clampedX,
-                y = clampedY,
+                x = centeredX,
+                y = centeredY,
                 width = targetWidth,
                 height = targetHeight,
                 savedBubbleX = x,
@@ -468,8 +463,7 @@ class FreeformStateManager(
             
             val result = repository.resumeDisplay(displayId)
             result.onSuccess {
-                val (displayWidth, displayHeight) = getDisplayDimensions()
-                _effect.emit(FreeformEffect.ResizeDisplay(displayWidth, displayHeight))
+                resizeDisplaySurface()
                 delay(FreeformConstants.DELAY_SURFACE_SETTLE_MS)
                 dispatch(WindowEvent.SurfaceSettled)
                 surfaceEventsManager.dispatch(SurfaceEvent.OperationCompleted("bubble_expand"))
@@ -483,17 +477,10 @@ class FreeformStateManager(
         }
     }
 
-    private suspend fun handleResizeStart() {
+    private fun handleResizeStart() {
         updateState { copy(isResizing = true) }
         surfaceEventsManager.dispatch(SurfaceEvent.ShowVeilRequested(VeilReason.RESIZE_STARTED))
         surfaceEventsManager.dispatch(SurfaceEvent.OperationStarted("resize"))
-        
-        val displayId = currentState.displayId
-        if (displayId >= 0) {
-            acceptsDisplayPauseCallback = true
-            repository.pauseDisplay(displayId)
-        }
-
         updateState { copy(isPaused = true) }
     }
     
@@ -550,15 +537,7 @@ class FreeformStateManager(
             ) 
         }
 
-        val displayId = currentState.displayId
-
-        if (displayId >= 0) {
-            acceptsDisplayPauseCallback = false
-            repository.resumeDisplay(displayId)
-        }
-
-        val (displayWidth, displayHeight) = getDisplayDimensions()
-        _effect.emit(FreeformEffect.ResizeDisplay(displayWidth, displayHeight))
+        resizeDisplaySurface()
 
         delay(FreeformConstants.DELAY_SURFACE_SETTLE_MS)
         surfaceEventsManager.dispatch(SurfaceEvent.OperationCompleted("resize"))
@@ -570,12 +549,6 @@ class FreeformStateManager(
         
         surfaceEventsManager.dispatch(SurfaceEvent.ShowVeilRequested(VeilReason.RESIZE_STARTED))
         surfaceEventsManager.dispatch(SurfaceEvent.OperationStarted("maximize"))
-        
-        val displayId = currentState.displayId
-        if (displayId >= 0) {
-            acceptsDisplayPauseCallback = true
-            repository.pauseDisplay(displayId)
-        }
         
         val padding = context.dpToPx(32)
         val maxWidth = screenWidth - (padding * 2)
@@ -606,13 +579,7 @@ class FreeformStateManager(
             )
         }
         
-        if (displayId >= 0) {
-            acceptsDisplayPauseCallback = false
-            repository.resumeDisplay(displayId)
-        }
-        
-        val (displayWidth, displayHeight) = getDisplayDimensions()
-        _effect.emit(FreeformEffect.ResizeDisplay(displayWidth, displayHeight))
+        resizeDisplaySurface()
         
         delay(FreeformConstants.DELAY_SURFACE_SETTLE_MS)
         surfaceEventsManager.dispatch(SurfaceEvent.OperationCompleted("maximize"))
@@ -624,12 +591,6 @@ class FreeformStateManager(
 
         surfaceEventsManager.dispatch(SurfaceEvent.ShowVeilRequested(VeilReason.RESIZE_STARTED))
         surfaceEventsManager.dispatch(SurfaceEvent.OperationStarted("resize_fullscreen"))
-
-        val displayId = currentState.displayId
-        if (displayId >= 0) {
-            acceptsDisplayPauseCallback = true
-            repository.pauseDisplay(displayId)
-        }
 
         val taskbarHeight = context.dpToPx(FreeformConstants.DESKTOP_TASKBAR_HEIGHT_DP)
         val statusBarHeight = context.dpToPx(FreeformConstants.DESKTOP_STATUS_BAR_HEIGHT_DP)
@@ -648,13 +609,7 @@ class FreeformStateManager(
             )
         }
 
-        if (displayId >= 0) {
-            acceptsDisplayPauseCallback = false
-            repository.resumeDisplay(displayId)
-        }
-
-        val (displayWidth, displayHeight) = getDisplayDimensions()
-        _effect.emit(FreeformEffect.ResizeDisplay(displayWidth, displayHeight))
+        resizeDisplaySurface()
 
         delay(FreeformConstants.DELAY_SURFACE_SETTLE_MS)
         surfaceEventsManager.dispatch(SurfaceEvent.OperationCompleted("resize_fullscreen"))
@@ -666,12 +621,6 @@ class FreeformStateManager(
 
         surfaceEventsManager.dispatch(SurfaceEvent.ShowVeilRequested(VeilReason.RESIZE_STARTED))
         surfaceEventsManager.dispatch(SurfaceEvent.OperationStarted("resize_half"))
-
-        val displayId = currentState.displayId
-        if (displayId >= 0) {
-            acceptsDisplayPauseCallback = true
-            repository.pauseDisplay(displayId)
-        }
 
         val taskbarHeight = context.dpToPx(FreeformConstants.DESKTOP_TASKBAR_HEIGHT_DP)
         val statusBarHeight = context.dpToPx(FreeformConstants.DESKTOP_STATUS_BAR_HEIGHT_DP)
@@ -690,13 +639,7 @@ class FreeformStateManager(
             )
         }
 
-        if (displayId >= 0) {
-            acceptsDisplayPauseCallback = false
-            repository.resumeDisplay(displayId)
-        }
-
-        val (displayWidth, displayHeight) = getDisplayDimensions()
-        _effect.emit(FreeformEffect.ResizeDisplay(displayWidth, displayHeight))
+        resizeDisplaySurface()
 
         delay(FreeformConstants.DELAY_SURFACE_SETTLE_MS)
         surfaceEventsManager.dispatch(SurfaceEvent.OperationCompleted("resize_half"))
@@ -786,15 +729,15 @@ class FreeformStateManager(
     }
     
     fun onResizeStart() {
-        dispatch(WindowEvent.ResizeStart)
+        handleResizeStart()
     }
     
     fun onResize(width: Int, height: Int) {
-        dispatch(WindowEvent.Resize(width, height))
+        handleResize(width, height, Float.NaN)
     }
 
     fun onResizeWithPosition(width: Int, height: Int, x: Float) {
-        dispatch(WindowEvent.Resize(width, height, x))
+        handleResize(width, height, x)
     }
 
     fun restoreWindowSize(width: Int, height: Int, isLandscape: Boolean) {

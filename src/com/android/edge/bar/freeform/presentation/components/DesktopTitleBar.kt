@@ -45,20 +45,20 @@ import com.android.edge.bar.R
 import com.android.edge.bar.freeform.domain.FreeformConstants.DESKTOP_TITLE_BAR_HEIGHT_DP
 
 private val desktopDecorTitleBarHeight = DESKTOP_TITLE_BAR_HEIGHT_DP.dp
-private val desktopDecorMenuStartMargin = 12.dp
-private val desktopDecorMenuContentStartPadding = 6.dp
-private val desktopDecorMenuContentEndPadding = 8.dp
-private val desktopDecorAppIconSize = 24.dp
-private val desktopDecorAppNameStartMargin = 8.dp
-private val desktopDecorChevronStartMargin = 8.dp
-private val desktopDecorChevronEndMargin = 8.dp
-private val desktopDecorChevronSize = 16.dp
-private val desktopDecorControlWidth = 40.dp
-private val desktopDecorControlHeight = 40.dp
-private val desktopDecorControlIconSize = 20.dp
-private val desktopDecorControlEndMargin = 8.dp
-private val desktopDecorRequiredDragWidth = 48.dp
-private val desktopDecorCompactDragWidth = 12.dp
+private val desktopDecorMenuStartMargin = 8.dp
+private val desktopDecorMenuContentStartPadding = 4.dp
+private val desktopDecorMenuContentEndPadding = 6.dp
+private val desktopDecorAppIconSize = 20.dp
+private val desktopDecorAppNameStartMargin = 6.dp
+private val desktopDecorChevronStartMargin = 6.dp
+private val desktopDecorChevronEndMargin = 6.dp
+private val desktopDecorChevronSize = 14.dp
+private val desktopDecorControlWidth = 32.dp
+private val desktopDecorControlHeight = 32.dp
+private val desktopDecorControlIconSize = 18.dp
+private val desktopDecorControlEndMargin = 6.dp
+private val desktopDecorRequiredDragWidth = 40.dp
+private val desktopDecorCompactDragWidth = 8.dp
 private val desktopDecorMaxAppNameWidth = 130.dp
 private val desktopDecorMinAppNameWidth = 48.dp
 
@@ -237,7 +237,7 @@ private fun WindowTitleMenu(
                     }
                     Text(
                         text = appName,
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.labelMedium,
                         color = colors.pillColor,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,

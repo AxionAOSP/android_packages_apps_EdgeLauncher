@@ -83,7 +83,7 @@ fun BottomResizeBar(
                 ResizeDotHandle(
                     color = colors.pillColor,
                     modifier = Modifier
-                        .width(48.dp)
+                        .width(40.dp)
                         .fillMaxHeight()
                         .resize2dInput(onLeftResize, onResizeStart, onResizeEnd)
                 )
@@ -96,7 +96,7 @@ fun BottomResizeBar(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(32.dp)
                             .semantics {
                                 contentDescription = backDescription
                             }
@@ -110,7 +110,7 @@ fun BottomResizeBar(
                             imageVector = Icons.Rounded.ArrowBack,
                             contentDescription = null,
                             tint = colors.pillColor,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
@@ -118,7 +118,7 @@ fun BottomResizeBar(
                 ResizeDotHandle(
                     color = colors.pillColor,
                     modifier = Modifier
-                        .width(48.dp)
+                        .width(40.dp)
                         .fillMaxHeight()
                         .resize2dInput(onRightResize, onResizeStart, onResizeEnd)
                 )

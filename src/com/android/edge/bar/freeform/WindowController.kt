@@ -61,6 +61,12 @@ class WindowController(
     }
     var composeView: ComposeView? = null
         private set
+    private var pendingX = 0
+    private var pendingY = 0
+    private var pendingWidth = 0
+    private var pendingHeight = 0
+    private var hasPendingLayout = false
+    private var layoutUpdateScheduled = false
 
     private inline fun runOnMain(crossinline block: () -> Unit) {
         if (Looper.myLooper() == Looper.getMainLooper()) {
@@ -116,11 +122,31 @@ class WindowController(
     }
 
     fun updateLayout(x: Int, y: Int, width: Int, height: Int) = runOnMain {
-        windowParams.x = x
-        windowParams.y = y
-        windowParams.width = width
-        windowParams.height = height
+        pendingX = x
+        pendingY = y
+        pendingWidth = width
+        pendingHeight = height
+        hasPendingLayout = true
 
+        if (!layoutUpdateScheduled) {
+            layoutUpdateScheduled = true
+            val view = composeView
+            if (view?.isAttachedToWindow == true) {
+                view.postOnAnimation { applyPendingLayout() }
+            } else {
+                applyPendingLayout()
+            }
+        }
+    }
+
+    private fun applyPendingLayout() {
+        layoutUpdateScheduled = false
+        if (!hasPendingLayout) return
+        hasPendingLayout = false
+        windowParams.x = pendingX
+        windowParams.y = pendingY
+        windowParams.width = pendingWidth
+        windowParams.height = pendingHeight
         try {
             composeView?.let { view ->
                 if (view.isAttachedToWindow) {

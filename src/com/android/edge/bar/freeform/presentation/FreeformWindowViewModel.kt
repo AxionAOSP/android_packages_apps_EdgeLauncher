@@ -45,7 +45,6 @@ class FreeformWindowViewModel(
     }
 
     private val handler = Handler(Looper.getMainLooper())
-    private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
     val scope = serviceScope?.plus(SupervisorJob() + Dispatchers.Main)
         ?: CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -66,6 +65,9 @@ class FreeformWindowViewModel(
 
     private var displaySurface: Surface? = null
     private var textureViewRef: TextureView? = null
+    private var appliedDisplayWidth = 0
+    private var appliedDisplayHeight = 0
+    private var appliedDisplayDensityDpi = 0
 
     var overlayView: View? = null
 
@@ -101,7 +103,16 @@ class FreeformWindowViewModel(
         scope.launch {
             stateManager.effect.collect { effect ->
                 when (effect) {
-                    is FreeformEffect.ResizeDisplay -> resizeVirtualDisplay(effect.width, effect.height)
+                    is FreeformEffect.ResizeDisplay -> {
+                        val result = try {
+                            resizeVirtualDisplay(effect.width, effect.height)
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Result.failure(e)
+                        }
+                        effect.completion.complete(result)
+                    }
                 }
             }
         }
@@ -142,44 +153,41 @@ class FreeformWindowViewModel(
         }
     }
 
-    fun updateWindowLayout(x: Float, y: Float, width: Int, height: Int, windowParams: WindowManager.LayoutParams) {
-        windowParams.x = x.toInt()
-        windowParams.y = y.toInt()
-        windowParams.width = width
-        windowParams.height = height
-
-        try {
-            overlayView?.let { view ->
-                if (view.isAttachedToWindow) {
-                    windowManager.updateViewLayout(view, windowParams)
-                }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "updateViewLayout failed", e)
-        }
-    }
-
-    fun resizeVirtualDisplay(width: Int, height: Int) {
+    private suspend fun resizeVirtualDisplay(width: Int, height: Int): Result<Unit> {
         val currentState = stateManager.state.value
         val displayId = currentState.displayId
-        if (displayId < 0) return
+        if (displayId < 0) {
+            return Result.failure(IllegalStateException("Invalid displayId: $displayId"))
+        }
         
-        val token = (repository as? FreeformRepositoryImpl)?.getAppToken() ?: return
+        val token = (repository as? FreeformRepositoryImpl)?.getAppToken()
+            ?: return Result.failure(IllegalStateException("Missing freeform app token"))
 
         val targetDensity = config.densityDpi
 
-        scope.launch {
-            textureViewRef?.let { view ->
-                view.surfaceTexture?.setDefaultBufferSize(width, height)
-                inputInjector.setScale(view.width, view.height, width, height)
-            }
-            val result = repository.resizeDisplay(token, width, height, targetDensity)
-            result.onSuccess { 
-                val latestState = stateManager.state.value
-                Log.i(TAG, "Virtual display resized to ${width}x${height} at ${targetDensity}dpi")
-                saveWindowState(latestState.width, latestState.height, latestState.isLandscape)
-            }.onFailure { Log.e(TAG, "Failed to resize virtual display", it) }
+        textureViewRef?.let { view ->
+            view.surfaceTexture?.setDefaultBufferSize(width, height)
+            inputInjector.setScale(view.width, view.height, width, height)
         }
+
+        if (appliedDisplayWidth == width &&
+                appliedDisplayHeight == height &&
+                appliedDisplayDensityDpi == targetDensity) {
+            val latestState = stateManager.state.value
+            saveWindowState(latestState.width, latestState.height, latestState.isLandscape)
+            return Result.success(Unit)
+        }
+
+        return repository.resizeDisplay(token, width, height, targetDensity)
+            .onSuccess {
+                val latestState = stateManager.state.value
+                appliedDisplayWidth = width
+                appliedDisplayHeight = height
+                appliedDisplayDensityDpi = targetDensity
+                Log.d(TAG, "Virtual display resized to ${width}x${height} at ${targetDensity}dpi")
+                saveWindowState(latestState.width, latestState.height, latestState.isLandscape)
+            }
+            .onFailure { Log.e(TAG, "Failed to resize virtual display", it) }
     }
 
     private fun resolveInitialOrientation(packageName: String, activityName: String): Int {
@@ -317,6 +325,9 @@ class FreeformWindowViewModel(
         )
 
         surface.setDefaultBufferSize(displayWidth, displayHeight)
+        appliedDisplayWidth = displayWidth
+        appliedDisplayHeight = displayHeight
+        appliedDisplayDensityDpi = config.densityDpi
         inputInjector.setScale(width, height, displayWidth, displayHeight)
 
         val displaySurface = Surface(surface)
