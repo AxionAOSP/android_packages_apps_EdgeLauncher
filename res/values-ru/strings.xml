@@ -26,4 +26,13 @@
     <string name="edge_settings_launch_mode_full">На весь экран</string>
     <string name="edge_settings_launch_mode_freeform">Свободная форма</string>
     <string name="edge_settings_launch_mode_bubble">Подсказка</string>
+    <string name="freeform_window_back">Назад</string>
+    <string name="freeform_window_menu">Window menu</string>
+    <string name="freeform_window_minimize">Свернуть</string>
+    <string name="freeform_window_fullscreen">На весь экран</string>
+    <string name="freeform_window_close">Закрыть</string>
+    <string name="freeform_window_fill_screen">Fill screen</string>
+    <string name="freeform_window_left_half">Left half</string>
+    <string name="freeform_window_right_half">Right half</string>
+    <string name="freeform_window_open_fullscreen">Open fullscreen</string>
 </resources>
