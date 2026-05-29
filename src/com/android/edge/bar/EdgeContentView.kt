@@ -65,10 +65,30 @@ import com.android.compose.animation.scene.transitions
 import com.android.edge.bar.R
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 val PANEL_WIDTH = 130.dp
 private val PANEL_CORNER_RADIUS = 24.dp
+internal const val ALL_APPS_WIDTH_FRACTION = 0.72f
+internal const val ALL_APPS_MIN_WIDTH_DP = 300f
+internal const val ALL_APPS_MAX_WIDTH_DP = 400f
+internal const val ALL_APPS_HORIZONTAL_MARGIN_DP = 24f
+internal const val ALL_APPS_HEIGHT_FRACTION = 0.65f
+internal const val ALL_APPS_MIN_HEIGHT_DP = 300f
+internal const val ALL_APPS_MAX_HEIGHT_DP = 580f
+internal const val ALL_APPS_VERTICAL_MARGIN_DP = 32f
+
+internal fun calculateAllAppsWidthDp(screenWidthDp: Float): Float =
+    (screenWidthDp * ALL_APPS_WIDTH_FRACTION)
+        .coerceIn(ALL_APPS_MIN_WIDTH_DP, ALL_APPS_MAX_WIDTH_DP)
+        .coerceAtMost(screenWidthDp - ALL_APPS_HORIZONTAL_MARGIN_DP)
+
+internal fun calculateAllAppsHeightDp(screenHeightDp: Float): Float =
+    (screenHeightDp * ALL_APPS_HEIGHT_FRACTION)
+        .coerceIn(ALL_APPS_MIN_HEIGHT_DP, ALL_APPS_MAX_HEIGHT_DP)
+        .coerceAtMost(screenHeightDp - ALL_APPS_VERTICAL_MARGIN_DP)
+
 private val ALL_APPS_ICON_SIZE = 34.dp
 private val ALL_APPS_ICON_CORNER = 10.dp
 
@@ -114,6 +134,7 @@ fun EdgeContentView(
     onSettingsClick: () -> Unit,
     onDrag: (deltaX: Float, deltaY: Float) -> Unit,
     onDragEnd: () -> Unit,
+    onAllAppsExpandedChange: (expanded: Boolean) -> Unit = {},
     panelOnRight: Boolean = true,
     modifier: Modifier = Modifier
 ) {
@@ -123,13 +144,10 @@ fun EdgeContentView(
     val config = LocalConfiguration.current
 
     val screenHeightDp = config.screenHeightDp.dp
-    val screenWidthDp = config.screenWidthDp.dp
     val panelHeight = (screenHeightDp * 0.42f).coerceIn(260.dp, 380.dp)
         .coerceAtMost(screenHeightDp - 32.dp)
-    val allAppsWidth = (screenWidthDp * 0.72f).coerceIn(300.dp, 400.dp)
-        .coerceAtMost(screenWidthDp - 24.dp)
-    val allAppsHeight = (screenHeightDp * 0.65f).coerceIn(300.dp, 580.dp)
-        .coerceAtMost(screenHeightDp - 32.dp)
+    val allAppsWidth = calculateAllAppsWidthDp(config.screenWidthDp.toFloat()).dp
+    val allAppsHeight = calculateAllAppsHeightDp(config.screenHeightDp.toFloat()).dp
 
     val version by AppHelper.version.collectAsState()
     val allApps by produceState(
@@ -149,6 +167,7 @@ fun EdgeContentView(
     }
 
     var activePopup by remember { mutableStateOf<PopupState?>(null) }
+    var allAppsExpanded by remember { mutableStateOf(false) }
 
     val stlState = rememberMutableSceneTransitionLayoutState(
         initialScene = EdgeScenes.Panel,
@@ -160,29 +179,60 @@ fun EdgeContentView(
         modifier = modifier
     ) {
         scene(EdgeScenes.Panel) {
-            EdgePanelCard(
-                pinnedApps = pinnedApps,
-                panelOnRight = panelOnRight,
-                panelHeight = panelHeight,
-                onPinnedAppClick = { pkg, activity -> onPinnedAppClick(context, pkg, activity) },
-                onLongClick = { pkg, activityName, bounds ->
-                    activePopup = PopupState(pkg, activityName, bounds)
-                },
-                onSettingsClick = onSettingsClick,
-                onAllAppsClick = {
-                    stlState.setTargetScene(EdgeScenes.AllApps, coroutineScope)
-                },
-                onDrag = onDrag,
-                onDragEnd = onDragEnd
-            )
+            val contentScope = this
+            val panelContent: @Composable () -> Unit = {
+                contentScope.EdgePanelCard(
+                    pinnedApps = pinnedApps,
+                    panelOnRight = panelOnRight,
+                    panelHeight = panelHeight,
+                    onPinnedAppClick = { pkg, activity -> onPinnedAppClick(context, pkg, activity) },
+                    onLongClick = { pkg, activityName, bounds ->
+                        activePopup = PopupState(pkg, activityName, bounds)
+                    },
+                    onSettingsClick = onSettingsClick,
+                    onAllAppsClick = {
+                        allAppsExpanded = true
+                        onAllAppsExpandedChange(true)
+                        stlState.setTargetScene(EdgeScenes.AllApps, coroutineScope)
+                    },
+                    onDrag = onDrag,
+                    onDragEnd = onDragEnd
+                )
+            }
+            if (allAppsExpanded) {
+                Box(
+                    modifier = Modifier.requiredWidth(allAppsWidth),
+                    contentAlignment = if (panelOnRight) Alignment.CenterEnd else Alignment.CenterStart
+                ) {
+                    panelContent()
+                }
+            } else {
+                panelContent()
+            }
         }
         scene(EdgeScenes.AllApps) {
             AllAppsCard(
                 allApps = allApps,
                 allAppsWidth = allAppsWidth,
                 allAppsHeight = allAppsHeight,
-                onAppClick = { pkg, activity -> onPinnedAppClick(context, pkg, activity) },
-                onBack = { stlState.setTargetScene(EdgeScenes.Panel, coroutineScope) }
+                onAppClick = { pkg, activity ->
+                    onPinnedAppClick(context, pkg, activity)
+                },
+                onBack = {
+                    val transition = stlState.setTargetScene(EdgeScenes.Panel, coroutineScope)
+                    if (transition == null) {
+                        allAppsExpanded = false
+                        onAllAppsExpandedChange(false)
+                    } else {
+                        coroutineScope.launch {
+                            transition.second.join()
+                            if (stlState.currentScene == EdgeScenes.Panel) {
+                                allAppsExpanded = false
+                                onAllAppsExpandedChange(false)
+                            }
+                        }
+                    }
+                }
             )
         }
     }

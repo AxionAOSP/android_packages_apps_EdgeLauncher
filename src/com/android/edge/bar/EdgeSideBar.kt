@@ -82,6 +82,7 @@ class EdgeSideBar(
     private var sidebarPositionY = 0
     private var xPos = 0
     private var yPos = 0
+    private var allAppsExpanded = false
 
     private var dragAccumX = 0f
     private var dragAccumY = 0f
@@ -96,6 +97,18 @@ class EdgeSideBar(
     private val panelWidthPx get() = (PANEL_WIDTH_DP * density).roundToInt()
     private val panelHeightPx get() = (PANEL_HEIGHT_DP * density).roundToInt()
     private val marginPx get() = (PANEL_MARGIN_DP * density).roundToInt()
+    private val allAppsWidthPx: Int
+        get() {
+            val screenWidthDp = context.resources.configuration.screenWidthDp.toFloat()
+            return (calculateAllAppsWidthDp(screenWidthDp) * density).roundToInt()
+        }
+    private val allAppsHeightPx: Int
+        get() {
+            val screenHeightDp = context.resources.configuration.screenHeightDp.toFloat()
+            return (calculateAllAppsHeightDp(screenHeightDp) * density).roundToInt()
+        }
+    private val currentPanelWidthPx get() = if (allAppsExpanded) allAppsWidthPx else panelWidthPx
+    private val currentPanelHeightPx get() = if (allAppsExpanded) allAppsHeightPx else panelHeightPx
 
     fun showPanelView() {
         synchronized(this) {
@@ -103,6 +116,7 @@ class EdgeSideBar(
             if (::panelView.isInitialized && panelView.isAttachedToWindow) {
                 removeViewSafely(panelView)
             }
+            allAppsExpanded = false
             updateSidebarPosition()
             fromRight.value = sidebarPositionX > 0
             panelView = createComposeView {
@@ -133,6 +147,7 @@ class EdgeSideBar(
                     },
                     onDrag = { dx, dy -> handlePanelDrag(dx, dy) },
                     onDragEnd = { handlePanelDragEnd() },
+                    onAllAppsExpandedChange = ::setAllAppsExpanded,
                     panelOnRight = fromRight.value
                 )
             }
@@ -147,6 +162,7 @@ class EdgeSideBar(
             if (::panelView.isInitialized) {
                 if (!isShowing && !force) return
                 isShowing = false
+                allAppsExpanded = false
                 val viewToRemove = panelView
                 if (force) {
                     panelVisible.value = false
@@ -191,13 +207,14 @@ class EdgeSideBar(
             )
         }
 
+        val panelWidth = currentPanelWidthPx
         xPos = if (sidebarPositionX > 0) {
-            screenWidth - panelWidthPx - marginPx
+            screenWidth - panelWidth - marginPx
         } else {
             marginPx
         }
 
-        yPos = constrainY((screenHeight - panelHeightPx) / 2 + sidebarPositionY)
+        yPos = constrainY((screenHeight - currentPanelHeightPx) / 2 + sidebarPositionY)
 
         if (isShowing) {
             mainScope.launch(Dispatchers.Main) {
@@ -279,7 +296,16 @@ class EdgeSideBar(
     }
 
     private fun constrainY(y: Int): Int {
-        return y.coerceIn(cachedStatusBarHeight, screenHeight - panelHeightPx - cachedNavBarHeight)
+        val maxY = screenHeight - currentPanelHeightPx - cachedNavBarHeight
+        return y.coerceIn(cachedStatusBarHeight, maxOf(cachedStatusBarHeight, maxY))
+    }
+
+    private fun setAllAppsExpanded(expanded: Boolean) {
+        synchronized(this) {
+            if (allAppsExpanded == expanded) return
+            allAppsExpanded = expanded
+            updateSidebarPosition()
+        }
     }
 
     private fun createPanelLayoutParams(): LayoutParams {
