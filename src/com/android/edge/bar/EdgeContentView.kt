@@ -136,6 +136,8 @@ fun EdgeContentView(
     onDragEnd: () -> Unit,
     onAllAppsExpandedChange: (expanded: Boolean) -> Unit = {},
     panelOnRight: Boolean = true,
+    screenDpWidth: Float? = null,
+    screenDpHeight: Float? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -143,11 +145,13 @@ fun EdgeContentView(
     val coroutineScope = rememberCoroutineScope()
     val config = LocalConfiguration.current
 
-    val screenHeightDp = config.screenHeightDp.dp
+    val swDp = screenDpWidth ?: config.screenWidthDp.toFloat()
+    val shDp = screenDpHeight ?: config.screenHeightDp.toFloat()
+    val screenHeightDp = shDp.dp
     val panelHeight = (screenHeightDp * 0.42f).coerceIn(260.dp, 380.dp)
         .coerceAtMost(screenHeightDp - 32.dp)
-    val allAppsWidth = calculateAllAppsWidthDp(config.screenWidthDp.toFloat()).dp
-    val allAppsHeight = calculateAllAppsHeightDp(config.screenHeightDp.toFloat()).dp
+    val allAppsWidth = calculateAllAppsWidthDp(swDp).dp
+    val allAppsHeight = calculateAllAppsHeightDp(shDp).dp
 
     val version by AppHelper.version.collectAsState()
     val allApps by produceState(

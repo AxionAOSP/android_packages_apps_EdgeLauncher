@@ -88,6 +88,8 @@ class EdgeSideBar(
     private var dragAccumY = 0f
     private var cachedStatusBarHeight = 0
     private var cachedNavBarHeight = 0
+    private val screenDpWidth = mutableStateOf(0f)
+    private val screenDpHeight = mutableStateOf(0f)
 
     private val density get() = context.resources.displayMetrics.density
     private val screenWidth get() = context.resources.displayMetrics.widthPixels
@@ -148,7 +150,9 @@ class EdgeSideBar(
                     onDrag = { dx, dy -> handlePanelDrag(dx, dy) },
                     onDragEnd = { handlePanelDragEnd() },
                     onAllAppsExpandedChange = ::setAllAppsExpanded,
-                    panelOnRight = fromRight.value
+                    panelOnRight = fromRight.value,
+                    screenDpWidth = screenDpWidth.value,
+                    screenDpHeight = screenDpHeight.value
                 )
             }
             val lp = createPanelLayoutParams()
@@ -180,6 +184,8 @@ class EdgeSideBar(
     }
 
     fun updateSidebarPosition() {
+        screenDpWidth.value = context.resources.configuration.screenWidthDp.toFloat()
+        screenDpHeight.value = context.resources.configuration.screenHeightDp.toFloat()
         cachedStatusBarHeight = SystemBarUtils.getStatusBarHeight(context)
         cachedNavBarHeight = if (isPortrait) {
             context.resources.getDimensionPixelSize(
@@ -223,6 +229,8 @@ class EdgeSideBar(
                         val lp = panelView.layoutParams as LayoutParams
                         lp.x = xPos
                         lp.y = yPos
+                        lp.width = currentPanelWidthPx
+                        lp.height = currentPanelHeightPx
                         windowManager.updateViewLayout(panelView, lp)
                     }
                 } catch (e: Exception) {
