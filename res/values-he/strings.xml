@@ -28,7 +28,7 @@
     <string name="edge_settings_launch_mode_bubble">בועה</string>
     <string name="freeform_window_back">חזרה</string>
     <string name="freeform_window_menu">מצב חלון</string>
-    <string name="freeform_window_minimize">Minimize</string>
+    <string name="freeform_window_minimize">מזעור</string>
     <string name="freeform_window_fullscreen">מסך מלא</string>
     <string name="freeform_window_close">סגירה</string>
     <string name="freeform_window_fill_screen">מילוי המסך</string>
