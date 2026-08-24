@@ -26,4 +26,13 @@
     <string name="edge_settings_launch_mode_full">Tela cheia</string>
     <string name="edge_settings_launch_mode_freeform">Janelas flutuantes</string>
     <string name="edge_settings_launch_mode_bubble">Balão</string>
+    <string name="freeform_window_back">Voltar</string>
+    <string name="freeform_window_menu">Menu de janela</string>
+    <string name="freeform_window_minimize">Minimizar</string>
+    <string name="freeform_window_fullscreen">Tela cheia</string>
+    <string name="freeform_window_close">Fechar</string>
+    <string name="freeform_window_fill_screen">Preencher tela</string>
+    <string name="freeform_window_left_half">Metade esquerda</string>
+    <string name="freeform_window_right_half">Metade direita</string>
+    <string name="freeform_window_open_fullscreen">Abrir tela cheia</string>
 </resources>
